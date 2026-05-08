@@ -562,23 +562,38 @@ const TALISMAN_SLOTS = 20;
 const CHARM_SIZES = [{id:1,label:'Small (1 slot)'},{id:2,label:'Medium (2 slots)'},{id:3,label:'Large (3 slots)'},{id:4,label:'Grand (4 slots)'}];
 
 const CHARM_SETS = {
-    ironblood:{name:'Ironblood',pieces:['Ironblood Crest','Ironblood Band','Ironblood Edge'],bonuses:[
-        {count:2,desc:'+20% Additive Damage',bucket:'additive',value:20},
-        {count:3,desc:'x15% All Damage Multiplier',bucket:'allMult',value:15}]},
-    marauder:{name:"Marauder's",pieces:["Marauder's Fang","Marauder's Hide","Marauder's Claw"],bonuses:[
-        {count:2,desc:'+25% Crit Multiplier',bucket:'critMult',value:25},
-        {count:3,desc:'x12% Global Multiplier',bucket:'global',value:12}]},
-    starlight:{name:'Starlight',pieces:['Starlight Shard','Starlight Prism','Starlight Core'],bonuses:[
-        {count:2,desc:'+20% Vulnerable Multiplier',bucket:'vulnMult',value:20},
-        {count:3,desc:'+30 Main Stat',bucket:'stat',value:30}]},
-    venom:{name:'Serpent Venom',pieces:['Venom Fang','Venom Scale','Venom Heart'],bonuses:[
-        {count:2,desc:'+25% DoT Multiplier',bucket:'dotMult',value:25},
-        {count:3,desc:'x10% All Damage Multiplier',bucket:'allMult',value:10}]},
-    warlord:{name:'Warlord',pieces:['Warlord Sigil','Warlord Plate','Warlord Crown'],bonuses:[
-        {count:2,desc:'+30% Overpower Damage',bucket:'overpower',value:30},
-        {count:3,desc:'+15% Additive Damage',bucket:'additive',value:15}]},
-    shadowfiend:{name:'Shadowfiend',pieces:['Shadowfiend Mask','Shadowfiend Cloak'],bonuses:[
-        {count:2,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    righteouswill:{name:'Righteous Will',pieces:['Fer of Righteous Will','Phoba of Righteous Will','Mlor of Righteous Will','Berú of Righteous Will','Linta of Righteous Will'],bonuses:[
+        {count:2,desc:'+15% All Damage',bucket:'allMult',value:15},
+        {count:3,desc:'+20% Core Skill Damage',bucket:'additive',value:20},
+        {count:5,desc:'x25% All Damage Multiplier',bucket:'allMult',value:25}]},
+    ironwolfs:{name:"Iron Wolf's Honor",pieces:["Fer of Iron Wolf's Honor","Phoba of Iron Wolf's Honor","Mlor of Iron Wolf's Honor","Berú of Iron Wolf's Honor","Linta of Iron Wolf's Honor"],bonuses:[
+        {count:2,desc:'+15% Vulnerable Damage',bucket:'vulnMult',value:15},
+        {count:3,desc:'+20% Close Damage',bucket:'additive',value:20},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    eternalnight:{name:'Eternal Night',pieces:['Fer of Eternal Night','Phoba of Eternal Night','Mlor of Eternal Night','Berú of Eternal Night','Linta of Eternal Night'],bonuses:[
+        {count:2,desc:'+15% Shadow Damage',bucket:'additive',value:15},
+        {count:3,desc:'+20% DoT Damage',bucket:'dotMult',value:20},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    ancestralguide:{name:'Ancestral Guide',pieces:['Fer of Ancestral Guide','Phoba of Ancestral Guide','Mlor of Ancestral Guide','Berú of Ancestral Guide','Linta of Ancestral Guide'],bonuses:[
+        {count:2,desc:'+15% Crit Damage',bucket:'critMult',value:15},
+        {count:3,desc:'+20% Companion Damage',bucket:'additive',value:20},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    wildrage:{name:'Wild Rage',pieces:['Fer of Wild Rage','Phoba of Wild Rage','Mlor of Wild Rage','Berú of Wild Rage','Linta of Wild Rage'],bonuses:[
+        {count:2,desc:'+15% Overpower Damage',bucket:'overpower',value:15},
+        {count:3,desc:'+20% Basic Skill Damage',bucket:'additive',value:20},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    burningskies:{name:'Burning Skies',pieces:['Fer of Burning Skies','Phoba of Burning Skies','Mlor of Burning Skies','Berú of Burning Skies','Linta of Burning Skies'],bonuses:[
+        {count:2,desc:'+15% Fire Damage',bucket:'additive',value:15},
+        {count:3,desc:'+20% Crit Damage',bucket:'critMult',value:20},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    serpentsstrike:{name:"Serpent's Strike",pieces:["Fer of Serpent's Strike","Phoba of Serpent's Strike","Mlor of Serpent's Strike","Berú of Serpent's Strike","Linta of Serpent's Strike"],bonuses:[
+        {count:2,desc:'+15% Poison Damage',bucket:'additive',value:15},
+        {count:3,desc:'+25% DoT Damage',bucket:'dotMult',value:25},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    stormcaller:{name:'Stormcaller',pieces:['Fer of Stormcaller','Phoba of Stormcaller','Mlor of Stormcaller','Berú of Stormcaller','Linta of Stormcaller'],bonuses:[
+        {count:2,desc:'+15% Lightning Damage',bucket:'additive',value:15},
+        {count:3,desc:'+20% All Damage',bucket:'allMult',value:20},
+        {count:5,desc:'x25% All Damage Multiplier',bucket:'allMult',value:25}]},
 };
 
 // ═══════════════════════════════════════════════════
@@ -608,11 +623,28 @@ const GLYPHS = [
     {id:'bane',name:'Bane',desc:'Poison Damage Multiplier',bucket:'allMult',base:10,perLvl:1.0},
     {id:'bloodfeeder',name:'Bloodfeeder',desc:'Blood Skill Damage',bucket:'additive',base:18,perLvl:1.5},
     {id:'essence',name:'Essence',desc:'DoT Multiplier',bucket:'dotMult',base:12,perLvl:1.0},
+    // Additional real D4 S13 glyphs
+    {id:'retribution',name:'Retribution',desc:'Thorns & Damage',bucket:'additive',base:15,perLvl:1.2},
+    {id:'honed',name:'Honed',desc:'Damage with Swords/Axes',bucket:'additive',base:16,perLvl:1.2},
+    {id:'sentinel',name:'Sentinel',desc:'Damage while Fortified/Healthy',bucket:'additive',base:14,perLvl:1.0},
+    {id:'marshal',name:'Marshal',desc:'Minion & Self Damage',bucket:'additive',base:14,perLvl:1.0},
+    {id:'dominate',name:'Dominate',desc:'Damage to Stunned/Immobilized',bucket:'additive',base:18,perLvl:1.5},
+    {id:'desecrate',name:'Desecrate',desc:'Shadow DoT Damage',bucket:'dotMult',base:15,perLvl:1.0},
+    {id:'fulminate',name:'Fulminate',desc:'Lightning Critical Damage',bucket:'critMult',base:12,perLvl:1.0},
+    {id:'conjurer',name:'Conjurer',desc:'Conjuration Skill Damage',bucket:'additive',base:16,perLvl:1.2},
+    {id:'ire',name:'Ire',desc:'Close Damage after Dash',bucket:'additive',base:14,perLvl:1.0},
+    {id:'resilience',name:'Resilience',desc:'Damage Reduction (defensive)',bucket:null,base:0,perLvl:0},
+    {id:'spirit',name:'Spirit',desc:'Spirit Skill Damage',bucket:'additive',base:16,perLvl:1.2},
+    {id:'devout',name:'Devout',desc:'Holy Damage',bucket:'additive',base:15,perLvl:1.2},
+    {id:'might',name:'Might',desc:'Damage per Strength threshold',bucket:'additive',base:12,perLvl:1.0},
+    {id:'protector',name:'Protector',desc:'Block & Shield Damage',bucket:'additive',base:14,perLvl:1.0},
+    {id:'tactician',name:'Tactician',desc:'Damage after using Defensive',bucket:'additive',base:16,perLvl:1.2},
+    {id:'piety',name:'Piety',desc:'Faith Generation & Damage',bucket:'additive',base:14,perLvl:1.0},
 ];
 
 const PARAGON_BOARDS = {
     rogue:[
-        {name:'Starting Board',legendary:{name:'Prime',desc:'x10% damage while Healthy',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Prime',desc:'x10% damage while Healthy',bucket:'global',value:10,editable:true},hasGlyph:true},
         {name:'Deadly Ambush',legendary:{name:'Deadly Ambush',desc:'+30% Crit damage to Trapped',bucket:'critMult',value:30,editable:true},hasGlyph:true},
         {name:'Tricks of the Trade',legendary:{name:'Tricks of the Trade',desc:'x12% damage per combo point',bucket:'global',value:12,editable:true},hasGlyph:true},
         {name:'Exploit Weakness',legendary:{name:'Exploit Weakness',desc:'+25% Vulnerable Damage',bucket:'vulnMult',value:25,editable:true},hasGlyph:true},
@@ -622,7 +654,7 @@ const PARAGON_BOARDS = {
         {name:'Cheap Shot',legendary:{name:'Cheap Shot',desc:'+25% to CC\'d enemies',bucket:'additive',value:25,editable:true},hasGlyph:true},
     ],
     barbarian:[
-        {name:'Starting Board',legendary:{name:'Raw Power',desc:'x10% while Berserking',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Raw Power',desc:'x10% while Berserking',bucket:'global',value:10,editable:true},hasGlyph:true},
         {name:'Blood Rage',legendary:{name:'Blood Rage',desc:'x15% while Berserking',bucket:'global',value:15,editable:true},hasGlyph:true},
         {name:'Carnage',legendary:{name:'Carnage',desc:'+20% Core Skill Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
         {name:'Decimator',legendary:{name:'Decimator',desc:'+25% to Injured enemies',bucket:'additive',value:25,editable:true},hasGlyph:true},
@@ -632,7 +664,7 @@ const PARAGON_BOARDS = {
         {name:'Weapons Master',legendary:{name:'Weapons Master',desc:'x10% with Two-Handed',bucket:'global',value:10,editable:true},hasGlyph:true},
     ],
     sorcerer:[
-        {name:'Starting Board',legendary:{name:'Elemental Balance',desc:'x10% Elemental Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Elemental Balance',desc:'x10% Elemental Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
         {name:'Burning Instinct',legendary:{name:'Burning Instinct',desc:'x15% Fire Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
         {name:'Ceaseless Conduit',legendary:{name:'Ceaseless Conduit',desc:'x15% Lightning Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
         {name:'Enchantment Master',legendary:{name:'Enchantment Master',desc:'+20% Enchantment Skill Dmg',bucket:'additive',value:20,editable:true},hasGlyph:true},
@@ -642,7 +674,7 @@ const PARAGON_BOARDS = {
         {name:'Elemental Summoner',legendary:{name:'Elemental Summoner',desc:'+20% Conjuration Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
     ],
     druid:[
-        {name:'Starting Board',legendary:{name:'Survival Instincts',desc:'x10% while in Werewolf',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Survival Instincts',desc:'x10% while in Werewolf',bucket:'global',value:10,editable:true},hasGlyph:true},
         {name:'Ancestral Guidance',legendary:{name:'Ancestral Guidance',desc:'x12% All Damage',bucket:'allMult',value:12,editable:true},hasGlyph:true},
         {name:'Inner Beast',legendary:{name:'Inner Beast',desc:'+20% Companion Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
         {name:'Lust for Carnage',legendary:{name:'Lust for Carnage',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
@@ -652,7 +684,7 @@ const PARAGON_BOARDS = {
         {name:'Constricting Tendrils',legendary:{name:'Constricting Tendrils',desc:'+20% to Immobilized',bucket:'additive',value:20,editable:true},hasGlyph:true},
     ],
     necromancer:[
-        {name:'Starting Board',legendary:{name:'Bone Graft',desc:'x10% Bone Skill Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Bone Graft',desc:'x10% Bone Skill Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
         {name:'Cult Leader',legendary:{name:'Cult Leader',desc:'+20% Minion & Self Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
         {name:'Scent of Death',legendary:{name:'Scent of Death',desc:'+25% Corpse Skill Damage',bucket:'additive',value:25,editable:true},hasGlyph:true},
         {name:'Blood Begets Blood',legendary:{name:'Blood Begets Blood',desc:'x15% Blood Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
@@ -662,7 +694,7 @@ const PARAGON_BOARDS = {
         {name:'Hulking Monstrosity',legendary:{name:'Hulking Monstrosity',desc:'x12% while Golem active',bucket:'global',value:12,editable:true},hasGlyph:true},
     ],
     spiritborn:[
-        {name:'Starting Board',legendary:{name:'Spirit Surge',desc:'x10% Spirit Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Spirit Surge',desc:'x10% Spirit Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
         {name:'Jaguar Ferocity',legendary:{name:'Jaguar Ferocity',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
         {name:'Eagle Precision',legendary:{name:'Eagle Precision',desc:'x15% Ranged Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
         {name:'Gorilla Might',legendary:{name:'Gorilla Might',desc:'+30% Overpower Damage',bucket:'overpower',value:30,editable:true},hasGlyph:true},
@@ -672,15 +704,17 @@ const PARAGON_BOARDS = {
         {name:'Primal Fury',legendary:{name:'Primal Fury',desc:'+20% Basic Skill Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
     ],
     paladin:[
-        {name:'Starting Board',legendary:{name:'Divine Fervor',desc:'x10% Holy Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
-        {name:'Righteous Path',legendary:{name:'Righteous Path',desc:'+20% Core Skill Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
-        {name:'Crusade',legendary:{name:'Crusade',desc:'x15% All Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
-        {name:'Zealotry',legendary:{name:'Zealotry',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Divine Fervor',desc:'x10% Holy Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Castle',legendary:{name:'Bastion',desc:'+20% Block Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Relentless',legendary:{name:'Relentless Assault',desc:'x15% All Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Shield Bearer',legendary:{name:'Shield Bearer',desc:'+25% while Blocking',bucket:'additive',value:25,editable:true},hasGlyph:true},
+        {name:'Beacon',legendary:{name:'Beacon of Light',desc:'x12% Holy Damage',bucket:'allMult',value:12,editable:true},hasGlyph:true},
+        {name:'Crusade',legendary:{name:'Crusade',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
         {name:'Bulwark',legendary:{name:'Bulwark',desc:'+30% Overpower Damage',bucket:'overpower',value:30,editable:true},hasGlyph:true},
         {name:'Consecration',legendary:{name:'Consecration',desc:'x12% in Consecrated Ground',bucket:'global',value:12,editable:true},hasGlyph:true},
     ],
     warlock:[
-        {name:'Starting Board',legendary:{name:'Dark Covenant',desc:'x10% Shadow Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Start',legendary:{name:'Dark Covenant',desc:'x10% Shadow Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
         {name:'Infernal Pact',legendary:{name:'Infernal Pact',desc:'x15% Fire Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
         {name:'Soul Harvest',legendary:{name:'Soul Harvest',desc:'+25% DoT Multiplier',bucket:'dotMult',value:25,editable:true},hasGlyph:true},
         {name:'Demonbind',legendary:{name:'Demonbind',desc:'+20% Summon Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
@@ -1467,8 +1501,9 @@ function parseMaxrollText(text){
         }
     }
 
-    // Parse paragon boards — "BoardName / GlyphName Lv. XX" or "BoardName / No Glyph"
-    const boardRegex=/([A-Za-z\s']+?)\s*\/\s*(?:([A-Za-z\s']+?)\s+Lv\.\s*(\d+)|No Glyph)/g;
+    // Parse paragon boards from "Boards Used" section
+    // Maxroll format (newline-separated): "BoardName\n/\nGlyphName Lv. XX" or "BoardName\n/\nNo Glyph"
+    const boardRegex=/([A-Za-z '^]+)\n\/\n(?:([A-Za-z '^]+?)\s+Lv\.\s*(\d+)|No Glyph)/g;
     let bm;
     while((bm=boardRegex.exec(text))!==null){
         result.paragonBoards.push({
@@ -1478,8 +1513,10 @@ function parseMaxrollText(text){
         });
     }
 
-    // Parse per-board node stat allocations: "1\nStart\n/\nChip\nStr: 75 Int: 32 Will: 37 Dex: 10"
-    const nodeStatRegex=/(\d+)\s*\n\s*([A-Za-z\s']+?)\s*(?:\/\s*([A-Za-z\s']+?)\s*)?\n\s*Str:\s*(\d+)\s+Int:\s*(\d+)\s+Will:\s*(\d+)\s+Dex:\s*(\d+)/g;
+    // Parse per-board node stat allocations
+    // Format: "1\nBoardName\n/\nGlyphName\nStr: 75 Int: 32 Will: 37 Dex: 10"
+    // Or without glyph: "5\nBoardName\nStr: 95 Int: 79 Will: 54 Dex: 20"
+    const nodeStatRegex=/(\d+)\n([A-Za-z '^]+?)(?:\n\/\n([A-Za-z '^]+?))?\nStr:\s*(\d+)\s+Int:\s*(\d+)\s+Will:\s*(\d+)\s+Dex:\s*(\d+)/g;
     let ns;
     while((ns=nodeStatRegex.exec(text))!==null){
         result.paragonNodeStats.push({
@@ -1516,30 +1553,35 @@ function parseMaxrollText(text){
         });
     }
 
-    // Parse talisman — between "Talisman" header and next section
-    const talismanMatch=text.match(/Talisman\s*\n([\s\S]*?)(?=\n(?:Soul Shards|Oath|Notes|Edit|Skills|Paragon)\b)/i);
+    // Parse talisman — between "Talisman" header and "Oath" or "Penitent" or next section
+    // Maxroll format: "Talisman\nSwiftness\nFer of Righteous Will\n..." then "Penitent Greaves\nOath"
+    const talismanMatch=text.match(/Talisman\s*\n([\s\S]*?)(?=\n(?:Penitent|Oath|Notes|Edit\n|Skills|Paragon|Mercenary)\b)/i);
     if(talismanMatch){
-        const charmLines=talismanMatch[1].split('\n').map(l=>l.trim()).filter(l=>l.length>1&&!l.match(/^(Edit|Notes|Prev|Next|Stat Priority|Collapse|Variant)/i));
+        const charmLines=talismanMatch[1].split('\n').map(l=>l.trim()).filter(l=>
+            l.length>1 &&
+            !l.match(/^(Edit|Notes|Prev|Next|Stat Priority|Collapse|Variant|Equipment|Talisman|Soul Shards)/i) &&
+            !l.match(/^(Legendary|Rare|Magic|Common|Normal)\s/i)
+        );
         charmLines.forEach(line=>{ result.talisman.push(line); });
     }
 
-    // Parse oath
-    const oathMatch=text.match(/Oath\s*\n\s*([A-Za-z\s']+?)(?=\n(?:Notes|Edit|Skills|Paragon))/i);
+    // Parse oath — look for "Oath\nNotes" pattern (oath text is between)
+    const oathMatch=text.match(/\nOath\s*\n\s*([^\n]+?)(?=\n)/i);
     if(oathMatch){
         const oath=oathMatch[1].trim();
-        if(oath&&oath.length>1&&!/^(Notes|Edit|Enter)/.test(oath)) result.oath=oath;
+        if(oath&&oath.length>1&&!/^(Notes|Edit|Enter|Skills|Paragon|Mercenary)/.test(oath)) result.oath=oath;
     }
 
     // Parse equipment — "AspectName\nLegendary SlotType"
-    const equipRegex=/([\w\s']+?)\s*\n\s*Legendary\s+(Helm|Chest Armor|Gloves|Pants|Boots|Amulet|Ring|Sword|Shield|Mace|Axe|Bow|Crossbow|Staff|Scythe|Dagger|Polearm|Wand|Focus)/gi;
+    // Use [^\n]+ instead of [\w\s'] to avoid matching across newlines
+    const equipRegex=/([^\n]+?)\s*\n\s*Legendary\s+(Helm|Chest Armor|Gloves|Pants|Boots|Amulet|Ring|Sword|Shield|Mace|Axe|Bow|Crossbow|Staff|Scythe|Dagger|Polearm|Wand|Focus|Two-Handed Sword|Two-Handed Mace|Two-Handed Axe)/gi;
     let em;
     while((em=equipRegex.exec(text))!==null){
-        result.equipment.push({aspect:em[1].trim(),slot:em[2].trim()});
-    }
-    // Also catch items listed before "Legendary" without aspect (base items)
-    const baseItemRegex=/([\w\s']+?)\s*\n\s*Legendary\s+(Mainhand|Offhand|Left Ring|Right Ring)/gi;
-    while((em=baseItemRegex.exec(text))!==null){
-        result.equipment.push({aspect:em[1].trim(),slot:em[2].trim()});
+        const aspectName=em[1].trim();
+        // Filter out non-aspect lines (navigation, headers, etc)
+        if(aspectName.length>1 && aspectName.length<60 && !/^(Equipment|Stat Priority|Edit|Variant|Prev|Next|\d)/.test(aspectName)){
+            result.equipment.push({aspect:aspectName,slot:em[2].trim()});
+        }
     }
 
     // Build detected features list
@@ -1619,8 +1661,11 @@ function previewMaxrollParse(){
         html+='<div style="display:flex;flex-wrap:wrap;gap:3px;font-size:0.7rem;">';
         maxrollParsed.talisman.forEach(name=>{
             let setName='';
+            const ofM=name.match(/\bof\s+(.+)$/i);
+            const sn=ofM?ofM[1].toLowerCase().trim():'';
             Object.values(CHARM_SETS).forEach(cs=>{
-                cs.pieces.forEach(p=>{if(name.toLowerCase().includes(p.toLowerCase().split(' ')[0])) setName=cs.name;});
+                if(sn && cs.name.toLowerCase()===sn) setName=cs.name;
+                if(!setName && cs.name.length>3 && name.toLowerCase().includes(cs.name.toLowerCase())) setName=cs.name;
             });
             const tag=setName?` <span style="color:var(--gold);">[${setName}]</span>`:'';
             html+=`<span style="padding:2px 6px;background:rgba(245,166,35,0.12);border-radius:3px;color:var(--orange-light);">${name}${tag}</span>`;
@@ -1763,20 +1808,29 @@ function doMaxrollImport(){
     if(p.talisman.length>0){
         p.talisman.forEach(name=>{
             let detectedSetId='';
-            // Try to match charm name to a set piece
+            const nameL=name.toLowerCase();
+            // D4 charm naming: "Prefix of SetName" — e.g., "Fer of Righteous Will"
+            // Extract the set name after "of " if present
+            const ofMatch=name.match(/\bof\s+(.+)$/i);
+            const setNameFromCharm=ofMatch?ofMatch[1].toLowerCase().trim():'';
+
             Object.entries(CHARM_SETS).forEach(([setId,cs])=>{
-                cs.pieces.forEach(piece=>{
-                    // Match if charm name contains any word from the piece name
-                    const pieceWords=piece.toLowerCase().split(' ');
-                    const nameL=name.toLowerCase();
-                    if(pieceWords.every(w=>nameL.includes(w)) || nameL.includes(piece.toLowerCase())){
-                        detectedSetId=setId;
-                    }
-                    // Also try matching first word (e.g., "Ironblood" in "Ironblood Crest")
-                    if(!detectedSetId && pieceWords[0].length>3 && nameL.includes(pieceWords[0])){
-                        detectedSetId=setId;
-                    }
-                });
+                // Direct set name match (e.g., "Righteous Will" matches "righteouswill" set's name)
+                if(setNameFromCharm && cs.name.toLowerCase()===setNameFromCharm){
+                    detectedSetId=setId;
+                }
+                // Also check if charm name exactly matches any piece
+                if(!detectedSetId){
+                    cs.pieces.forEach(piece=>{
+                        if(nameL===piece.toLowerCase() || nameL.includes(piece.toLowerCase())){
+                            detectedSetId=setId;
+                        }
+                    });
+                }
+                // Fuzzy: check if set name appears in charm name
+                if(!detectedSetId && cs.name.length>3 && nameL.includes(cs.name.toLowerCase())){
+                    detectedSetId=setId;
+                }
             });
             if(detectedSetId) charmsWithSet++;
             state.charms.push({
