@@ -504,7 +504,7 @@
 // ═══════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════
-const CLASSES={barbarian:{stat:'Strength'},druid:{stat:'Willpower'},necromancer:{stat:'Intelligence'},rogue:{stat:'Dexterity'},sorcerer:{stat:'Intelligence'},spiritborn:{stat:'Dexterity'},paladin:{stat:'Willpower'},warlock:{stat:'Intelligence'}};
+const CLASSES={barbarian:{stat:'Strength'},druid:{stat:'Willpower'},necromancer:{stat:'Intelligence'},rogue:{stat:'Dexterity'},sorcerer:{stat:'Intelligence'},spiritborn:{stat:'Dexterity'},paladin:{stat:'Strength'},warlock:{stat:'Intelligence'}};
 
 const GEAR_SLOTS=[
     {id:'helm',name:'Helm',icon:'\u{1FA96}',socket:'armor'},{id:'chest',name:'Chest',icon:'\u{1F6E1}',socket:'armor'},
@@ -728,7 +728,7 @@ const PARAGON_BOARDS = {
 // ═══════════════════════════════════════════════════
 const state = {
     selectedClass:'rogue', isCrit:false, isVuln:false, isDot:false, isOP:false,
-    gearAffixes:{}, gemSelections:{}, multipliers:[],
+    gearAffixes:{}, gearAspects:{}, gemSelections:{}, multipliers:[],
     charms:[], // {id, name, size, setId, affixes:[{type,value}]}
     paragon:{}, // keyed by class: [{boardIdx, attached, legendaryActive, legendaryValue, glyphId, glyphLevel, normalPts, magicPts, rarePts}]
 };
@@ -787,7 +787,7 @@ function buildClassSelector(){
 // ═══════════════════════════════════════════════════
 // GEAR
 // ═══════════════════════════════════════════════════
-function buildGearSlots(){const g=document.getElementById('gearGrid');g.innerHTML='';GEAR_SLOTS.forEach(slot=>{state.gearAffixes[slot.id]=state.gearAffixes[slot.id]||[];const d=document.createElement('div');d.className='gear-slot';d.id='slot-'+slot.id;d.innerHTML=`<div class="gear-slot-header"><span class="gear-slot-name">${slot.icon} ${slot.name}</span><span style="font-size:0.62rem;color:var(--text-dim)">${slot.socket!=='none'?slot.socket:''}</span></div><div class="affix-list" id="affixes-${slot.id}"></div><button class="btn-add-affix" onclick="addAffix('${slot.id}')">+ Affix</button>`;g.appendChild(d);});}
+function buildGearSlots(){const g=document.getElementById('gearGrid');g.innerHTML='';GEAR_SLOTS.forEach(slot=>{state.gearAffixes[slot.id]=state.gearAffixes[slot.id]||[];const aspect=state.gearAspects[slot.id]||'';const aspectHtml=aspect?`<div style="font-size:0.68rem;color:var(--purple);padding:2px 0 4px;font-weight:500;font-style:italic;">${aspect}</div>`:'';const d=document.createElement('div');d.className='gear-slot'+(aspect?' has-item':'');d.id='slot-'+slot.id;d.innerHTML=`<div class="gear-slot-header"><span class="gear-slot-name">${slot.icon} ${slot.name}</span><span style="font-size:0.62rem;color:var(--text-dim)">${slot.socket!=='none'?slot.socket:''}</span></div>${aspectHtml}<div class="affix-list" id="affixes-${slot.id}"></div><button class="btn-add-affix" onclick="addAffix('${slot.id}')">+ Affix</button>`;g.appendChild(d);});}
 function addAffix(s,t='additive',v=0){const id='afx_'+(affixCounter++);state.gearAffixes[s].push({id,type:t,value:v});renderAffixes(s);recalc();}
 function removeAffix(s,id){state.gearAffixes[s]=state.gearAffixes[s].filter(a=>a.id!==id);renderAffixes(s);recalc();}
 function renderAffixes(s){const c=document.getElementById('affixes-'+s);c.innerHTML='';state.gearAffixes[s].forEach(affix=>{const def=AFFIX_TYPES.find(a=>a.id===affix.type)||AFFIX_TYPES[0];const r=document.createElement('div');r.className='affix-row';r.innerHTML=`<span class="affix-bucket-tag ${TAG_CLS[def.bucket]}">${TAG_LBL[def.bucket]}</span><select onchange="updateAffixType('${s}','${affix.id}',this.value)">${AFFIX_TYPES.map(a=>`<option value="${a.id}"${a.id===affix.type?' selected':''}>${a.label}</option>`).join('')}</select><input type="number" value="${affix.value}" step="0.1" onchange="updateAffixVal('${s}','${affix.id}',this.value)" oninput="updateAffixVal('${s}','${affix.id}',this.value)"><button class="btn-remove" onclick="removeAffix('${s}','${affix.id}')">✕</button>`;c.appendChild(r);});const sl=document.getElementById('slot-'+s);if(sl)sl.classList.toggle('has-item',state.gearAffixes[s].length>0);}
@@ -1374,10 +1374,10 @@ const STORAGE_KEY='d4_builds_v3';
 function getBuilds(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{};}catch(e){return {};}}
 function setBuilds(b){localStorage.setItem(STORAGE_KEY,JSON.stringify(b));}
 function refreshBuildList(){const sel=document.getElementById('buildList');const builds=getBuilds();sel.innerHTML='<option value="">-- Select --</option>';Object.keys(builds).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});}
-function getBuildData(){return{version:3,selectedClass:state.selectedClass,mainStat:document.getElementById('mainStat').value,enemyDR:document.getElementById('enemyDR').value,gearAffixes:state.gearAffixes,gemSelections:state.gemSelections,multipliers:state.multipliers,charms:state.charms,paragon:state.paragon,skillSelect:document.getElementById('skillSelect').value,skillRank:document.getElementById('skillRank').value,weaponType:document.getElementById('weaponType').value,isCrit:state.isCrit,isVuln:state.isVuln,isDot:state.isDot,isOP:state.isOP,manualWeaponDmg:document.getElementById('manualWeaponDmg').value,manualAdditive:document.getElementById('manualAdditive').value,manualAllMult:document.getElementById('manualAllMult').value,manualCritMult:document.getElementById('manualCritMult').value,manualVulnMult:document.getElementById('manualVulnMult').value,manualDotMult:document.getElementById('manualDotMult').value,manualOverpower:document.getElementById('manualOverpower').value,manualMainStat:document.getElementById('manualMainStat').value,totalParagonPts:document.getElementById('totalParagonPts').value};}
+function getBuildData(){return{version:3,selectedClass:state.selectedClass,mainStat:document.getElementById('mainStat').value,enemyDR:document.getElementById('enemyDR').value,gearAffixes:state.gearAffixes,gearAspects:state.gearAspects,gemSelections:state.gemSelections,multipliers:state.multipliers,charms:state.charms,paragon:state.paragon,skillSelect:document.getElementById('skillSelect').value,skillRank:document.getElementById('skillRank').value,weaponType:document.getElementById('weaponType').value,isCrit:state.isCrit,isVuln:state.isVuln,isDot:state.isDot,isOP:state.isOP,manualWeaponDmg:document.getElementById('manualWeaponDmg').value,manualAdditive:document.getElementById('manualAdditive').value,manualAllMult:document.getElementById('manualAllMult').value,manualCritMult:document.getElementById('manualCritMult').value,manualVulnMult:document.getElementById('manualVulnMult').value,manualDotMult:document.getElementById('manualDotMult').value,manualOverpower:document.getElementById('manualOverpower').value,manualMainStat:document.getElementById('manualMainStat').value,totalParagonPts:document.getElementById('totalParagonPts').value};}
 function loadBuildData(data){
     if(!data)return;
-    state.selectedClass=data.selectedClass||'rogue';state.gearAffixes=data.gearAffixes||{};state.gemSelections=data.gemSelections||{};
+    state.selectedClass=data.selectedClass||'rogue';state.gearAffixes=data.gearAffixes||{};state.gearAspects=data.gearAspects||{};state.gemSelections=data.gemSelections||{};
     state.multipliers=data.multipliers||[];state.charms=data.charms||[];state.paragon=data.paragon||{};
     state.isCrit=data.isCrit||false;state.isVuln=data.isVuln||false;state.isDot=data.isDot||false;state.isOP=data.isOP||false;
     affixCounter=0;multCounter=0;charmCounter=0;
@@ -1481,7 +1481,7 @@ function parseMaxrollText(text){
     });
 
     // Determine main stat based on class
-    const mainStatKey={barbarian:'strength',druid:'willpower',necromancer:'intelligence',rogue:'dexterity',sorcerer:'intelligence',spiritborn:'dexterity',paladin:'willpower',warlock:'intelligence'};
+    const mainStatKey={barbarian:'strength',druid:'willpower',necromancer:'intelligence',rogue:'dexterity',sorcerer:'intelligence',spiritborn:'dexterity',paladin:'strength',warlock:'intelligence'};
     if(result.class){
         const k=mainStatKey[result.class];
         if(result.stats[k]) result.stats.mainStat=result.stats[k];
@@ -1719,19 +1719,18 @@ function doMaxrollImport(){
     }
 
     // ── 3. Multiplier library from aggregate stats ──
+    // Stats placed directly on gear slots (physDmg, critDmg, vulnDmg, allDmg, eliteDmg, weaponDmg, mainStat) are NOT added here
+    // Only stats NOT on gear go into multipliers to avoid double counting
     state.multipliers=[];
+    state.gearAffixes={};
+    affixCounter=0;
     multCounter=0;
     const statMults=[
-        {key:'physDamage',name:'Physical Damage',bucket:'additive'},
         {key:'fireDamage',name:'Fire Damage',bucket:'additive'},
         {key:'coldDamage',name:'Cold Damage',bucket:'additive'},
         {key:'lightningDamage',name:'Lightning Damage',bucket:'additive'},
         {key:'shadowDamage',name:'Shadow Damage',bucket:'additive'},
         {key:'poisonDamage',name:'Poison Damage',bucket:'additive'},
-        {key:'critDamage',name:'Crit Strike Damage',bucket:'critMult'},
-        {key:'vulnDamage',name:'Vulnerable Damage',bucket:'vulnMult'},
-        {key:'allDamage',name:'All Damage',bucket:'allMult'},
-        {key:'eliteDamage',name:'Damage vs Elites',bucket:'global'},
         {key:'dotDamage',name:'DoT Damage',bucket:'dotMult'},
         {key:'overpowerDamage',name:'Overpower Damage',bucket:'overpower'},
         {key:'chilledDamage',name:'Damage vs Chilled',bucket:'additive'},
@@ -1843,30 +1842,100 @@ function doMaxrollImport(){
     }
     importLog.push(state.charms.length+' talisman charms ('+charmsWithSet+' with set match)');
 
-    // ── 6. EQUIPMENT — add aspects as named multiplier entries for reference ──
+    // ── 6. EQUIPMENT — map aspects to gear slots and populate ──
+    state.gearAspects={};
+    // Map Maxroll slot names to our gear slot IDs
+    const slotMap={
+        'helm':'helm','chest armor':'chest','gloves':'gloves','pants':'pants','boots':'boots',
+        'amulet':'amulet','sword':'wep1','mace':'wep1','axe':'wep1','bow':'wep1','crossbow':'wep1',
+        'staff':'wep1','scythe':'wep1','dagger':'wep1','polearm':'wep1','wand':'wep1',
+        'two-handed sword':'wep1','two-handed mace':'wep1','two-handed axe':'wep1',
+        'shield':'offhand','focus':'offhand','offhand':'offhand',
+    };
+    let ringCount=0;
+    let equipSlotted=0;
     if(p.equipment.length>0){
         p.equipment.forEach(eq=>{
-            state.multipliers.push({
-                id:'mult_'+(multCounter++),
-                name:eq.aspect+' ('+eq.slot+')',
-                source:'gear',
-                bucket:'additive',
-                value:0, // value unknown from text, user can adjust
-                enabled:false // disabled by default so it doesn't affect calc until user sets values
-            });
+            const slotKey=eq.slot.toLowerCase();
+            let targetSlot=slotMap[slotKey];
+            // Handle multiple rings
+            if(slotKey==='ring'){
+                ringCount++;
+                targetSlot=ringCount<=1?'ring1':'ring2';
+            }
+            if(targetSlot){
+                // Store aspect name for display
+                state.gearAspects[targetSlot]=eq.aspect;
+                // Initialize the affix array if needed
+                state.gearAffixes[targetSlot]=state.gearAffixes[targetSlot]||[];
+                // Add aspect as a multiplier entry with source 'aspect'
+                state.multipliers.push({
+                    id:'mult_'+(multCounter++),
+                    name:eq.aspect,
+                    source:'aspect',
+                    bucket:'allMult',
+                    value:0, // user sets the aspect's value
+                    enabled:false
+                });
+                equipSlotted++;
+            }
         });
-        importLog.push(p.equipment.length+' equipment aspects noted');
+        importLog.push(equipSlotted+'/'+p.equipment.length+' equipment aspects mapped to gear slots');
+    }
+
+    // Populate gear affixes from aggregate Maxroll stats distributed across slots
+    // Physical Damage 267.7% is a big one — split across gear slots as additive
+    if(p.stats.physDamage && p.stats.physDamage>0){
+        // Distribute physical damage across weapon slots as a major source
+        const wep1Affixes=state.gearAffixes['wep1']||[];
+        wep1Affixes.push({id:'afx_'+(affixCounter++),type:'additive_phys',value:Math.round(p.stats.physDamage*10)/10});
+        state.gearAffixes['wep1']=wep1Affixes;
+    }
+    // Weapon damage on the weapon slot
+    if(p.stats.weaponDmg){
+        const wep1Affixes=state.gearAffixes['wep1']||[];
+        wep1Affixes.push({id:'afx_'+(affixCounter++),type:'weapon_dmg',value:Math.round(p.stats.weaponDmg)});
+        state.gearAffixes['wep1']=wep1Affixes;
+    }
+    // Main stat on helm (representative — total main stat)
+    if(p.stats.mainStat){
+        const helmAffixes=state.gearAffixes['helm']||[];
+        helmAffixes.push({id:'afx_'+(affixCounter++),type:'main_stat',value:Math.round(p.stats.mainStat)});
+        state.gearAffixes['helm']=helmAffixes;
+    }
+    // Crit damage on amulet
+    if(p.stats.critDamage && p.stats.critDamage>0){
+        const amAffixes=state.gearAffixes['amulet']||[];
+        amAffixes.push({id:'afx_'+(affixCounter++),type:'crit_mult',value:p.stats.critDamage});
+        state.gearAffixes['amulet']=amAffixes;
+    }
+    // Vuln damage on gloves
+    if(p.stats.vulnDamage && p.stats.vulnDamage>0){
+        const glAffixes=state.gearAffixes['gloves']||[];
+        glAffixes.push({id:'afx_'+(affixCounter++),type:'vuln_mult',value:p.stats.vulnDamage});
+        state.gearAffixes['gloves']=glAffixes;
+    }
+    // All damage on chest
+    if(p.stats.allDamage && p.stats.allDamage>0){
+        const chAffixes=state.gearAffixes['chest']||[];
+        chAffixes.push({id:'afx_'+(affixCounter++),type:'all_mult',value:p.stats.allDamage});
+        state.gearAffixes['chest']=chAffixes;
+    }
+    // Elite damage on ring1
+    if(p.stats.eliteDamage && p.stats.eliteDamage>0){
+        const r1Affixes=state.gearAffixes['ring1']||[];
+        r1Affixes.push({id:'afx_'+(affixCounter++),type:'global_mult',value:p.stats.eliteDamage});
+        state.gearAffixes['ring1']=r1Affixes;
     }
 
     // ── 7. OATH ──
     if(p.oath){
-        // Store oath in a multiplier entry as a reference
         state.multipliers.push({
             id:'mult_'+(multCounter++),
             name:'Oath: '+p.oath,
-            source:'other',
+            source:'oath',
             bucket:'global',
-            value:0, // user can set the oath bonus value
+            value:0,
             enabled:false
         });
         importLog.push('Oath: '+p.oath);
@@ -1875,12 +1944,13 @@ function doMaxrollImport(){
     // ── 8. SKILLS — store allocation info ──
     if(p.skills.length>0){
         importLog.push(p.skills.length+' skill allocations detected');
-        // Skills are hard to map without names from Maxroll text, but we note the total
         const totalPts=p.skills.reduce((s,sk)=>s+sk.current,0);
         importLog.push(totalPts+' total skill points spent');
     }
 
     // ── 9. Rebuild all UI ──
+    buildGearSlots(); // rebuild gear slots to show aspect names
+    GEAR_SLOTS.forEach(slot=>renderAffixes(slot.id)); // render affixes in each slot
     renderMultLibrary();
     renderTalisman();
     renderParagonBoards();
