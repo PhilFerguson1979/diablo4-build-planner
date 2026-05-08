@@ -561,12 +561,12 @@
 const CLASSES={barbarian:{stat:'Strength'},druid:{stat:'Willpower'},necromancer:{stat:'Intelligence'},rogue:{stat:'Dexterity'},sorcerer:{stat:'Intelligence'},spiritborn:{stat:'Dexterity'},paladin:{stat:'Strength'},warlock:{stat:'Intelligence'}};
 
 const GEAR_SLOTS=[
-    {id:'helm',name:'Helm',icon:'\u{1FA96}',socket:'armor'},{id:'chest',name:'Chest',icon:'\u{1F6E1}',socket:'armor'},
-    {id:'gloves',name:'Gloves',icon:'\u{1F9E4}',socket:'none'},{id:'pants',name:'Pants',icon:'\u{1F456}',socket:'armor'},
-    {id:'boots',name:'Boots',icon:'\u{1F462}',socket:'none'},{id:'amulet',name:'Amulet',icon:'\u{1F4FF}',socket:'jewelry'},
-    {id:'ring1',name:'Ring 1',icon:'\u{1F48D}',socket:'jewelry'},{id:'ring2',name:'Ring 2',icon:'\u{1F48D}',socket:'jewelry'},
-    {id:'wep1',name:'Weapon 1',icon:'⚔',socket:'weapon'},{id:'wep2',name:'Weapon 2',icon:'\u{1F5E1}',socket:'weapon'},
-    {id:'offhand',name:'Offhand',icon:'\u{1F6E1}',socket:'none'},
+    {id:'helm',name:'Helm',icon:'\u{1FA96}',socket:'rune',socketCount:2},{id:'chest',name:'Chest',icon:'\u{1F6E1}',socket:'rune',socketCount:2},
+    {id:'gloves',name:'Gloves',icon:'\u{1F9E4}',socket:'none',socketCount:0},{id:'pants',name:'Pants',icon:'\u{1F456}',socket:'armor',socketCount:2},
+    {id:'boots',name:'Boots',icon:'\u{1F462}',socket:'none',socketCount:0},{id:'amulet',name:'Amulet',icon:'\u{1F4FF}',socket:'jewelry',socketCount:1},
+    {id:'ring1',name:'Ring 1',icon:'\u{1F48D}',socket:'jewelry',socketCount:1},{id:'ring2',name:'Ring 2',icon:'\u{1F48D}',socket:'jewelry',socketCount:1},
+    {id:'wep1',name:'Weapon 1',icon:'⚔',socket:'weapon',socketCount:1},{id:'wep2',name:'Weapon 2',icon:'\u{1F5E1}',socket:'weapon',socketCount:1},
+    {id:'offhand',name:'Offhand',icon:'\u{1F6E1}',socket:'weapon',socketCount:1},
 ];
 
 const AFFIX_TYPES=[
@@ -597,6 +597,37 @@ const GEM_TYPES={
     armor:[{id:'none',label:'No Gem',bucket:null,value:0},{id:'ruby_a',label:'Ruby -- Max Life',bucket:null,value:0},{id:'sapphire_a',label:'Sapphire -- Armor',bucket:null,value:0},{id:'topaz_a',label:'Topaz -- DR',bucket:null,value:0}],
     jewelry:[{id:'none',label:'No Gem',bucket:null,value:0},{id:'ruby_j',label:'Ruby -- Fire Res',bucket:null,value:0},{id:'emerald_j',label:'Emerald -- Poison Res',bucket:null,value:0},{id:'sapphire_j',label:'Sapphire -- Cold Res',bucket:null,value:0},{id:'topaz_j',label:'Topaz -- Light Res',bucket:null,value:0},{id:'diamond_j',label:'Diamond -- All Res',bucket:null,value:0}],
 };
+
+// D4 Runes — Condition + Effect = Runeword (socketed in Helm and Chest)
+const RUNE_CONDITIONS=[
+    {id:'none',label:'No Rune',maxrollId:null},
+    {id:'cond_bomb',label:'Bomb (Cem) -- On Explosion Hit',maxrollId:'Rune_Condition_Bomb'},
+    {id:'cond_summons',label:'Summons (Teb) -- Summon Expires',maxrollId:'Rune_Condition_Summons'},
+    {id:'cond_evade',label:'Evade (Yom) -- After Evading',maxrollId:'Rune_Condition_Evade'},
+    {id:'cond_heal',label:'Heal (Ohm) -- On Healing',maxrollId:'Rune_Condition_Heal'},
+    {id:'cond_cast',label:'Cast (Xol) -- On Skill Cast',maxrollId:'Rune_Condition_Cast'},
+    {id:'cond_barrier',label:'Barrier (Neo) -- Barrier Applied',maxrollId:'Rune_Condition_Barrier'},
+    {id:'cond_crit',label:'Crit (Poc) -- On Critical Strike',maxrollId:'Rune_Condition_Crit'},
+    {id:'cond_resource',label:'Resource (Lum) -- Spend Resource',maxrollId:'Rune_Condition_Resource'},
+    {id:'cond_elite',label:'Elite (Zan) -- On Elite Kill',maxrollId:'Rune_Condition_Elite'},
+    {id:'cond_cc',label:'CC (Moni) -- On CC Hit',maxrollId:'Rune_Condition_CC'},
+    {id:'cond_immobilize',label:'Immobilize (Tal) -- On Immobilize',maxrollId:'Rune_Condition_Immobilize'},
+    {id:'cond_vulnerable',label:'Vulnerable (Noc) -- Make Vulnerable',maxrollId:'Rune_Condition_Vulnerable'},
+];
+const RUNE_EFFECTS=[
+    {id:'none',label:'No Rune',maxrollId:null,bucket:null,value:0,desc:''},
+    {id:'eff_critbuff',label:'Crit Buff (Que) -- +Crit Damage',maxrollId:'Rune_Effect_CritBuff',bucket:'critMult',value:25,desc:'+25% Crit Damage for 7s'},
+    {id:'eff_summonwolf',label:'Spirit Wolf (Xal) -- Summon Wolf',maxrollId:'Rune_Effect_SummonSpiritWolf',bucket:'additive',value:15,desc:'Summon Spirit Wolf'},
+    {id:'eff_dmgburst',label:'Damage Burst (Yax) -- AoE Burst',maxrollId:'Rune_Effect_DamageBurst',bucket:'additive',value:30,desc:'AoE Damage Burst'},
+    {id:'eff_vuln',label:'Vulnerable (Feo) -- Apply Vuln',maxrollId:'Rune_Effect_Vulnerable',bucket:null,value:0,desc:'Apply Vulnerable'},
+    {id:'eff_fortify',label:'Fortify (Zan) -- Gain Fortify',maxrollId:'Rune_Effect_Fortify',bucket:null,value:0,desc:'Gain Fortify'},
+    {id:'eff_barrier',label:'Barrier (Kry) -- Gain Barrier',maxrollId:'Rune_Effect_Barrier',bucket:null,value:0,desc:'Gain Barrier'},
+    {id:'eff_resource',label:'Resource (Lith) -- Restore Resource',maxrollId:'Rune_Effect_Resource',bucket:null,value:0,desc:'Restore Resource'},
+    {id:'eff_cdr',label:'CDR (Tzic) -- Reduce Cooldowns',maxrollId:'Rune_Effect_CDR',bucket:null,value:0,desc:'Reduce Cooldowns'},
+    {id:'eff_movespeed',label:'Move Speed (Wat) -- +Move Speed',maxrollId:'Rune_Effect_MoveSpeed',bucket:'additive',value:20,desc:'+20% Move Speed for 5s'},
+    {id:'eff_thorns',label:'Thorns (Bac) -- Thorns Burst',maxrollId:'Rune_Effect_Thorns',bucket:'additive',value:25,desc:'Thorns AoE Burst'},
+    {id:'eff_allres',label:'All Res (Tec) -- +All Resistance',maxrollId:'Rune_Effect_AllRes',bucket:null,value:0,desc:'+All Resistance'},
+];
 
 const SKILLS={
     rogue:[{name:'Blade Shift',coeff:45,tags:'Basic, Melee',speed:1.5},{name:'Invigorating Strike',coeff:46,tags:'Basic, Melee',speed:1.4},{name:'Puncture',coeff:36,tags:'Basic, Ranged',speed:1.8},{name:'Forceful Arrow',coeff:49,tags:'Basic, Ranged',speed:1.2},{name:'Heartseeker',coeff:44,tags:'Basic, Ranged',speed:1.3},{name:'Twisting Blades',coeff:63,tags:'Core, Melee',speed:1.1},{name:'Flurry',coeff:31,tags:'Core, Melee',speed:2.0},{name:'Rapid Fire',coeff:48,tags:'Core, Ranged',speed:1.8},{name:'Penetrating Shot',coeff:70,tags:'Core, Ranged',speed:0.9},{name:'Barrage',coeff:40,tags:'Core, Ranged',speed:1.4},{name:'Dance of Knives',coeff:15,tags:'Core, Melee',speed:3.5},{name:'Shadow Step',coeff:72,tags:'Agility, Melee',speed:0.8},{name:'Dash',coeff:63,tags:'Agility, Melee',speed:0.7},{name:'Death Trap',coeff:250,tags:'Ultimate, Trap',speed:0.3},{name:'Rain of Arrows',coeff:200,tags:'Ultimate, Ranged',speed:0.25}],
@@ -790,7 +821,7 @@ const PARAGON_BOARDS = {
 // ═══════════════════════════════════════════════════
 const state = {
     selectedClass:'rogue', isCrit:false, isVuln:false, isDot:false, isOP:false,
-    gearAffixes:{}, gearAspects:{}, gemSelections:{}, multipliers:[],
+    gearAffixes:{}, gearAspects:{}, gemSelections:{}, runeSelections:{}, multipliers:[],
     charms:[], // {id, name, size, setId, affixes:[{type,value}]}
     paragon:{}, // keyed by class: [{boardIdx, attached, legendaryActive, legendaryValue, glyphId, glyphLevel, normalPts, magicPts, rarePts}]
 };
@@ -859,8 +890,44 @@ function updateAffixVal(s,id,v){const a=state.gearAffixes[s].find(x=>x.id===id);
 // ═══════════════════════════════════════════════════
 // GEMS
 // ═══════════════════════════════════════════════════
-function buildGemSlots(){const g=document.getElementById('gemGrid');g.innerHTML='';GEAR_SLOTS.filter(s=>s.socket!=='none').forEach(slot=>{state.gemSelections[slot.id]=state.gemSelections[slot.id]||'none';const gems=GEM_TYPES[slot.socket];const d=document.createElement('div');d.className='gem-slot';d.innerHTML=`<div class="gem-slot-label">${slot.icon} ${slot.name}</div><select id="gem-${slot.id}" onchange="updateGem('${slot.id}',this.value)">${gems.map(g=>`<option value="${g.id}"${state.gemSelections[slot.id]===g.id?' selected':''}>${g.label}</option>`).join('')}</select>`;g.appendChild(d);});}
+function buildGemSlots(){
+    const g=document.getElementById('gemGrid');g.innerHTML='';
+    GEAR_SLOTS.filter(s=>s.socket!=='none').forEach(slot=>{
+        if(slot.socket==='rune'){
+            // Rune sockets (Helm, Chest) — Condition + Effect pair
+            state.runeSelections[slot.id]=state.runeSelections[slot.id]||{condition:'none',effect:'none'};
+            const rs=state.runeSelections[slot.id];
+            const d=document.createElement('div');d.className='gem-slot';
+            d.innerHTML=`<div class="gem-slot-label" style="color:var(--orange-light)">\u{1F52E} ${slot.name} — Runeword</div>
+                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:4px;">Condition Rune</div>
+                <select id="rune-cond-${slot.id}" onchange="updateRune('${slot.id}','condition',this.value)" style="margin-bottom:6px;">
+                    ${RUNE_CONDITIONS.map(r=>`<option value="${r.id}"${rs.condition===r.id?' selected':''}>${r.label}</option>`).join('')}
+                </select>
+                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:4px;">Effect Rune</div>
+                <select id="rune-eff-${slot.id}" onchange="updateRune('${slot.id}','effect',this.value)">
+                    ${RUNE_EFFECTS.map(r=>`<option value="${r.id}"${rs.effect===r.id?' selected':''}>${r.label}</option>`).join('')}
+                </select>`;
+            g.appendChild(d);
+        } else {
+            // Gem sockets — 1 or 2 depending on socketCount
+            const count=slot.socketCount||1;
+            const gems=GEM_TYPES[slot.socket]||[];
+            for(let i=0;i<count;i++){
+                const key=count>1?slot.id+'_'+(i+1):slot.id;
+                state.gemSelections[key]=state.gemSelections[key]||'none';
+                const d=document.createElement('div');d.className='gem-slot';
+                const label=count>1?`${slot.icon} ${slot.name} — Gem ${i+1}`:`${slot.icon} ${slot.name}`;
+                d.innerHTML=`<div class="gem-slot-label">${label}</div>
+                    <select id="gem-${key}" onchange="updateGem('${key}',this.value)">
+                        ${gems.map(gm=>`<option value="${gm.id}"${state.gemSelections[key]===gm.id?' selected':''}>${gm.label}</option>`).join('')}
+                    </select>`;
+                g.appendChild(d);
+            }
+        }
+    });
+}
 function updateGem(s,g){state.gemSelections[s]=g;recalc();}
+function updateRune(slotId,type,val){state.runeSelections[slotId]=state.runeSelections[slotId]||{condition:'none',effect:'none'};state.runeSelections[slotId][type]=val;recalc();}
 
 // ═══════════════════════════════════════════════════
 // SKILLS
@@ -1186,11 +1253,24 @@ function aggregateBuckets(){
         else b[def.bucket]+=affix.value;
     }));
 
-    // Gems
-    GEAR_SLOTS.filter(s=>s.socket!=='none').forEach(slot=>{
-        const gemId=state.gemSelections[slot.id];if(!gemId||gemId==='none')return;
-        const gem=GEM_TYPES[slot.socket].find(g=>g.id===gemId);
-        if(gem&&gem.bucket){if(gem.bucket==='global'){if(gem.value>0)b.globals.push({value:gem.value,name:'Gem'});}else b[gem.bucket]+=gem.value;}
+    // Gems (supports multi-socket slots like pants with 2 gem sockets)
+    GEAR_SLOTS.filter(s=>s.socket!=='none'&&s.socket!=='rune').forEach(slot=>{
+        const count=slot.socketCount||1;
+        for(let i=0;i<count;i++){
+            const key=count>1?slot.id+'_'+(i+1):slot.id;
+            const gemId=state.gemSelections[key];if(!gemId||gemId==='none') continue;
+            const gem=GEM_TYPES[slot.socket]?.find(g=>g.id===gemId);
+            if(gem&&gem.bucket){if(gem.bucket==='global'){if(gem.value>0)b.globals.push({value:gem.value,name:'Gem ('+slot.name+')'});}else b[gem.bucket]+=gem.value;}
+        }
+    });
+    // Runes (Helm, Chest — Effect rune provides the damage bonus)
+    GEAR_SLOTS.filter(s=>s.socket==='rune').forEach(slot=>{
+        const rs=state.runeSelections[slot.id];if(!rs) return;
+        const eff=RUNE_EFFECTS.find(r=>r.id===rs.effect);
+        if(eff&&eff.bucket&&eff.value>0){
+            if(eff.bucket==='global') b.globals.push({value:eff.value,name:'Rune ('+slot.name+')'});
+            else if(b.hasOwnProperty(eff.bucket)) b[eff.bucket]+=eff.value;
+        }
     });
 
     // Multiplier Library
@@ -1436,10 +1516,10 @@ const STORAGE_KEY='d4_builds_v3';
 function getBuilds(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{};}catch(e){return {};}}
 function setBuilds(b){localStorage.setItem(STORAGE_KEY,JSON.stringify(b));}
 function refreshBuildList(){const sel=document.getElementById('buildList');const builds=getBuilds();sel.innerHTML='<option value="">-- Select --</option>';Object.keys(builds).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});}
-function getBuildData(){return{version:3,selectedClass:state.selectedClass,mainStat:document.getElementById('mainStat').value,enemyDR:document.getElementById('enemyDR').value,gearAffixes:state.gearAffixes,gearAspects:state.gearAspects,gemSelections:state.gemSelections,multipliers:state.multipliers,charms:state.charms,paragon:state.paragon,skillSelect:document.getElementById('skillSelect').value,skillRank:document.getElementById('skillRank').value,weaponType:document.getElementById('weaponType').value,isCrit:state.isCrit,isVuln:state.isVuln,isDot:state.isDot,isOP:state.isOP,manualWeaponDmg:document.getElementById('manualWeaponDmg').value,manualAdditive:document.getElementById('manualAdditive').value,manualAllMult:document.getElementById('manualAllMult').value,manualCritMult:document.getElementById('manualCritMult').value,manualVulnMult:document.getElementById('manualVulnMult').value,manualDotMult:document.getElementById('manualDotMult').value,manualOverpower:document.getElementById('manualOverpower').value,manualMainStat:document.getElementById('manualMainStat').value,totalParagonPts:document.getElementById('totalParagonPts').value};}
+function getBuildData(){return{version:3,selectedClass:state.selectedClass,mainStat:document.getElementById('mainStat').value,enemyDR:document.getElementById('enemyDR').value,gearAffixes:state.gearAffixes,gearAspects:state.gearAspects,gemSelections:state.gemSelections,runeSelections:state.runeSelections,multipliers:state.multipliers,charms:state.charms,paragon:state.paragon,skillSelect:document.getElementById('skillSelect').value,skillRank:document.getElementById('skillRank').value,weaponType:document.getElementById('weaponType').value,isCrit:state.isCrit,isVuln:state.isVuln,isDot:state.isDot,isOP:state.isOP,manualWeaponDmg:document.getElementById('manualWeaponDmg').value,manualAdditive:document.getElementById('manualAdditive').value,manualAllMult:document.getElementById('manualAllMult').value,manualCritMult:document.getElementById('manualCritMult').value,manualVulnMult:document.getElementById('manualVulnMult').value,manualDotMult:document.getElementById('manualDotMult').value,manualOverpower:document.getElementById('manualOverpower').value,manualMainStat:document.getElementById('manualMainStat').value,totalParagonPts:document.getElementById('totalParagonPts').value};}
 function loadBuildData(data){
     if(!data)return;
-    state.selectedClass=data.selectedClass||'rogue';state.gearAffixes=data.gearAffixes||{};state.gearAspects=data.gearAspects||{};state.gemSelections=data.gemSelections||{};
+    state.selectedClass=data.selectedClass||'rogue';state.gearAffixes=data.gearAffixes||{};state.gearAspects=data.gearAspects||{};state.gemSelections=data.gemSelections||{};state.runeSelections=data.runeSelections||{};
     state.multipliers=data.multipliers||[];state.charms=data.charms||[];state.paragon=data.paragon||{};
     state.isCrit=data.isCrit||false;state.isVuln=data.isVuln||false;state.isDot=data.isDot||false;state.isOP=data.isOP||false;
     affixCounter=0;multCounter=0;charmCounter=0;
@@ -1632,6 +1712,7 @@ function doMaxrollApiImport(){
         state.gearAffixes={};
         state.gearAspects={};
         state.gemSelections={};
+        state.runeSelections={};
         state.multipliers=[];
         state.charms=[];
         affixCounter=0; multCounter=0; charmCounter=0;
@@ -1726,23 +1807,37 @@ function doMaxrollApiImport(){
                 });
             }
 
-            // Process sockets → gem selections
+            // Process sockets → gem selections or rune selections
             if(item.sockets&&item.sockets.length>0){
                 const slotDef=GEAR_SLOTS.find(s=>s.id===slot);
-                if(slotDef&&slotDef.socket!=='none'){
+                if(slotDef&&slotDef.socket==='rune'){
+                    // Rune sockets — match Condition + Effect
+                    state.runeSelections[slot]=state.runeSelections[slot]||{condition:'none',effect:'none'};
+                    item.sockets.forEach(sock=>{
+                        if(!sock) return;
+                        if(sock.startsWith('Rune_Condition_')){
+                            const cond=RUNE_CONDITIONS.find(r=>r.maxrollId===sock);
+                            if(cond) state.runeSelections[slot].condition=cond.id;
+                        } else if(sock.startsWith('Rune_Effect_')){
+                            const eff=RUNE_EFFECTS.find(r=>r.maxrollId===sock);
+                            if(eff) state.runeSelections[slot].effect=eff.id;
+                        }
+                    });
+                } else if(slotDef&&slotDef.socket!=='none'){
+                    // Gem sockets — supports multiple sockets per slot
+                    const suffixMap={weapon:'_w',armor:'_a',jewelry:'_j'};
+                    const suffix=suffixMap[slotDef.socket]||'';
+                    const gemList=GEM_TYPES[slotDef.socket]||[];
+                    const count=slotDef.socketCount||1;
+                    let gemIdx=0;
                     item.sockets.forEach(sock=>{
                         if(!sock||!sock.startsWith('Gem_')) return;
-                        // "Gem_Ruby_05" → gem type "ruby"
-                        const parts=sock.split('_');
-                        const gemType=(parts[1]||'').toLowerCase();
-                        // Map to our gem IDs based on socket type
-                        const suffixMap={weapon:'_w',armor:'_a',jewelry:'_j'};
-                        const suffix=suffixMap[slotDef.socket]||'';
+                        const gemType=(sock.split('_')[1]||'').toLowerCase();
                         const gemId=gemType+suffix;
-                        // Verify gem exists in our system
-                        const gemList=GEM_TYPES[slotDef.socket]||[];
                         if(gemList.find(g=>g.id===gemId)){
-                            state.gemSelections[slot]=gemId;
+                            const key=count>1?slot+'_'+(gemIdx+1):slot;
+                            state.gemSelections[key]=gemId;
+                            gemIdx++;
                         }
                     });
                 }
