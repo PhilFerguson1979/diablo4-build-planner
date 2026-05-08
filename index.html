@@ -581,9 +581,10 @@ const AFFIX_TYPES=[
     {id:'fire_mult',label:'x Fire Dmg Mult %',bucket:'allMult',prefix:'x'},{id:'cold_mult',label:'x Cold Dmg Mult %',bucket:'allMult',prefix:'x'},
     {id:'lightning_mult',label:'x Lightning Dmg Mult %',bucket:'allMult',prefix:'x'},
     {id:'dot_mult',label:'x DoT Multiplier %',bucket:'dotMult',prefix:'x'},{id:'global_mult',label:'x Global Multiplier %',bucket:'global',prefix:'x'},
+    {id:'defensive',label:'Defensive (no dmg)',bucket:'defensive',prefix:''},{id:'utility',label:'Utility (no dmg)',bucket:'defensive',prefix:''},
 ];
-const TAG_CLS={weapon:'tag-weapon',stat:'tag-stat',additive:'tag-additive',overpower:'tag-additive',critMult:'tag-crit-mult',vulnMult:'tag-vuln-mult',allMult:'tag-all-mult',dotMult:'tag-dot-mult',global:'tag-global'};
-const TAG_LBL={weapon:'WPN',stat:'STAT',additive:'ADD',overpower:'OP+',critMult:'CRIT',vulnMult:'VULN',allMult:'ALL',dotMult:'DOT',global:'MULT'};
+const TAG_CLS={weapon:'tag-weapon',stat:'tag-stat',additive:'tag-additive',overpower:'tag-additive',critMult:'tag-crit-mult',vulnMult:'tag-vuln-mult',allMult:'tag-all-mult',dotMult:'tag-dot-mult',global:'tag-global',defensive:'tag-stat'};
+const TAG_LBL={weapon:'WPN',stat:'STAT',additive:'ADD',overpower:'OP+',critMult:'CRIT',vulnMult:'VULN',allMult:'ALL',dotMult:'DOT',global:'MULT',defensive:'DEF'};
 
 const MULT_SOURCES=['paragon','aspect','glyph','passive','unique','oath','temper','other'];
 const MULT_BUCKETS=[
@@ -1249,8 +1250,9 @@ function aggregateBuckets(){
     // Gear affixes
     Object.values(state.gearAffixes).forEach(affixes=>affixes.forEach(affix=>{
         const def=AFFIX_TYPES.find(a=>a.id===affix.type);if(!def)return;
+        if(def.bucket==='defensive') return; // skip non-damage stats
         if(def.bucket==='global'){if(affix.value>0)b.globals.push({value:affix.value,name:'Gear affix'});}
-        else b[def.bucket]+=affix.value;
+        else if(b.hasOwnProperty(def.bucket)) b[def.bucket]+=affix.value;
     }));
 
     // Gems (supports multi-socket slots like pants with 2 gem sockets)
@@ -1399,7 +1401,8 @@ function recalc(){
 
     // Sidebar mult list
     const activeM=state.multipliers.filter(m=>m.enabled&&m.value>0);
-    document.getElementById('sidebarMultList').innerHTML=activeM.length?activeM.map(m=>`<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>${m.name||'Unnamed'}</span><span style="color:var(--gold-light)">${m.bucket==='global'?'x':'+'} ${m.value}%</span></div>`).join(''):'<span style="font-size:0.72rem;color:var(--text-dim);">No active multipliers</span>';
+    const multPrefix=b=>(['global','allMult','critMult','vulnMult','dotMult','overpower'].includes(b)?'x':'+');
+    document.getElementById('sidebarMultList').innerHTML=activeM.length?activeM.map(m=>`<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>${m.name||'Unnamed'}</span><span style="color:var(--gold-light)">${multPrefix(m.bucket)} ${m.value}%</span></div>`).join(''):'<span style="font-size:0.72rem;color:var(--text-dim);">No active multipliers</span>';
 
     // Bucket Summary
     document.getElementById('bucketSummary').innerHTML=`
@@ -1563,42 +1566,45 @@ let maxrollApiData=null;
 // Known Maxroll affix NID → our affix type mapping (D4 S13)
 // Values < 1 are percentages (0.12 = 12%), values >= 1 are flat amounts
 const NID_MAP={
+    // Main stats (affect damage via stat/800 formula)
     1829570:{type:'main_stat',label:'Strength',flat:true},
-    1829592:{type:'main_stat',label:'Armor/Life',flat:true},
+    2602159:{type:'main_stat',label:'Strength',flat:true},
+    2620567:{type:'main_stat',label:'Strength',flat:true},
+    // Offensive affixes
     1829560:{type:'crit_mult',label:'Crit Chance %',pct:true},
     1829582:{type:'crit_mult',label:'Crit Damage %',pct:true},
     1829586:{type:'crit_mult',label:'Crit Damage %',pct:true},
-    1829598:{type:'additive',label:'Movement Speed %',pct:true},
-    1829594:{type:'main_stat',label:'Thorns',flat:true},
-    1829664:{type:'additive',label:'Damage %',pct:true},
-    1829666:{type:'main_stat',label:'Max Life',flat:true},
-    1829668:{type:'main_stat',label:'Max Life',flat:true},
     1829588:{type:'vuln_mult',label:'Vuln Damage %',pct:true},
-    1834175:{type:'additive',label:'Damage Reduction %',pct:true},
-    1928803:{type:'additive',label:'Block Damage %',pct:true},
-    2497240:{type:'main_stat',label:'Resolve',flat:true},
-    2520249:{type:'main_stat',label:'Resolve',flat:true},
+    1829664:{type:'additive',label:'Damage %',pct:true},
     2558672:{type:'all_mult',label:'All Damage %',pct:true},
-    2589252:{type:'main_stat',label:'Max Minions',flat:true},
-    2602159:{type:'main_stat',label:'Strength',flat:true},
-    2602166:{type:'additive',label:'CDR %',pct:true},
     2602182:{type:'all_mult',label:'All Damage %',pct:true},
-    2605602:{type:'main_stat',label:'Armor',flat:true},
-    2609197:{type:'main_stat',label:'Skill Ranks',flat:true},
-    2611719:{type:'additive_skill',label:'Skill Damage %',pct:true},  // temper
-    2615143:{type:'main_stat',label:'Armor',flat:true},
     2619737:{type:'additive',label:'Damage %',pct:true},
     2619742:{type:'additive',label:'Damage %',pct:true},
     2619758:{type:'additive',label:'Damage %',pct:true},
     2619760:{type:'additive',label:'Damage %',pct:true},
     2620512:{type:'additive',label:'Damage %',pct:true},
     2620503:{type:'additive',label:'Damage %',pct:true},
-    2620567:{type:'main_stat',label:'Strength',flat:true},
-    2625638:{type:'main_stat',label:'Thorns',flat:true},
-    1862266:{type:'main_stat',label:'Thorns',flat:true},
-    1862301:{type:'main_stat',label:'Life',flat:true},
     1862348:{type:'additive',label:'Damage %',pct:true},  // temper
+    2611719:{type:'additive_skill',label:'Skill Damage %',pct:true},  // temper
     1862359:{type:'additive_skill',label:'Skill Damage %',pct:true},  // temper
+    // Defensive / Utility (displayed but don't affect damage)
+    1829592:{type:'defensive',label:'Armor/Life',flat:true},
+    1829594:{type:'defensive',label:'Thorns',flat:true},
+    1829598:{type:'utility',label:'Movement Speed %',pct:true},
+    1829666:{type:'defensive',label:'Max Life',flat:true},
+    1829668:{type:'defensive',label:'Max Life',flat:true},
+    1834175:{type:'defensive',label:'Damage Reduction %',pct:true},
+    1928803:{type:'defensive',label:'Block Damage %',pct:true},
+    2497240:{type:'defensive',label:'Resolve',flat:true},
+    2520249:{type:'defensive',label:'Resolve',flat:true},
+    2589252:{type:'defensive',label:'Max Minions',flat:true},
+    2602166:{type:'utility',label:'CDR %',pct:true},
+    2605602:{type:'defensive',label:'Armor',flat:true},
+    2609197:{type:'utility',label:'Skill Ranks',flat:true},
+    2615143:{type:'defensive',label:'Armor',flat:true},
+    2625638:{type:'defensive',label:'Thorns',flat:true},
+    1862266:{type:'defensive',label:'Thorns',flat:true},
+    1862301:{type:'defensive',label:'Life',flat:true},
 };
 
 // Maxroll item slot IDs → our gear slot IDs
@@ -1792,7 +1798,8 @@ function doMaxrollApiImport(){
                 });
             }
 
-            // Process aspects → add as multiplier entries
+            // Process aspects → add as independent global multipliers
+            // In D4, each aspect is its own multiplicative source (not additive with other aspects)
             if(item.aspects){
                 item.aspects.forEach(asp=>{
                     const aspVal=asp.values[0]||0;
@@ -1800,7 +1807,7 @@ function doMaxrollApiImport(){
                         id:'mult_'+(multCounter++),
                         name:(item.name||'Aspect')+' ('+slot+')',
                         source:'aspect',
-                        bucket:'allMult',
+                        bucket:'global',
                         value:typeof aspVal==='number'&&aspVal<1?Math.round(aspVal*1000)/10:Math.round(aspVal*10)/10,
                         enabled:true
                     });
