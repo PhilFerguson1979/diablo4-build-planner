@@ -1631,6 +1631,7 @@ function doMaxrollApiImport(){
         // ── 2. Reset gear ──
         state.gearAffixes={};
         state.gearAspects={};
+        state.gemSelections={};
         state.multipliers=[];
         state.charms=[];
         affixCounter=0; multCounter=0; charmCounter=0;
@@ -1639,7 +1640,7 @@ function doMaxrollApiImport(){
         // profile.items maps position→item key: {4:8, 5:9, ...}
         // Known position mapping (D4 planner standard):
         // 4=Helm, 5=Chest, 6=Offhand/Shield, 7=Gloves, 13=Wep1, 14=Amulet, 15=Ring1, 16=Ring2, 17=Pants, 18=Boots
-        const POS_TO_SLOT={4:'helm',5:'chest',6:'offhand',7:'gloves',13:'wep1',14:'amulet',15:'ring1',16:'ring2',17:'pants',18:'boots'};
+        const POS_TO_SLOT={4:'helm',5:'chest',6:'offhand',7:'wep1',13:'gloves',14:'pants',15:'boots',16:'ring1',17:'ring2',18:'amulet'};
         // Also try to infer from item ID prefixes
         const ID_PREFIX_TO_SLOT={
             'Helm':'helm','Chest':'chest','Gloves':'gloves','Pants':'pants','Boots':'boots',
@@ -1723,6 +1724,37 @@ function doMaxrollApiImport(){
                         enabled:true
                     });
                 });
+            }
+
+            // Process sockets → gem selections
+            if(item.sockets&&item.sockets.length>0){
+                const slotDef=GEAR_SLOTS.find(s=>s.id===slot);
+                if(slotDef&&slotDef.socket!=='none'){
+                    item.sockets.forEach(sock=>{
+                        if(!sock||!sock.startsWith('Gem_')) return;
+                        // "Gem_Ruby_05" → gem type "ruby"
+                        const parts=sock.split('_');
+                        const gemType=(parts[1]||'').toLowerCase();
+                        // Map to our gem IDs based on socket type
+                        const suffixMap={weapon:'_w',armor:'_a',jewelry:'_j'};
+                        const suffix=suffixMap[slotDef.socket]||'';
+                        const gemId=gemType+suffix;
+                        // Verify gem exists in our system
+                        const gemList=GEM_TYPES[slotDef.socket]||[];
+                        if(gemList.find(g=>g.id===gemId)){
+                            state.gemSelections[slot]=gemId;
+                        }
+                    });
+                }
+            }
+
+            // Estimate weapon base damage from item power (for weapons only)
+            if(slot==='wep1'||slot==='wep2'){
+                const iPower=item.power||800;
+                const isOneHand=item.id&&(item.id.startsWith('1H'));
+                // D4 weapon damage rough formula: ~2.5-3x item power for 2H, ~1.5-2x for 1H
+                const estDmg=isOneHand?Math.round(iPower*1.8):Math.round(iPower*2.8);
+                document.getElementById('manualWeaponDmg').value=estDmg;
             }
         });
 
@@ -1826,10 +1858,11 @@ function doMaxrollApiImport(){
         }
 
         // ── 7. Calculate main stat from gear affixes ──
+        const classMainStat=CLASSES[cls]?CLASSES[cls].stat:'Strength';
         let totalMainStat=0;
         Object.values(state.gearAffixes).forEach(affixes=>{
             affixes.forEach(a=>{
-                if(a.type==='main_stat' && a.label && a.label.includes('Strength')){
+                if(a.type==='main_stat' && a.label && a.label.includes(classMainStat)){
                     totalMainStat+=a.value;
                 }
             });
@@ -1841,6 +1874,7 @@ function doMaxrollApiImport(){
         // ── 8. Rebuild UI ──
         buildGearSlots();
         GEAR_SLOTS.forEach(slot=>renderAffixes(slot.id));
+        buildGemSlots();
         renderMultLibrary();
         renderTalisman();
         renderParagonBoards();
