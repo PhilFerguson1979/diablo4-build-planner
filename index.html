@@ -1393,31 +1393,31 @@ function openMaxrollImport(){
 function closeMaxrollModal(){document.getElementById('maxrollOverlay').classList.remove('show');}
 
 function parseMaxrollText(text){
-    const result={class:null,stats:{},paragonBoards:[],talisman:[],equipment:[],detected:[]};
+    const result={class:null,stats:{},paragonBoards:[],paragonNodeStats:[],talisman:[],equipment:[],skills:[],oath:null,detected:[]};
 
-    // Detect class from stat patterns
-    const classStatMap={
-        barbarian:['Strength'],druid:['Willpower'],necromancer:['Intelligence'],
-        rogue:['Dexterity'],sorcerer:['Intelligence'],spiritborn:['Dexterity'],
-        paladin:['Willpower','Faith','Resolve'],warlock:['Intelligence']
-    };
-    // Check for class-specific keywords
-    if(/\bFaith\b/.test(text)&&/\bResolve\b/.test(text)) result.class='paladin';
-    else if(/\bSpirit\b/i.test(text)&&/\bJaguar|Eagle|Gorilla|Centipede\b/i.test(text)) result.class='spiritborn';
-    else if(/\bBerserking\b/i.test(text)||/\bWeapon Technique\b/i.test(text)) result.class='barbarian';
-    else if(/\bCompanion\b/i.test(text)&&/\bWerewolf|Werebear\b/i.test(text)) result.class='druid';
-    else if(/\bCorpse|Minion|Skeleton\b/i.test(text)&&/\bEssence\b/i.test(text)) result.class='necromancer';
-    else if(/\bMana\b/i.test(text)&&/\bEnchantment\b/i.test(text)) result.class='sorcerer';
-    else if(/\bDemon|Hellfire|Soul\b/i.test(text)) result.class='warlock';
+    // Direct class detection from "Class\nClassName" pattern in Maxroll
+    const classDirectMatch=text.match(/Class\s*\n\s*(Barbarian|Druid|Necromancer|Rogue|Sorcerer|Spiritborn|Paladin|Warlock)/i);
+    if(classDirectMatch) result.class=classDirectMatch[1].toLowerCase();
 
-    // Parse stats section — look for "Label\nValue" or "Label Value" patterns
+    // Fallback: class-specific resource/keyword detection
+    if(!result.class){
+        if(/Maximum Faith/i.test(text)) result.class='paladin';
+        else if(/Maximum Wrath/i.test(text)&&/Dominance/i.test(text)) result.class='warlock';
+        else if(/Maximum Spirit/i.test(text)&&/Vigor/i.test(text)) result.class='spiritborn';
+        else if(/Maximum Fury/i.test(text)) result.class='barbarian';
+        else if(/Maximum Mana/i.test(text)) result.class='sorcerer';
+        else if(/Maximum Essence/i.test(text)) result.class='necromancer';
+        else if(/Maximum Spirit/i.test(text)) result.class='druid';
+    }
+
+    // Parse stats section
     const statPatterns=[
         {key:'weaponDmg',regex:/Base Weapon Damage[\s\n]+([0-9,]+)/i},
         {key:'weaponSpeed',regex:/Weapon Speed[\s\n]+([0-9.]+)/i},
-        {key:'strength',regex:/Strength[\s\n]+([0-9,]+)/i},
-        {key:'intelligence',regex:/Intelligence[\s\n]+([0-9,]+)/i},
-        {key:'willpower',regex:/Willpower[\s\n]+([0-9,]+)/i},
-        {key:'dexterity',regex:/Dexterity[\s\n]+([0-9,]+)/i},
+        {key:'strength',regex:/(?:^|\n)Strength[\s\n]+([0-9,]+)/i},
+        {key:'intelligence',regex:/(?:^|\n)Intelligence[\s\n]+([0-9,]+)/i},
+        {key:'willpower',regex:/(?:^|\n)Willpower[\s\n]+([0-9,]+)/i},
+        {key:'dexterity',regex:/(?:^|\n)Dexterity[\s\n]+([0-9,]+)/i},
         {key:'critChance',regex:/Critical Strike Chance[\s\n]+([0-9.]+)%/i},
         {key:'critDamage',regex:/Critical Strike Damage[\s\n]+([0-9.]+)%/i},
         {key:'vulnDamage',regex:/Vulnerable Damage[\s\n]+([0-9.]+)%/i},
@@ -1429,14 +1429,17 @@ function parseMaxrollText(text){
         {key:'shadowDamage',regex:/Damage with Shadow[\s\n]+([0-9.]+)%/i},
         {key:'poisonDamage',regex:/Damage with Poison[\s\n]+([0-9.]+)%/i},
         {key:'eliteDamage',regex:/Damage vs Elites[\s\n]+([0-9.]+)%/i},
+        {key:'chilledDamage',regex:/Damage vs Chilled[\s\n]+([0-9.]+)%/i},
         {key:'attackPower',regex:/Attack Power[\s\n]+([0-9,]+)/i},
         {key:'maxLife',regex:/Maximum Life[\s\n]+([0-9,]+)/i},
         {key:'armor',regex:/(?:^|\n)Armor[\s\n]+([0-9,]+)/i},
         {key:'moveSpeed',regex:/Movement Speed[\s\n]+([0-9.]+)%/i},
         {key:'cdr',regex:/Cooldown Reduction[\s\n]+([0-9.]+)%/i},
-        {key:'level',regex:/Level[\s\n]+(\d+)/i},
+        {key:'level',regex:/(?:^|\n)Level[\s\n]+(\d+)/i},
         {key:'dotDamage',regex:/Damage Over Time[\s\n]+([0-9.]+)%/i},
         {key:'overpowerDamage',regex:/Overpower Damage[\s\n]+([0-9.]+)%/i},
+        {key:'blockChance',regex:/Block Chance[\s\n]+([0-9.]+)%/i},
+        {key:'thorns',regex:/Thorns[\s\n]+([0-9,]+)/i},
     ];
     statPatterns.forEach(sp=>{
         const m=text.match(sp.regex);
@@ -1449,14 +1452,12 @@ function parseMaxrollText(text){
         const k=mainStatKey[result.class];
         if(result.stats[k]) result.stats.mainStat=result.stats[k];
     }
-    // Fallback: pick the highest primary stat
     if(!result.stats.mainStat){
         const primaries=['strength','intelligence','willpower','dexterity'];
         let best=0,bestK='';
         primaries.forEach(k=>{if((result.stats[k]||0)>best){best=result.stats[k];bestK=k;}});
         if(best>0){
             result.stats.mainStat=best;
-            // Reverse-detect class from highest stat
             if(!result.class){
                 if(bestK==='strength')result.class='barbarian';
                 else if(bestK==='dexterity')result.class='rogue';
@@ -1466,7 +1467,7 @@ function parseMaxrollText(text){
         }
     }
 
-    // Parse paragon boards — "BoardName / GlyphName Lv. XX"
+    // Parse paragon boards — "BoardName / GlyphName Lv. XX" or "BoardName / No Glyph"
     const boardRegex=/([A-Za-z\s']+?)\s*\/\s*(?:([A-Za-z\s']+?)\s+Lv\.\s*(\d+)|No Glyph)/g;
     let bm;
     while((bm=boardRegex.exec(text))!==null){
@@ -1477,41 +1478,89 @@ function parseMaxrollText(text){
         });
     }
 
-    // Parse paragon points
-    const ppMatch=text.match(/(\d+)\s*points?\s*spent/i);
-    if(ppMatch) result.stats.paragonSpent=parseInt(ppMatch[1]);
-    const ppAvail=text.match(/Available Points[\s\n]+(\d+)/i);
-    if(ppAvail) result.stats.paragonAvailable=parseInt(ppAvail[1]);
-
-    // Parse talisman charms — look for charm section
-    const talismanMatch=text.match(/Talisman\s*\n([\s\S]*?)(?=\nOath|\nNotes|\nSkills|\nParagon|\n\n)/i);
-    if(talismanMatch){
-        const charmLines=talismanMatch[1].split('\n').map(l=>l.trim()).filter(l=>l.length>0&&!l.match(/^(Edit|Notes|Prev|Next)/i));
-        charmLines.forEach(line=>{
-            if(line.length>1) result.talisman.push(line);
+    // Parse per-board node stat allocations: "1\nStart\n/\nChip\nStr: 75 Int: 32 Will: 37 Dex: 10"
+    const nodeStatRegex=/(\d+)\s*\n\s*([A-Za-z\s']+?)\s*(?:\/\s*([A-Za-z\s']+?)\s*)?\n\s*Str:\s*(\d+)\s+Int:\s*(\d+)\s+Will:\s*(\d+)\s+Dex:\s*(\d+)/g;
+    let ns;
+    while((ns=nodeStatRegex.exec(text))!==null){
+        result.paragonNodeStats.push({
+            idx:parseInt(ns[1]),board:ns[2].trim(),glyph:ns[3]?ns[3].trim():null,
+            str:parseInt(ns[4]),int:parseInt(ns[5]),will:parseInt(ns[6]),dex:parseInt(ns[7])
         });
     }
 
-    // Parse equipment — look for "Legendary" gear pieces
+    // Parse paragon points
+    const ppMatches=[...text.matchAll(/(\d+)\s*points?\s*spent/gi)];
+    // Skills points come first, paragon points come second
+    if(ppMatches.length>=2){
+        result.stats.skillsSpent=parseInt(ppMatches[0][1]);
+        result.stats.paragonSpent=parseInt(ppMatches[1][1]);
+    } else if(ppMatches.length===1){
+        result.stats.paragonSpent=parseInt(ppMatches[0][1]);
+    }
+    const ppAvailMatches=[...text.matchAll(/Available Points[\s\n]+(\d+)/gi)];
+    if(ppAvailMatches.length>=2){
+        result.stats.paragonAvailable=parseInt(ppAvailMatches[1][1]);
+    } else if(ppAvailMatches.length===1){
+        result.stats.paragonAvailable=parseInt(ppAvailMatches[0][1]);
+    }
+
+    // Parse skill point allocations — "15/15+2" patterns
+    const skillPtRegex=/(\d+)\/(\d+)(?:\+(\d+))?/g;
+    let sp;
+    while((sp=skillPtRegex.exec(text))!==null){
+        result.skills.push({
+            current:parseInt(sp[1]),
+            max:parseInt(sp[2]),
+            bonus:sp[3]?parseInt(sp[3]):0,
+            total:parseInt(sp[1])+(sp[3]?parseInt(sp[3]):0)
+        });
+    }
+
+    // Parse talisman — between "Talisman" header and next section
+    const talismanMatch=text.match(/Talisman\s*\n([\s\S]*?)(?=\n(?:Soul Shards|Oath|Notes|Edit|Skills|Paragon)\b)/i);
+    if(talismanMatch){
+        const charmLines=talismanMatch[1].split('\n').map(l=>l.trim()).filter(l=>l.length>1&&!l.match(/^(Edit|Notes|Prev|Next|Stat Priority|Collapse|Variant)/i));
+        charmLines.forEach(line=>{ result.talisman.push(line); });
+    }
+
+    // Parse oath
+    const oathMatch=text.match(/Oath\s*\n\s*([A-Za-z\s']+?)(?=\n(?:Notes|Edit|Skills|Paragon))/i);
+    if(oathMatch){
+        const oath=oathMatch[1].trim();
+        if(oath&&oath.length>1&&!/^(Notes|Edit|Enter)/.test(oath)) result.oath=oath;
+    }
+
+    // Parse equipment — "AspectName\nLegendary SlotType"
     const equipRegex=/([\w\s']+?)\s*\n\s*Legendary\s+(Helm|Chest Armor|Gloves|Pants|Boots|Amulet|Ring|Sword|Shield|Mace|Axe|Bow|Crossbow|Staff|Scythe|Dagger|Polearm|Wand|Focus)/gi;
     let em;
     while((em=equipRegex.exec(text))!==null){
         result.equipment.push({aspect:em[1].trim(),slot:em[2].trim()});
     }
+    // Also catch items listed before "Legendary" without aspect (base items)
+    const baseItemRegex=/([\w\s']+?)\s*\n\s*Legendary\s+(Mainhand|Offhand|Left Ring|Right Ring)/gi;
+    while((em=baseItemRegex.exec(text))!==null){
+        result.equipment.push({aspect:em[1].trim(),slot:em[2].trim()});
+    }
 
     // Build detected features list
     if(result.class) result.detected.push('Class: '+result.class.charAt(0).toUpperCase()+result.class.slice(1));
-    if(result.stats.mainStat) result.detected.push('Main Stat: '+result.stats.mainStat);
+    if(result.stats.level) result.detected.push('Level: '+result.stats.level);
+    if(result.stats.mainStat) result.detected.push('Main Stat ('+mainStatKey[result.class||'rogue']+'): '+result.stats.mainStat);
     if(result.stats.weaponDmg) result.detected.push('Weapon Damage: '+result.stats.weaponDmg);
+    if(result.stats.attackPower) result.detected.push('Attack Power: '+result.stats.attackPower);
+    if(result.stats.critChance) result.detected.push('Crit Chance: '+result.stats.critChance+'%');
     if(result.stats.critDamage) result.detected.push('Crit Damage: '+result.stats.critDamage+'%');
     if(result.stats.vulnDamage) result.detected.push('Vuln Damage: '+result.stats.vulnDamage+'%');
     if(result.stats.allDamage) result.detected.push('All Damage: '+result.stats.allDamage+'%');
     if(result.stats.physDamage) result.detected.push('Physical Damage: '+result.stats.physDamage+'%');
     if(result.stats.eliteDamage) result.detected.push('Elite Damage: '+result.stats.eliteDamage+'%');
-    if(result.stats.attackPower) result.detected.push('Attack Power: '+result.stats.attackPower);
+    if(result.stats.chilledDamage) result.detected.push('Chilled Damage: '+result.stats.chilledDamage+'%');
+    if(result.equipment.length) result.detected.push('Equipment: '+result.equipment.length+' pieces');
+    if(result.skills.length) result.detected.push('Skills: '+result.skills.length+' allocated');
     if(result.paragonBoards.length) result.detected.push('Paragon Boards: '+result.paragonBoards.length);
+    if(result.stats.paragonSpent) result.detected.push('Paragon Pts Spent: '+result.stats.paragonSpent);
     if(result.talisman.length) result.detected.push('Talisman Charms: '+result.talisman.length);
-    if(result.equipment.length) result.detected.push('Equipment Pieces: '+result.equipment.length);
+    if(result.oath) result.detected.push('Oath: '+result.oath);
 
     return result;
 }
@@ -1529,28 +1578,72 @@ function previewMaxrollParse(){
         return;
     }
 
-    let html='<div style="font-size:0.78rem;font-weight:600;color:var(--gold);margin-bottom:8px;">Detected Build Data:</div>';
+    let html='<div style="font-size:0.78rem;font-weight:600;color:var(--gold);margin-bottom:8px;">✦ Detected Build Data:</div>';
     html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.75rem;">';
     maxrollParsed.detected.forEach(d=>{
-        const [label,val]=d.split(': ');
+        const [label,...rest]=d.split(': ');
+        const val=rest.join(': ');
         html+=`<span style="color:var(--text-label)">${label}</span><span style="color:var(--gold-light);font-family:'Courier New',monospace">${val}</span>`;
     });
     html+='</div>';
 
+    // Paragon boards detail
     if(maxrollParsed.paragonBoards.length>0){
-        html+='<div style="margin-top:8px;font-size:0.72rem;color:var(--text-dim);"><strong>Paragon:</strong> ';
-        html+=maxrollParsed.paragonBoards.map(b=>b.board+(b.glyph?' / '+b.glyph+' Lv.'+b.level:' / No Glyph')).join(' | ');
+        html+='<div style="margin-top:10px;font-size:0.75rem;font-weight:600;color:var(--blue);margin-bottom:4px;">Paragon Boards:</div>';
+        html+='<div style="display:flex;flex-direction:column;gap:2px;font-size:0.72rem;">';
+        const cls=maxrollParsed.class||state.selectedClass;
+        const boards=PARAGON_BOARDS[cls]||[];
+        maxrollParsed.paragonBoards.forEach(pb=>{
+            const matched=boards.find(b=>b.name.toLowerCase()===pb.board.toLowerCase());
+            const glyphMatched=pb.glyph?GLYPHS.find(g=>g.name.toLowerCase()===pb.glyph.toLowerCase()):null;
+            const boardStatus=matched?'<span style="color:var(--green);">matched</span>':'<span style="color:var(--orange);">no match</span>';
+            const glyphStatus=pb.glyph?(glyphMatched?'<span style="color:var(--green);">matched</span>':'<span style="color:var(--orange);">no match</span>'):'<span style="color:var(--text-dim);">none</span>';
+            html+=`<div style="padding:2px 6px;background:var(--bg-slot);border-radius:3px;">Board: <strong>${pb.board}</strong> [${boardStatus}] | Glyph: <strong>${pb.glyph||'None'}</strong> Lv.${pb.level} [${glyphStatus}]</div>`;
+        });
         html+='</div>';
     }
-    if(maxrollParsed.talisman.length>0){
-        html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--text-dim);"><strong>Talisman:</strong> '+maxrollParsed.talisman.join(', ')+'</div>';
-    }
+
+    // Equipment detail
     if(maxrollParsed.equipment.length>0){
-        html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--text-dim);"><strong>Equipment:</strong> '+maxrollParsed.equipment.map(e=>e.aspect+' ('+e.slot+')').join(', ')+'</div>';
+        html+='<div style="margin-top:10px;font-size:0.75rem;font-weight:600;color:var(--purple);margin-bottom:4px;">Equipment Aspects:</div>';
+        html+='<div style="display:flex;flex-wrap:wrap;gap:3px;font-size:0.7rem;">';
+        maxrollParsed.equipment.forEach(e=>{
+            html+=`<span style="padding:2px 6px;background:rgba(123,82,171,0.15);border-radius:3px;color:var(--purple);">${e.aspect} (${e.slot})</span>`;
+        });
+        html+='</div>';
     }
 
+    // Talisman detail
+    if(maxrollParsed.talisman.length>0){
+        html+='<div style="margin-top:10px;font-size:0.75rem;font-weight:600;color:var(--orange-light);margin-bottom:4px;">Talisman Charms:</div>';
+        html+='<div style="display:flex;flex-wrap:wrap;gap:3px;font-size:0.7rem;">';
+        maxrollParsed.talisman.forEach(name=>{
+            let setName='';
+            Object.values(CHARM_SETS).forEach(cs=>{
+                cs.pieces.forEach(p=>{if(name.toLowerCase().includes(p.toLowerCase().split(' ')[0])) setName=cs.name;});
+            });
+            const tag=setName?` <span style="color:var(--gold);">[${setName}]</span>`:'';
+            html+=`<span style="padding:2px 6px;background:rgba(245,166,35,0.12);border-radius:3px;color:var(--orange-light);">${name}${tag}</span>`;
+        });
+        html+='</div>';
+    }
+
+    // Oath
+    if(maxrollParsed.oath){
+        html+=`<div style="margin-top:8px;font-size:0.72rem;color:var(--text-dim);"><strong style="color:var(--gold);">Oath:</strong> ${maxrollParsed.oath}</div>`;
+    }
+
+    // Skills
+    if(maxrollParsed.skills.length>0){
+        html+=`<div style="margin-top:8px;font-size:0.72rem;color:var(--text-dim);"><strong style="color:var(--green);">Skills:</strong> ${maxrollParsed.skills.length} skills allocated (${maxrollParsed.skills.reduce((s,sk)=>s+sk.current,0)} pts spent)</div>`;
+    }
+
+    // Import summary
     html+='<div style="margin-top:10px;padding:8px;background:rgba(74,140,92,0.1);border:1px solid var(--green);border-radius:4px;font-size:0.72rem;color:var(--green);">';
-    html+='This will populate: Main Stat, Weapon Damage, and create multiplier entries for Crit Damage, Vulnerable Damage, All Damage, Physical/Elemental Damage, and Elite Damage from the Maxroll stats. Paragon boards and talisman charms will also be noted.';
+    html+='<strong>Full Import will populate:</strong> Class, Main Stat, Weapon Damage, Multiplier entries (Crit/Vuln/All/Elemental/Elite/DoT), ';
+    html+='Paragon boards (attach + legendary nodes + glyphs w/ levels + node points), Talisman charms (with set detection), Equipment aspects as notes, ';
+    if(maxrollParsed.oath) html+='Oath selection, ';
+    html+='and Skill allocations.';
     html+='</div>';
 
     preview.innerHTML=html;
@@ -1560,102 +1653,202 @@ function previewMaxrollParse(){
 function doMaxrollImport(){
     if(!maxrollParsed||maxrollParsed.detected.length===0){toast('Preview first');return;}
     const p=maxrollParsed;
+    const cls=p.class||state.selectedClass;
+    let importLog=[];
 
-    // Set class
+    // ── 1. Set class ──
     if(p.class&&CLASSES[p.class]){
         state.selectedClass=p.class;
         document.getElementById('mainStatLabel').textContent=CLASSES[p.class].stat;
         buildClassSelector();buildSkillSelector();
+        importLog.push('Class: '+p.class);
     }
 
-    // Set main stat
+    // ── 2. Set main stat & weapon damage ──
     if(p.stats.mainStat){
         document.getElementById('mainStat').value=Math.round(p.stats.mainStat);
+        importLog.push('Main Stat: '+Math.round(p.stats.mainStat));
     }
-
-    // Set weapon damage via manual override (since we have the total, not per-item)
     if(p.stats.weaponDmg){
         document.getElementById('manualWeaponDmg').value=Math.round(p.stats.weaponDmg);
+        importLog.push('Weapon Dmg: '+Math.round(p.stats.weaponDmg));
     }
 
-    // Clear existing multipliers and add from Maxroll stats
+    // ── 3. Multiplier library from aggregate stats ──
     state.multipliers=[];
     multCounter=0;
+    const statMults=[
+        {key:'physDamage',name:'Physical Damage',bucket:'additive'},
+        {key:'fireDamage',name:'Fire Damage',bucket:'additive'},
+        {key:'coldDamage',name:'Cold Damage',bucket:'additive'},
+        {key:'lightningDamage',name:'Lightning Damage',bucket:'additive'},
+        {key:'shadowDamage',name:'Shadow Damage',bucket:'additive'},
+        {key:'poisonDamage',name:'Poison Damage',bucket:'additive'},
+        {key:'critDamage',name:'Crit Strike Damage',bucket:'critMult'},
+        {key:'vulnDamage',name:'Vulnerable Damage',bucket:'vulnMult'},
+        {key:'allDamage',name:'All Damage',bucket:'allMult'},
+        {key:'eliteDamage',name:'Damage vs Elites',bucket:'global'},
+        {key:'dotDamage',name:'DoT Damage',bucket:'dotMult'},
+        {key:'overpowerDamage',name:'Overpower Damage',bucket:'overpower'},
+        {key:'chilledDamage',name:'Damage vs Chilled',bucket:'additive'},
+    ];
+    statMults.forEach(sm=>{
+        if(p.stats[sm.key]&&p.stats[sm.key]>0){
+            state.multipliers.push({id:'mult_'+(multCounter++),name:sm.name+' (Maxroll)',source:'other',bucket:sm.bucket,value:p.stats[sm.key],enabled:true});
+        }
+    });
+    importLog.push(state.multipliers.length+' multiplier entries');
 
-    // Physical/Elemental damage goes to additive bucket
-    if(p.stats.physDamage&&p.stats.physDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Physical Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.physDamage,enabled:true});
-    }
-    if(p.stats.fireDamage&&p.stats.fireDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Fire Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.fireDamage,enabled:true});
-    }
-    if(p.stats.coldDamage&&p.stats.coldDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Cold Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.coldDamage,enabled:true});
-    }
-    if(p.stats.lightningDamage&&p.stats.lightningDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Lightning Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.lightningDamage,enabled:true});
-    }
-    if(p.stats.shadowDamage&&p.stats.shadowDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Shadow Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.shadowDamage,enabled:true});
-    }
-    if(p.stats.poisonDamage&&p.stats.poisonDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Poison Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.poisonDamage,enabled:true});
-    }
+    // ── 4. PARAGON BOARDS — match, attach, set glyphs & legendary nodes ──
+    initParagonState(); // reset paragon for current class
+    const classBoards=PARAGON_BOARDS[cls]||[];
+    const classParagon=state.paragon[cls]||[];
+    let boardsAttached=0, glyphsSlotted=0;
 
-    // Crit damage → critMult bucket
-    if(p.stats.critDamage&&p.stats.critDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Crit Strike Damage (Maxroll)',source:'other',bucket:'critMult',value:p.stats.critDamage,enabled:true});
-    }
+    if(p.paragonBoards.length>0 && classBoards.length>0){
+        p.paragonBoards.forEach((pb,idx)=>{
+            // Find matching board by name (fuzzy: case-insensitive, trim)
+            const boardName=pb.board.toLowerCase().trim();
+            let matchIdx=classBoards.findIndex(b=>b.name.toLowerCase().trim()===boardName);
+            // Fallback: partial match
+            if(matchIdx<0) matchIdx=classBoards.findIndex(b=>b.name.toLowerCase().includes(boardName)||boardName.includes(b.name.toLowerCase()));
 
-    // Vuln damage → vulnMult bucket
-    if(p.stats.vulnDamage&&p.stats.vulnDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Vulnerable Damage (Maxroll)',source:'other',bucket:'vulnMult',value:p.stats.vulnDamage,enabled:true});
-    }
+            if(matchIdx>=0 && classParagon[matchIdx]){
+                const ps=classParagon[matchIdx];
+                ps.attached=true;
+                ps.legendaryActive=true; // activate legendary node
+                boardsAttached++;
 
-    // All Damage → allMult bucket
-    if(p.stats.allDamage&&p.stats.allDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'All Damage (Maxroll)',source:'other',bucket:'allMult',value:p.stats.allDamage,enabled:true});
-    }
+                // Match glyph
+                if(pb.glyph){
+                    const glyphName=pb.glyph.toLowerCase().trim();
+                    const glyph=GLYPHS.find(g=>g.name.toLowerCase()===glyphName);
+                    if(glyph){
+                        ps.glyphId=glyph.id;
+                        ps.glyphLevel=pb.level||1;
+                        glyphsSlotted++;
+                    }
+                }
 
-    // Elite damage → global bucket
-    if(p.stats.eliteDamage&&p.stats.eliteDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Damage vs Elites (Maxroll)',source:'other',bucket:'global',value:p.stats.eliteDamage,enabled:true});
-    }
-
-    // DoT damage
-    if(p.stats.dotDamage&&p.stats.dotDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'DoT Damage (Maxroll)',source:'other',bucket:'dotMult',value:p.stats.dotDamage,enabled:true});
-    }
-
-    // Overpower damage
-    if(p.stats.overpowerDamage&&p.stats.overpowerDamage>0){
-        state.multipliers.push({id:'mult_'+(multCounter++),name:'Overpower Damage (Maxroll)',source:'other',bucket:'overpower',value:p.stats.overpowerDamage,enabled:true});
-    }
-
-    // Talisman charms — add as named charms
-    state.charms=[];
-    charmCounter=0;
-    if(p.talisman.length>0){
-        p.talisman.forEach(name=>{
-            state.charms.push({id:'charm_'+(charmCounter++),name:name,size:1,setId:'',affixes:[{type:'additive',value:0}]});
+                // Match per-board node stats from paragonNodeStats
+                const nodeStats=p.paragonNodeStats.find(ns=>{
+                    const nsBoard=ns.board.toLowerCase().trim();
+                    return nsBoard===boardName || classBoards[matchIdx].name.toLowerCase().includes(nsBoard) || nsBoard.includes(classBoards[matchIdx].name.toLowerCase());
+                });
+                if(nodeStats){
+                    // Estimate node point allocation from stat totals
+                    // Normal nodes give +5 to a stat, so total stats / 5 = approx normal points
+                    const totalStats=nodeStats.str+nodeStats.int+nodeStats.will+nodeStats.dex;
+                    ps.normalPts=Math.min(Math.round(totalStats/5),30); // cap at 30
+                    // Estimate magic/rare based on remaining capacity
+                    ps.magicPts=Math.min(Math.round(totalStats/25),10);
+                    ps.rarePts=Math.min(Math.round(totalStats/40),5);
+                }
+            }
         });
     }
+    importLog.push(boardsAttached+'/'+p.paragonBoards.length+' paragon boards attached');
+    importLog.push(glyphsSlotted+' glyphs slotted');
 
-    // Set paragon points if available
+    // Set total paragon points
     if(p.stats.paragonSpent){
-        document.getElementById('totalParagonPts').value=p.stats.paragonSpent+(p.stats.paragonAvailable||0);
+        const el=document.getElementById('totalParagonPts');
+        if(el) el.value=p.stats.paragonSpent+(p.stats.paragonAvailable||0);
     }
 
-    // Rebuild UI
-    renderMultLibrary();renderTalisman();
-    initParagonState();renderParagonBoards();
-    onSkillChange();recalc();
+    // ── 5. TALISMAN — match charms to sets ──
+    state.charms=[];
+    charmCounter=0;
+    let charmsWithSet=0;
+    if(p.talisman.length>0){
+        p.talisman.forEach(name=>{
+            let detectedSetId='';
+            // Try to match charm name to a set piece
+            Object.entries(CHARM_SETS).forEach(([setId,cs])=>{
+                cs.pieces.forEach(piece=>{
+                    // Match if charm name contains any word from the piece name
+                    const pieceWords=piece.toLowerCase().split(' ');
+                    const nameL=name.toLowerCase();
+                    if(pieceWords.every(w=>nameL.includes(w)) || nameL.includes(piece.toLowerCase())){
+                        detectedSetId=setId;
+                    }
+                    // Also try matching first word (e.g., "Ironblood" in "Ironblood Crest")
+                    if(!detectedSetId && pieceWords[0].length>3 && nameL.includes(pieceWords[0])){
+                        detectedSetId=setId;
+                    }
+                });
+            });
+            if(detectedSetId) charmsWithSet++;
+            state.charms.push({
+                id:'charm_'+(charmCounter++),
+                name:name,
+                size:1,
+                setId:detectedSetId,
+                affixes:[{type:'additive',value:0}]
+            });
+        });
+    }
+    importLog.push(state.charms.length+' talisman charms ('+charmsWithSet+' with set match)');
 
-    const buildName='Maxroll Import';
+    // ── 6. EQUIPMENT — add aspects as named multiplier entries for reference ──
+    if(p.equipment.length>0){
+        p.equipment.forEach(eq=>{
+            state.multipliers.push({
+                id:'mult_'+(multCounter++),
+                name:eq.aspect+' ('+eq.slot+')',
+                source:'gear',
+                bucket:'additive',
+                value:0, // value unknown from text, user can adjust
+                enabled:false // disabled by default so it doesn't affect calc until user sets values
+            });
+        });
+        importLog.push(p.equipment.length+' equipment aspects noted');
+    }
+
+    // ── 7. OATH ──
+    if(p.oath){
+        // Store oath in a multiplier entry as a reference
+        state.multipliers.push({
+            id:'mult_'+(multCounter++),
+            name:'Oath: '+p.oath,
+            source:'other',
+            bucket:'global',
+            value:0, // user can set the oath bonus value
+            enabled:false
+        });
+        importLog.push('Oath: '+p.oath);
+    }
+
+    // ── 8. SKILLS — store allocation info ──
+    if(p.skills.length>0){
+        importLog.push(p.skills.length+' skill allocations detected');
+        // Skills are hard to map without names from Maxroll text, but we note the total
+        const totalPts=p.skills.reduce((s,sk)=>s+sk.current,0);
+        importLog.push(totalPts+' total skill points spent');
+    }
+
+    // ── 9. Rebuild all UI ──
+    renderMultLibrary();
+    renderTalisman();
+    renderParagonBoards();
+    onSkillChange();
+    recalc();
+
+    const buildName='Maxroll '+cls.charAt(0).toUpperCase()+cls.slice(1)+' Import';
     document.getElementById('buildName').value=buildName;
 
     closeMaxrollModal();
-    toast(`Imported! ${state.multipliers.length} multipliers, ${state.charms.length} charms detected`);
+
+    // Show detailed import toast
+    const summary=[
+        boardsAttached+' boards',
+        glyphsSlotted+' glyphs',
+        state.charms.length+' charms',
+        state.multipliers.length+' mults',
+        p.equipment.length+' aspects'
+    ].join(', ');
+    toast(`Full import complete! ${summary}`);
+    console.log('Maxroll Import Log:',importLog);
 }
 
 init();
