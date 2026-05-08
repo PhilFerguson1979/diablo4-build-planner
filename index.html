@@ -253,7 +253,9 @@
         <button class="sb-btn danger" onclick="deleteSelectedBuild()">Delete</button>
         <div class="divider"></div>
         <button class="sb-btn" onclick="openExport()">Export</button>
-        <button class="sb-btn" onclick="openImport()">Import</button>
+        <button class="sb-btn" onclick="openImport()">Import JSON</button>
+        <div class="divider"></div>
+        <button class="sb-btn" onclick="openMaxrollImport()" style="border-color:var(--orange);color:var(--orange);">Import from Maxroll</button>
     </div>
 
     <div class="formula-bar">
@@ -476,6 +478,23 @@
         <div class="modal-btns">
             <button class="sb-btn" onclick="closeModal()">Cancel</button>
             <button class="sb-btn primary" id="modalAction">OK</button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="maxrollOverlay" onclick="if(event.target===this)closeMaxrollModal()">
+    <div class="modal" style="max-width:800px;">
+        <h2 style="color:var(--orange);">Import from Maxroll</h2>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:8px;">
+            Open your build on <a href="https://maxroll.gg/d4/planner" target="_blank" style="color:var(--orange)">maxroll.gg/d4/planner</a>,
+            press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong>, and paste below.
+        </p>
+        <textarea id="maxrollTextarea" style="height:180px;" placeholder="Paste the full page text from your Maxroll build here..."></textarea>
+        <div id="maxrollPreview" style="display:none;margin-top:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:12px;max-height:250px;overflow-y:auto;">
+        </div>
+        <div class="modal-btns">
+            <button class="sb-btn" onclick="closeMaxrollModal()">Cancel</button>
+            <button class="sb-btn" onclick="previewMaxrollParse()" style="border-color:var(--blue);color:var(--blue);">Preview</button>
+            <button class="sb-btn primary" id="maxrollImportBtn" onclick="doMaxrollImport()" disabled>Import Build</button>
         </div>
     </div>
 </div>
@@ -1358,6 +1377,286 @@ function openImport(){document.getElementById('modalTitle').textContent='Import 
 function doImport(){try{const data=JSON.parse(document.getElementById('modalTextarea').value);loadBuildData(data);toast('Imported');closeModal();}catch(e){toast('Invalid JSON');}}
 function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ═══════════════════════════════════════════════════
+// MAXROLL IMPORT PARSER
+// ═══════════════════════════════════════════════════
+let maxrollParsed=null;
+
+function openMaxrollImport(){
+    document.getElementById('maxrollTextarea').value='';
+    document.getElementById('maxrollPreview').style.display='none';
+    document.getElementById('maxrollImportBtn').disabled=true;
+    maxrollParsed=null;
+    document.getElementById('maxrollOverlay').classList.add('show');
+}
+function closeMaxrollModal(){document.getElementById('maxrollOverlay').classList.remove('show');}
+
+function parseMaxrollText(text){
+    const result={class:null,stats:{},paragonBoards:[],talisman:[],equipment:[],detected:[]};
+
+    // Detect class from stat patterns
+    const classStatMap={
+        barbarian:['Strength'],druid:['Willpower'],necromancer:['Intelligence'],
+        rogue:['Dexterity'],sorcerer:['Intelligence'],spiritborn:['Dexterity'],
+        paladin:['Willpower','Faith','Resolve'],warlock:['Intelligence']
+    };
+    // Check for class-specific keywords
+    if(/\bFaith\b/.test(text)&&/\bResolve\b/.test(text)) result.class='paladin';
+    else if(/\bSpirit\b/i.test(text)&&/\bJaguar|Eagle|Gorilla|Centipede\b/i.test(text)) result.class='spiritborn';
+    else if(/\bBerserking\b/i.test(text)||/\bWeapon Technique\b/i.test(text)) result.class='barbarian';
+    else if(/\bCompanion\b/i.test(text)&&/\bWerewolf|Werebear\b/i.test(text)) result.class='druid';
+    else if(/\bCorpse|Minion|Skeleton\b/i.test(text)&&/\bEssence\b/i.test(text)) result.class='necromancer';
+    else if(/\bMana\b/i.test(text)&&/\bEnchantment\b/i.test(text)) result.class='sorcerer';
+    else if(/\bDemon|Hellfire|Soul\b/i.test(text)) result.class='warlock';
+
+    // Parse stats section — look for "Label\nValue" or "Label Value" patterns
+    const statPatterns=[
+        {key:'weaponDmg',regex:/Base Weapon Damage[\s\n]+([0-9,]+)/i},
+        {key:'weaponSpeed',regex:/Weapon Speed[\s\n]+([0-9.]+)/i},
+        {key:'strength',regex:/Strength[\s\n]+([0-9,]+)/i},
+        {key:'intelligence',regex:/Intelligence[\s\n]+([0-9,]+)/i},
+        {key:'willpower',regex:/Willpower[\s\n]+([0-9,]+)/i},
+        {key:'dexterity',regex:/Dexterity[\s\n]+([0-9,]+)/i},
+        {key:'critChance',regex:/Critical Strike Chance[\s\n]+([0-9.]+)%/i},
+        {key:'critDamage',regex:/Critical Strike Damage[\s\n]+([0-9.]+)%/i},
+        {key:'vulnDamage',regex:/Vulnerable Damage[\s\n]+([0-9.]+)%/i},
+        {key:'allDamage',regex:/All Damage[\s\n]+([0-9.]+)%/i},
+        {key:'physDamage',regex:/Damage with Physical[\s\n]+([0-9.]+)%/i},
+        {key:'fireDamage',regex:/Damage with Fire[\s\n]+([0-9.]+)%/i},
+        {key:'coldDamage',regex:/Damage with Cold[\s\n]+([0-9.]+)%/i},
+        {key:'lightningDamage',regex:/Damage with Lightning[\s\n]+([0-9.]+)%/i},
+        {key:'shadowDamage',regex:/Damage with Shadow[\s\n]+([0-9.]+)%/i},
+        {key:'poisonDamage',regex:/Damage with Poison[\s\n]+([0-9.]+)%/i},
+        {key:'eliteDamage',regex:/Damage vs Elites[\s\n]+([0-9.]+)%/i},
+        {key:'attackPower',regex:/Attack Power[\s\n]+([0-9,]+)/i},
+        {key:'maxLife',regex:/Maximum Life[\s\n]+([0-9,]+)/i},
+        {key:'armor',regex:/(?:^|\n)Armor[\s\n]+([0-9,]+)/i},
+        {key:'moveSpeed',regex:/Movement Speed[\s\n]+([0-9.]+)%/i},
+        {key:'cdr',regex:/Cooldown Reduction[\s\n]+([0-9.]+)%/i},
+        {key:'level',regex:/Level[\s\n]+(\d+)/i},
+        {key:'dotDamage',regex:/Damage Over Time[\s\n]+([0-9.]+)%/i},
+        {key:'overpowerDamage',regex:/Overpower Damage[\s\n]+([0-9.]+)%/i},
+    ];
+    statPatterns.forEach(sp=>{
+        const m=text.match(sp.regex);
+        if(m) result.stats[sp.key]=parseFloat(m[1].replace(/,/g,''));
+    });
+
+    // Determine main stat based on class
+    const mainStatKey={barbarian:'strength',druid:'willpower',necromancer:'intelligence',rogue:'dexterity',sorcerer:'intelligence',spiritborn:'dexterity',paladin:'willpower',warlock:'intelligence'};
+    if(result.class){
+        const k=mainStatKey[result.class];
+        if(result.stats[k]) result.stats.mainStat=result.stats[k];
+    }
+    // Fallback: pick the highest primary stat
+    if(!result.stats.mainStat){
+        const primaries=['strength','intelligence','willpower','dexterity'];
+        let best=0,bestK='';
+        primaries.forEach(k=>{if((result.stats[k]||0)>best){best=result.stats[k];bestK=k;}});
+        if(best>0){
+            result.stats.mainStat=best;
+            // Reverse-detect class from highest stat
+            if(!result.class){
+                if(bestK==='strength')result.class='barbarian';
+                else if(bestK==='dexterity')result.class='rogue';
+                else if(bestK==='intelligence')result.class='sorcerer';
+                else if(bestK==='willpower')result.class='druid';
+            }
+        }
+    }
+
+    // Parse paragon boards — "BoardName / GlyphName Lv. XX"
+    const boardRegex=/([A-Za-z\s']+?)\s*\/\s*(?:([A-Za-z\s']+?)\s+Lv\.\s*(\d+)|No Glyph)/g;
+    let bm;
+    while((bm=boardRegex.exec(text))!==null){
+        result.paragonBoards.push({
+            board:bm[1].trim(),
+            glyph:bm[2]?bm[2].trim():null,
+            level:bm[3]?parseInt(bm[3]):0
+        });
+    }
+
+    // Parse paragon points
+    const ppMatch=text.match(/(\d+)\s*points?\s*spent/i);
+    if(ppMatch) result.stats.paragonSpent=parseInt(ppMatch[1]);
+    const ppAvail=text.match(/Available Points[\s\n]+(\d+)/i);
+    if(ppAvail) result.stats.paragonAvailable=parseInt(ppAvail[1]);
+
+    // Parse talisman charms — look for charm section
+    const talismanMatch=text.match(/Talisman\s*\n([\s\S]*?)(?=\nOath|\nNotes|\nSkills|\nParagon|\n\n)/i);
+    if(talismanMatch){
+        const charmLines=talismanMatch[1].split('\n').map(l=>l.trim()).filter(l=>l.length>0&&!l.match(/^(Edit|Notes|Prev|Next)/i));
+        charmLines.forEach(line=>{
+            if(line.length>1) result.talisman.push(line);
+        });
+    }
+
+    // Parse equipment — look for "Legendary" gear pieces
+    const equipRegex=/([\w\s']+?)\s*\n\s*Legendary\s+(Helm|Chest Armor|Gloves|Pants|Boots|Amulet|Ring|Sword|Shield|Mace|Axe|Bow|Crossbow|Staff|Scythe|Dagger|Polearm|Wand|Focus)/gi;
+    let em;
+    while((em=equipRegex.exec(text))!==null){
+        result.equipment.push({aspect:em[1].trim(),slot:em[2].trim()});
+    }
+
+    // Build detected features list
+    if(result.class) result.detected.push('Class: '+result.class.charAt(0).toUpperCase()+result.class.slice(1));
+    if(result.stats.mainStat) result.detected.push('Main Stat: '+result.stats.mainStat);
+    if(result.stats.weaponDmg) result.detected.push('Weapon Damage: '+result.stats.weaponDmg);
+    if(result.stats.critDamage) result.detected.push('Crit Damage: '+result.stats.critDamage+'%');
+    if(result.stats.vulnDamage) result.detected.push('Vuln Damage: '+result.stats.vulnDamage+'%');
+    if(result.stats.allDamage) result.detected.push('All Damage: '+result.stats.allDamage+'%');
+    if(result.stats.physDamage) result.detected.push('Physical Damage: '+result.stats.physDamage+'%');
+    if(result.stats.eliteDamage) result.detected.push('Elite Damage: '+result.stats.eliteDamage+'%');
+    if(result.stats.attackPower) result.detected.push('Attack Power: '+result.stats.attackPower);
+    if(result.paragonBoards.length) result.detected.push('Paragon Boards: '+result.paragonBoards.length);
+    if(result.talisman.length) result.detected.push('Talisman Charms: '+result.talisman.length);
+    if(result.equipment.length) result.detected.push('Equipment Pieces: '+result.equipment.length);
+
+    return result;
+}
+
+function previewMaxrollParse(){
+    const text=document.getElementById('maxrollTextarea').value;
+    if(!text||text.length<50){toast('Paste more text');return;}
+    maxrollParsed=parseMaxrollText(text);
+    const preview=document.getElementById('maxrollPreview');
+    preview.style.display='block';
+
+    if(maxrollParsed.detected.length===0){
+        preview.innerHTML='<div style="color:var(--red);font-size:0.8rem;">Could not detect any build data. Make sure you pasted the full page text (Ctrl+A then Ctrl+C).</div>';
+        document.getElementById('maxrollImportBtn').disabled=true;
+        return;
+    }
+
+    let html='<div style="font-size:0.78rem;font-weight:600;color:var(--gold);margin-bottom:8px;">Detected Build Data:</div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.75rem;">';
+    maxrollParsed.detected.forEach(d=>{
+        const [label,val]=d.split(': ');
+        html+=`<span style="color:var(--text-label)">${label}</span><span style="color:var(--gold-light);font-family:'Courier New',monospace">${val}</span>`;
+    });
+    html+='</div>';
+
+    if(maxrollParsed.paragonBoards.length>0){
+        html+='<div style="margin-top:8px;font-size:0.72rem;color:var(--text-dim);"><strong>Paragon:</strong> ';
+        html+=maxrollParsed.paragonBoards.map(b=>b.board+(b.glyph?' / '+b.glyph+' Lv.'+b.level:' / No Glyph')).join(' | ');
+        html+='</div>';
+    }
+    if(maxrollParsed.talisman.length>0){
+        html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--text-dim);"><strong>Talisman:</strong> '+maxrollParsed.talisman.join(', ')+'</div>';
+    }
+    if(maxrollParsed.equipment.length>0){
+        html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--text-dim);"><strong>Equipment:</strong> '+maxrollParsed.equipment.map(e=>e.aspect+' ('+e.slot+')').join(', ')+'</div>';
+    }
+
+    html+='<div style="margin-top:10px;padding:8px;background:rgba(74,140,92,0.1);border:1px solid var(--green);border-radius:4px;font-size:0.72rem;color:var(--green);">';
+    html+='This will populate: Main Stat, Weapon Damage, and create multiplier entries for Crit Damage, Vulnerable Damage, All Damage, Physical/Elemental Damage, and Elite Damage from the Maxroll stats. Paragon boards and talisman charms will also be noted.';
+    html+='</div>';
+
+    preview.innerHTML=html;
+    document.getElementById('maxrollImportBtn').disabled=false;
+}
+
+function doMaxrollImport(){
+    if(!maxrollParsed||maxrollParsed.detected.length===0){toast('Preview first');return;}
+    const p=maxrollParsed;
+
+    // Set class
+    if(p.class&&CLASSES[p.class]){
+        state.selectedClass=p.class;
+        document.getElementById('mainStatLabel').textContent=CLASSES[p.class].stat;
+        buildClassSelector();buildSkillSelector();
+    }
+
+    // Set main stat
+    if(p.stats.mainStat){
+        document.getElementById('mainStat').value=Math.round(p.stats.mainStat);
+    }
+
+    // Set weapon damage via manual override (since we have the total, not per-item)
+    if(p.stats.weaponDmg){
+        document.getElementById('manualWeaponDmg').value=Math.round(p.stats.weaponDmg);
+    }
+
+    // Clear existing multipliers and add from Maxroll stats
+    state.multipliers=[];
+    multCounter=0;
+
+    // Physical/Elemental damage goes to additive bucket
+    if(p.stats.physDamage&&p.stats.physDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Physical Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.physDamage,enabled:true});
+    }
+    if(p.stats.fireDamage&&p.stats.fireDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Fire Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.fireDamage,enabled:true});
+    }
+    if(p.stats.coldDamage&&p.stats.coldDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Cold Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.coldDamage,enabled:true});
+    }
+    if(p.stats.lightningDamage&&p.stats.lightningDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Lightning Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.lightningDamage,enabled:true});
+    }
+    if(p.stats.shadowDamage&&p.stats.shadowDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Shadow Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.shadowDamage,enabled:true});
+    }
+    if(p.stats.poisonDamage&&p.stats.poisonDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Poison Damage (Maxroll)',source:'other',bucket:'additive',value:p.stats.poisonDamage,enabled:true});
+    }
+
+    // Crit damage → critMult bucket
+    if(p.stats.critDamage&&p.stats.critDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Crit Strike Damage (Maxroll)',source:'other',bucket:'critMult',value:p.stats.critDamage,enabled:true});
+    }
+
+    // Vuln damage → vulnMult bucket
+    if(p.stats.vulnDamage&&p.stats.vulnDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Vulnerable Damage (Maxroll)',source:'other',bucket:'vulnMult',value:p.stats.vulnDamage,enabled:true});
+    }
+
+    // All Damage → allMult bucket
+    if(p.stats.allDamage&&p.stats.allDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'All Damage (Maxroll)',source:'other',bucket:'allMult',value:p.stats.allDamage,enabled:true});
+    }
+
+    // Elite damage → global bucket
+    if(p.stats.eliteDamage&&p.stats.eliteDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Damage vs Elites (Maxroll)',source:'other',bucket:'global',value:p.stats.eliteDamage,enabled:true});
+    }
+
+    // DoT damage
+    if(p.stats.dotDamage&&p.stats.dotDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'DoT Damage (Maxroll)',source:'other',bucket:'dotMult',value:p.stats.dotDamage,enabled:true});
+    }
+
+    // Overpower damage
+    if(p.stats.overpowerDamage&&p.stats.overpowerDamage>0){
+        state.multipliers.push({id:'mult_'+(multCounter++),name:'Overpower Damage (Maxroll)',source:'other',bucket:'overpower',value:p.stats.overpowerDamage,enabled:true});
+    }
+
+    // Talisman charms — add as named charms
+    state.charms=[];
+    charmCounter=0;
+    if(p.talisman.length>0){
+        p.talisman.forEach(name=>{
+            state.charms.push({id:'charm_'+(charmCounter++),name:name,size:1,setId:'',affixes:[{type:'additive',value:0}]});
+        });
+    }
+
+    // Set paragon points if available
+    if(p.stats.paragonSpent){
+        document.getElementById('totalParagonPts').value=p.stats.paragonSpent+(p.stats.paragonAvailable||0);
+    }
+
+    // Rebuild UI
+    renderMultLibrary();renderTalisman();
+    initParagonState();renderParagonBoards();
+    onSkillChange();recalc();
+
+    const buildName='Maxroll Import';
+    document.getElementById('buildName').value=buildName;
+
+    closeMaxrollModal();
+    toast(`Imported! ${state.multipliers.length} multipliers, ${state.charms.length} charms detected`);
+}
 
 init();
 </script>
