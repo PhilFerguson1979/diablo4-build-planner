@@ -256,6 +256,8 @@
         <button class="sb-btn" onclick="openImport()">Import JSON</button>
         <div class="divider"></div>
         <button class="sb-btn" onclick="openMaxrollImport()" style="border-color:var(--orange);color:var(--orange);">Import from Maxroll</button>
+        <button class="sb-btn" onclick="openMobalyticsImport()" style="border-color:var(--purple);color:var(--purple);">Import from Mobalytics</button>
+        <button class="sb-btn" onclick="openWowheadImport()" style="border-color:var(--blue);color:var(--blue);">Import from Wowhead</button>
     </div>
 
     <div class="formula-bar">
@@ -501,6 +503,52 @@
             <button class="sb-btn" onclick="closeMaxrollModal()">Cancel</button>
             <button class="sb-btn" onclick="previewMaxrollParse()" style="border-color:var(--blue);color:var(--blue);">Preview Text</button>
             <button class="sb-btn primary" id="maxrollImportBtn" onclick="doMaxrollImport()" disabled>Import Build</button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="mobalyticsOverlay" onclick="if(event.target===this)closeMobalyticsModal()">
+    <div class="modal" style="max-width:800px;">
+        <h2 style="color:var(--purple);">Import from Mobalytics</h2>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:6px;">
+            <strong>Option 1 (Recommended):</strong> Paste the Mobalytics build page URL — we'll fetch and parse the page data.
+        </p>
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <input type="text" id="mobalyticsUrlInput" style="flex:1;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.85rem;" placeholder="https://mobalytics.gg/diablo-4/builds/retribution-thorns-paladin">
+            <button class="sb-btn primary" onclick="fetchMobalyticsBuild()" id="mobalyticsFetchBtn">Fetch Build</button>
+        </div>
+        <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:6px;">
+            <strong>Option 2:</strong> Paste page text (Ctrl+A, Ctrl+C from Mobalytics page).
+        </p>
+        <textarea id="mobalyticsTextarea" style="height:120px;" placeholder="Paste the full page text from your Mobalytics build here..."></textarea>
+        <div id="mobalyticsPreview" style="display:none;margin-top:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:12px;max-height:300px;overflow-y:auto;">
+        </div>
+        <div class="modal-btns">
+            <button class="sb-btn" onclick="closeMobalyticsModal()">Cancel</button>
+            <button class="sb-btn" onclick="previewMobalyticsParse()" style="border-color:var(--blue);color:var(--blue);">Preview</button>
+            <button class="sb-btn primary" id="mobalyticsImportBtn" onclick="doMobalyticsImport()" disabled>Import Build</button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="wowheadOverlay" onclick="if(event.target===this)closeWowheadModal()">
+    <div class="modal" style="max-width:800px;">
+        <h2 style="color:var(--blue);">Import from Wowhead</h2>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:6px;">
+            <strong>Option 1 (Recommended):</strong> Paste the Wowhead D4 build planner URL.
+        </p>
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <input type="text" id="wowheadUrlInput" style="flex:1;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.85rem;" placeholder="https://www.wowhead.com/diablo-4/builds/paladin/...">
+            <button class="sb-btn primary" onclick="fetchWowheadBuild()" id="wowheadFetchBtn">Fetch Build</button>
+        </div>
+        <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:6px;">
+            <strong>Option 2:</strong> Paste page text (Ctrl+A, Ctrl+C from Wowhead page).
+        </p>
+        <textarea id="wowheadTextarea" style="height:120px;" placeholder="Paste the full page text from your Wowhead D4 build here..."></textarea>
+        <div id="wowheadPreview" style="display:none;margin-top:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:12px;max-height:300px;overflow-y:auto;">
+        </div>
+        <div class="modal-btns">
+            <button class="sb-btn" onclick="closeWowheadModal()">Cancel</button>
+            <button class="sb-btn" onclick="previewWowheadParse()" style="border-color:var(--blue);color:var(--blue);">Preview</button>
+            <button class="sb-btn primary" id="wowheadImportBtn" onclick="doWowheadImport()" disabled>Import Build</button>
         </div>
     </div>
 </div>
@@ -2366,6 +2414,563 @@ function doMaxrollImport(){
     ].join(', ');
     toast(`Full import complete! ${summary}`);
     console.log('Maxroll Import Log:',importLog);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOBALYTICS IMPORT
+// ═══════════════════════════════════════════════════════════════
+let mobalyticsParsed=null;
+
+function openMobalyticsImport(){
+    document.getElementById('mobalyticsUrlInput').value='';
+    document.getElementById('mobalyticsTextarea').value='';
+    document.getElementById('mobalyticsPreview').style.display='none';
+    document.getElementById('mobalyticsImportBtn').disabled=true;
+    mobalyticsParsed=null;
+    document.getElementById('mobalyticsOverlay').classList.add('show');
+}
+function closeMobalyticsModal(){document.getElementById('mobalyticsOverlay').classList.remove('show');}
+
+async function fetchMobalyticsBuild(){
+    const url=document.getElementById('mobalyticsUrlInput').value.trim();
+    const preview=document.getElementById('mobalyticsPreview');
+    preview.style.display='block';
+    preview.innerHTML='<div style="color:var(--blue);font-size:0.8rem;">Fetching page data...</div>';
+    if(!url.includes('mobalytics.gg')){
+        preview.innerHTML='<div style="color:var(--red);font-size:0.8rem;">Please paste a valid Mobalytics URL</div>';
+        return;
+    }
+    try{
+        // Use a CORS proxy or direct fetch — Mobalytics pages are SSR so we can grab HTML
+        const resp=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const html=await resp.text();
+        // Extract text from HTML
+        const parser=new DOMParser();
+        const doc=parser.parseFromString(html,'text/html');
+        const pageText=doc.body.innerText||doc.body.textContent;
+        document.getElementById('mobalyticsTextarea').value=pageText;
+        mobalyticsParsed=parseMobalyticsText(pageText);
+        showMobalyticsPreview(mobalyticsParsed);
+    }catch(e){
+        preview.innerHTML=`<div style="color:var(--orange-light);font-size:0.8rem;">Could not fetch page (CORS). Use Option 2: copy the page text manually (Ctrl+A, Ctrl+C).</div>`;
+    }
+}
+
+function parseMobalyticsText(text){
+    const result={class:null,skills:[],equipment:[],affixPriority:[],paragonStats:{},talisman:[],oath:null,detected:[]};
+
+    // Class detection from URL slug or content
+    const classNames=['barbarian','druid','necromancer','rogue','sorcerer','spiritborn','paladin','warlock'];
+    classNames.forEach(c=>{
+        const re=new RegExp('\\b'+c+'\\b','i');
+        if(re.test(text)&&!result.class) result.class=c;
+    });
+    // More specific: "Paladin Build" or class in title-like pattern
+    const classTitleMatch=text.match(/(Barbarian|Druid|Necromancer|Rogue|Sorcerer|Spiritborn|Paladin|Warlock)\s+(?:Build|Guide)/i);
+    if(classTitleMatch) result.class=classTitleMatch[1].toLowerCase();
+    if(result.class) result.detected.push('Class: '+result.class);
+
+    // Equipment/Aspects — Mobalytics lists gear with aspect names
+    // Pattern: numbered slots like "1\nAspect Name" or "Helm\nAspect of Something"
+    const slotNames=['Helm','Chest Armor','Gloves','Pants','Boots','Amulet','Ring 1','Ring 2','Main Hand','Off-Hand','Offhand'];
+    const aspectPattern=/(?:Aspect of [A-Za-z' ]+|[A-Za-z']+ of [A-Za-z' ]+(?:'s)?)/gi;
+    const aspectMatches=text.match(aspectPattern)||[];
+    // Deduplicate and filter out non-aspects
+    const seenAspects=new Set();
+    aspectMatches.forEach(asp=>{
+        const clean=asp.trim();
+        if(clean.length>8 && !seenAspects.has(clean.toLowerCase()) && !/of the (Year|Day|Month|Week)/i.test(clean)){
+            seenAspects.add(clean.toLowerCase());
+            result.equipment.push({slot:'unknown',name:clean});
+        }
+    });
+    if(result.equipment.length) result.detected.push(result.equipment.length+' aspects');
+
+    // Try to assign aspects to slots by proximity in text
+    const slotAspectMap={};
+    slotNames.forEach(sn=>{
+        // Find slot name in text then look for next aspect-like string
+        const slotIdx=text.indexOf(sn);
+        if(slotIdx===-1) return;
+        const after=text.substring(slotIdx,slotIdx+200);
+        const aspMatch=after.match(/(?:Aspect of [A-Za-z' ]+|Heir of [A-Za-z' ]+|Mantle of [A-Za-z' ]+|[A-Za-z']+'s [A-Za-z' ]+)/i);
+        if(aspMatch){
+            const normalized=sn.toLowerCase().replace(/\s+/g,'').replace('chestarmor','chest').replace('mainhand','wep1').replace('off-hand','offhand').replace('ring1','ring1').replace('ring2','ring2');
+            slotAspectMap[normalized]=aspMatch[0];
+        }
+    });
+
+    // Skills — Mobalytics lists skill names
+    const skillSection=text.match(/(?:Active Skills|Skill Tree|Skills)\s*\n([\s\S]*?)(?=\n(?:Paragon|Equipment|Gear|Talisman|Aspects|Mercenary|Affix)\b)/i);
+    if(skillSection){
+        const skillLines=skillSection[1].split('\n').filter(l=>l.trim().length>2 && !/^\d+$/.test(l.trim()));
+        skillLines.forEach(l=>{
+            const name=l.trim().replace(/\s*\d+\/\d+/,'').trim();
+            if(name.length>2 && name.length<40 && !/^(Basic|Core|Defensive|Companion|Wrath|Ultimate|Passive|Key|Conjuration|Macabre|Curse)/i.test(name)){
+                result.skills.push({name:name,current:1});
+            }
+        });
+        if(result.skills.length) result.detected.push(result.skills.length+' skills');
+    }
+
+    // Affix Priority — Mobalytics shows "Offensive Affix Priority", "Defensive Affix Priority"
+    const offAffixMatch=text.match(/Offensive Affix Priority\s*\n([\s\S]*?)(?=\n(?:Defensive|Utility|Tempering)\s*Affix\b|\n(?:Paragon|Equipment|Talisman|Mercenary)\b)/i);
+    if(offAffixMatch){
+        const lines=offAffixMatch[1].split('\n').filter(l=>l.trim().length>2);
+        lines.forEach(l=>{
+            const clean=l.trim();
+            if(clean.length>3 && clean.length<60){
+                let bucket='additive';
+                if(/crit\s*chance/i.test(clean)) bucket='crit_mult';
+                else if(/crit\s*damage/i.test(clean)) bucket='crit_mult';
+                else if(/vuln/i.test(clean)) bucket='vuln_mult';
+                else if(/all.*damage|phys.*damage/i.test(clean)) bucket='all_mult';
+                else if(/attack speed|strength|dexterity|intelligence|willpower/i.test(clean)) bucket='additive';
+                result.affixPriority.push({name:clean,bucket:bucket});
+            }
+        });
+        if(result.affixPriority.length) result.detected.push(result.affixPriority.length+' affix priorities');
+    }
+
+    // Paragon stats — "Str: 60" format
+    const strMatch=text.match(/Str:\s*(\d+)/);
+    const intMatch=text.match(/Int:\s*(\d+)/);
+    const dexMatch=text.match(/Dex:\s*(\d+)/);
+    const wilMatch=text.match(/Will?:\s*(\d+)/);
+    if(strMatch) result.paragonStats.strength=parseInt(strMatch[1]);
+    if(intMatch) result.paragonStats.intelligence=parseInt(intMatch[1]);
+    if(dexMatch) result.paragonStats.dexterity=parseInt(dexMatch[1]);
+    if(wilMatch) result.paragonStats.willpower=parseInt(wilMatch[1]);
+    if(Object.keys(result.paragonStats).length) result.detected.push('Paragon stats found');
+
+    // Talisman charms
+    const talismanMatch=text.match(/(?:Talisman|Charms)\s*\n([\s\S]*?)(?=\n(?:Paragon|Equipment|Oath|Mercenary|Build\s+Variants)\b)/i);
+    if(talismanMatch){
+        const charmLines=talismanMatch[1].split('\n').filter(l=>l.trim().length>3);
+        charmLines.forEach(l=>{
+            const name=l.trim();
+            if(name.length>3 && name.length<60 && !/^\d+$/.test(name) && !/Penitent/i.test(name)){
+                let setId='';
+                const ofMatch=name.match(/\bof\s+(.+)$/i);
+                if(ofMatch){
+                    const sn=ofMatch[1].toLowerCase().trim();
+                    Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+                        if(cs.name.toLowerCase()===sn) setId=sid;
+                    });
+                }
+                result.talisman.push({name:name,setId:setId});
+            }
+        });
+        if(result.talisman.length) result.detected.push(result.talisman.length+' charms');
+    }
+
+    // Talisman set names from anywhere in text (e.g., "Sundered Night")
+    if(result.talisman.length===0){
+        Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+            if(text.includes(cs.name)){
+                result.talisman.push({name:cs.name+' set',setId:sid});
+                result.detected.push('Talisman set: '+cs.name);
+            }
+        });
+    }
+
+    // Store slot-aspect mapping for import
+    result.slotAspectMap=slotAspectMap;
+
+    return result;
+}
+
+function showMobalyticsPreview(p){
+    const preview=document.getElementById('mobalyticsPreview');
+    preview.style.display='block';
+    let html='<div style="font-size:0.78rem;font-weight:600;color:var(--purple);margin-bottom:8px;">Mobalytics Build Parsed</div>';
+    if(p.detected.length===0){
+        html+='<div style="color:var(--red);font-size:0.75rem;">No build data detected. Make sure you pasted the full page text.</div>';
+    }else{
+        html+='<div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:6px;">Detected: '+p.detected.join(' • ')+'</div>';
+        if(p.class) html+=`<div style="font-size:0.75rem;"><span style="color:var(--text-label)">Class:</span> <span style="color:var(--gold-light)">${p.class}</span></div>`;
+        if(p.equipment.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--orange-light);font-weight:600;">Equipment Aspects:</div>';
+            p.equipment.forEach(e=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${e.name}</div>`; });
+        }
+        if(p.skills.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--green);font-weight:600;">Skills:</div>';
+            p.skills.forEach(s=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${s.name}</div>`; });
+        }
+        if(p.affixPriority.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--blue);font-weight:600;">Affix Priorities:</div>';
+            p.affixPriority.forEach(a=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${a.name} (${a.bucket})</div>`; });
+        }
+        if(p.talisman.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--orange-light);font-weight:600;">Talisman:</div>';
+            p.talisman.forEach(c=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${c.name}${c.setId?' ('+c.setId+')':''}</div>`; });
+        }
+        html+='<div style="margin-top:8px;padding:6px;background:rgba(123,82,171,0.1);border:1px solid var(--purple);border-radius:4px;font-size:0.72rem;color:var(--purple);">';
+        html+='<strong>Note:</strong> Mobalytics guides don\'t include exact affix values. Aspects will be imported as multiplier entries; affix priorities are imported as placeholders you can adjust.';
+        html+='</div>';
+    }
+    preview.innerHTML=html;
+    document.getElementById('mobalyticsImportBtn').disabled=(p.detected.length===0);
+}
+
+function previewMobalyticsParse(){
+    const text=document.getElementById('mobalyticsTextarea').value;
+    if(!text.trim()){toast('Paste the Mobalytics page text first');return;}
+    mobalyticsParsed=parseMobalyticsText(text);
+    showMobalyticsPreview(mobalyticsParsed);
+}
+
+function doMobalyticsImport(){
+    if(!mobalyticsParsed||mobalyticsParsed.detected.length===0){toast('Preview first');return;}
+    const p=mobalyticsParsed;
+
+    // Set class
+    if(p.class && CLASSES[p.class]){
+        state.selectedClass=p.class;
+        document.getElementById('mainStatLabel').textContent=CLASSES[p.class].stat;
+        buildClassSelector();buildSkillSelector();
+    }
+    const cls=state.selectedClass;
+
+    // Reset
+    state.gearAffixes={};state.gearAspects={};state.multipliers=[];state.charms=[];
+    affixCounter=0;multCounter=0;charmCounter=0;
+
+    // Equipment aspects → multiplier entries + gear aspect names
+    const slotQueue=['helm','chest','gloves','pants','boots','amulet','ring1','ring2','wep1','offhand'];
+    let slotIdx=0;
+    // First use mapped slots
+    Object.entries(p.slotAspectMap||{}).forEach(([slot,aspName])=>{
+        state.gearAspects[slot]=aspName;
+        state.multipliers.push({id:'mult_'+(multCounter++),name:aspName+' ('+slot+')',source:'aspect',bucket:'allMult',value:0,enabled:false});
+    });
+    // Remaining unmapped aspects
+    p.equipment.forEach(eq=>{
+        const alreadyMapped=Object.values(p.slotAspectMap||{}).some(v=>v===eq.name);
+        if(!alreadyMapped && slotIdx<slotQueue.length){
+            // Skip slots already mapped
+            while(slotIdx<slotQueue.length && state.gearAspects[slotQueue[slotIdx]]) slotIdx++;
+            if(slotIdx<slotQueue.length){
+                const slot=slotQueue[slotIdx++];
+                state.gearAspects[slot]=eq.name;
+                state.multipliers.push({id:'mult_'+(multCounter++),name:eq.name+' ('+slot+')',source:'aspect',bucket:'allMult',value:0,enabled:false});
+            }
+        }
+    });
+
+    // Affix priorities → placeholder gear affixes on appropriate slots
+    const prioritySlotMap={crit_mult:'amulet',vuln_mult:'gloves',all_mult:'chest',additive:'helm'};
+    p.affixPriority.forEach(ap=>{
+        const slot=prioritySlotMap[ap.bucket]||'helm';
+        state.gearAffixes[slot]=state.gearAffixes[slot]||[];
+        state.gearAffixes[slot].push({id:'afx_'+(affixCounter++),type:ap.bucket,value:0,label:ap.name+' [Priority]'});
+    });
+
+    // Paragon stats → main stat
+    const mainStatKey={barbarian:'strength',druid:'willpower',necromancer:'intelligence',rogue:'dexterity',sorcerer:'intelligence',spiritborn:'dexterity',paladin:'strength',warlock:'intelligence'};
+    const msKey=mainStatKey[cls];
+    if(msKey && p.paragonStats[msKey]){
+        document.getElementById('mainStat').value=p.paragonStats[msKey];
+    }
+
+    // Talisman charms
+    p.talisman.forEach(ch=>{
+        state.charms.push({
+            id:'charm_'+(charmCounter++),
+            name:ch.name,
+            size:1,
+            setId:ch.setId||'',
+            affixes:[{type:'additive',value:0}]
+        });
+    });
+
+    // Paragon boards — attach starting board
+    initParagonState();
+    const classParagon=state.paragon[cls]||[];
+    if(classParagon.length) classParagon[0].attached=true;
+
+    // Rebuild UI
+    buildGearSlots();
+    GEAR_SLOTS.forEach(slot=>renderAffixes(slot.id));
+    renderMultLibrary();renderTalisman();renderParagonBoards();onSkillChange();recalc();
+
+    const buildName='Mobalytics '+(cls.charAt(0).toUpperCase()+cls.slice(1))+' Import';
+    document.getElementById('buildName').value=buildName;
+    closeMobalyticsModal();
+
+    toast(`Mobalytics import! ${p.equipment.length} aspects, ${p.skills.length} skills, ${p.talisman.length} charms, ${p.affixPriority.length} affix priorities`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WOWHEAD IMPORT
+// ═══════════════════════════════════════════════════════════════
+let wowheadParsed=null;
+
+function openWowheadImport(){
+    document.getElementById('wowheadUrlInput').value='';
+    document.getElementById('wowheadTextarea').value='';
+    document.getElementById('wowheadPreview').style.display='none';
+    document.getElementById('wowheadImportBtn').disabled=true;
+    wowheadParsed=null;
+    document.getElementById('wowheadOverlay').classList.add('show');
+}
+function closeWowheadModal(){document.getElementById('wowheadOverlay').classList.remove('show');}
+
+async function fetchWowheadBuild(){
+    const url=document.getElementById('wowheadUrlInput').value.trim();
+    const preview=document.getElementById('wowheadPreview');
+    preview.style.display='block';
+    preview.innerHTML='<div style="color:var(--blue);font-size:0.8rem;">Fetching page data...</div>';
+    if(!url.includes('wowhead.com')){
+        preview.innerHTML='<div style="color:var(--red);font-size:0.8rem;">Please paste a valid Wowhead D4 URL</div>';
+        return;
+    }
+    try{
+        const resp=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const html=await resp.text();
+        const parser=new DOMParser();
+        const doc=parser.parseFromString(html,'text/html');
+        const pageText=doc.body.innerText||doc.body.textContent;
+        document.getElementById('wowheadTextarea').value=pageText;
+        wowheadParsed=parseWowheadText(pageText);
+        showWowheadPreview(wowheadParsed);
+    }catch(e){
+        preview.innerHTML=`<div style="color:var(--orange-light);font-size:0.8rem;">Could not fetch page (CORS). Use Option 2: copy the page text manually (Ctrl+A, Ctrl+C).</div>`;
+    }
+}
+
+function parseWowheadText(text){
+    const result={class:null,skills:[],equipment:[],affixes:[],paragonBoards:[],talisman:[],oath:null,detected:[]};
+
+    // Class detection
+    const classNames=['barbarian','druid','necromancer','rogue','sorcerer','spiritborn','paladin','warlock'];
+    const classTitleMatch=text.match(/(Barbarian|Druid|Necromancer|Rogue|Sorcerer|Spiritborn|Paladin|Warlock)\s+(?:Build|Guide|Planner)/i);
+    if(classTitleMatch) result.class=classTitleMatch[1].toLowerCase();
+    if(!result.class){
+        classNames.forEach(c=>{
+            const re=new RegExp('\\b'+c+'\\b','i');
+            if(re.test(text)&&!result.class) result.class=c;
+        });
+    }
+    if(result.class) result.detected.push('Class: '+result.class);
+
+    // Wowhead build planners use a structured format with gear slots and affixes
+    // Equipment: "Helm", "Chest Armor", etc. followed by item name and affixes
+    const gearSlotNames=['Helm','Chest Armor','Chest','Gloves','Pants','Boots','Amulet','Ring','Ring 1','Ring 2','Weapon','Main Hand','Off-Hand','Offhand','Two-Handed'];
+    const gearSlotRegex=new RegExp('('+gearSlotNames.join('|')+')\\s*\\n([^\\n]+?)(?:\\n|$)','gi');
+    let gearMatch;
+    while((gearMatch=gearSlotRegex.exec(text))!==null){
+        const slotName=gearMatch[1].trim();
+        const itemOrAspect=gearMatch[2].trim();
+        if(itemOrAspect.length>3 && itemOrAspect.length<80){
+            result.equipment.push({slot:slotName,name:itemOrAspect});
+        }
+    }
+
+    // Aspects — "Aspect of X" pattern
+    const aspectPattern=/(?:Aspect of [A-Za-z' ]+|[A-Za-z']+ of [A-Za-z' ]+(?:'s)?)/gi;
+    const aspectMatches=text.match(aspectPattern)||[];
+    const seenAspects=new Set(result.equipment.map(e=>e.name.toLowerCase()));
+    aspectMatches.forEach(asp=>{
+        const clean=asp.trim();
+        if(clean.length>8 && !seenAspects.has(clean.toLowerCase()) && !/of the (Year|Day|Month|Week)/i.test(clean)){
+            seenAspects.add(clean.toLowerCase());
+            result.equipment.push({slot:'unknown',name:clean});
+        }
+    });
+    if(result.equipment.length) result.detected.push(result.equipment.length+' gear/aspects');
+
+    // Affix values — Wowhead shows "Critical Strike Damage +50.0%" format
+    const affixPattern=/([A-Za-z ]+?)\s*[+:]?\s*([0-9,.]+)(%?)/g;
+    const knownAffixes=['Critical Strike Chance','Critical Strike Damage','Vulnerable Damage','All Damage','Attack Speed','Cooldown Reduction','Movement Speed','Damage Reduction','Thorns','Maximum Life','Strength','Intelligence','Willpower','Dexterity'];
+    knownAffixes.forEach(aName=>{
+        const re=new RegExp(aName.replace(/\s+/g,'\\s+')+'\\s*[+:]?\\s*([0-9,.]+)(%?)','i');
+        const m=text.match(re);
+        if(m){
+            let bucket='additive';
+            if(/crit/i.test(aName)) bucket='crit_mult';
+            else if(/vuln/i.test(aName)) bucket='vuln_mult';
+            else if(/all damage/i.test(aName)) bucket='all_mult';
+            result.affixes.push({name:aName,value:parseFloat(m[1].replace(/,/g,'')),pct:!!m[2],bucket:bucket});
+        }
+    });
+    if(result.affixes.length) result.detected.push(result.affixes.length+' stat values');
+
+    // Skills
+    const skillSection=text.match(/(?:Active Skills|Skill Tree|Skills)\s*\n([\s\S]*?)(?=\n(?:Paragon|Equipment|Gear|Aspects|Mercenary|Talisman)\b)/i);
+    if(skillSection){
+        const skillLines=skillSection[1].split('\n').filter(l=>l.trim().length>2 && !/^\d+$/.test(l.trim()));
+        skillLines.forEach(l=>{
+            const name=l.trim().replace(/\s*\d+\/\d+/,'').replace(/\s*Rank\s*\d+/i,'').trim();
+            if(name.length>2 && name.length<40 && !/^(Basic|Core|Defensive|Companion|Wrath|Ultimate|Passive|Key)/i.test(name)){
+                result.skills.push({name:name,current:1});
+            }
+        });
+        if(result.skills.length) result.detected.push(result.skills.length+' skills');
+    }
+
+    // Paragon boards
+    const boardPattern=/([A-Za-z '^]+)\s*(?:Board|board)/gi;
+    let boardMatch;
+    const seenBoards=new Set();
+    while((boardMatch=boardPattern.exec(text))!==null){
+        const name=boardMatch[1].trim();
+        if(name.length>2 && name.length<30 && !seenBoards.has(name.toLowerCase())){
+            seenBoards.add(name.toLowerCase());
+            result.paragonBoards.push({name:name,glyph:null});
+        }
+    }
+    if(result.paragonBoards.length) result.detected.push(result.paragonBoards.length+' paragon boards');
+
+    // Talisman
+    Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+        if(text.includes(cs.name)){
+            result.talisman.push({name:cs.name+' set',setId:sid});
+        }
+    });
+    // Also individual charm names
+    const charmOfPattern=/(\w+ of [A-Za-z' ]+)/g;
+    let charmMatch;
+    while((charmMatch=charmOfPattern.exec(text))!==null){
+        const name=charmMatch[1].trim();
+        let setId='';
+        const ofPart=name.match(/\bof\s+(.+)$/i);
+        if(ofPart){
+            const sn=ofPart[1].toLowerCase().trim();
+            Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+                if(cs.name.toLowerCase()===sn) setId=sid;
+            });
+        }
+        if(setId && !result.talisman.some(t=>t.name===name)){
+            result.talisman.push({name:name,setId:setId});
+        }
+    }
+    if(result.talisman.length) result.detected.push(result.talisman.length+' charms/sets');
+
+    return result;
+}
+
+function showWowheadPreview(p){
+    const preview=document.getElementById('wowheadPreview');
+    preview.style.display='block';
+    let html='<div style="font-size:0.78rem;font-weight:600;color:var(--blue);margin-bottom:8px;">Wowhead Build Parsed</div>';
+    if(p.detected.length===0){
+        html+='<div style="color:var(--red);font-size:0.75rem;">No build data detected. Make sure you pasted the full page text.</div>';
+    }else{
+        html+='<div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:6px;">Detected: '+p.detected.join(' • ')+'</div>';
+        if(p.class) html+=`<div style="font-size:0.75rem;"><span style="color:var(--text-label)">Class:</span> <span style="color:var(--gold-light)">${p.class}</span></div>`;
+        if(p.equipment.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--orange-light);font-weight:600;">Equipment/Aspects:</div>';
+            p.equipment.forEach(e=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${e.slot!=='unknown'?'['+e.slot+'] ':''}${e.name}</div>`; });
+        }
+        if(p.affixes.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--green);font-weight:600;">Stat Values:</div>';
+            p.affixes.forEach(a=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${a.name}: ${a.value}${a.pct?'%':''} (${a.bucket})</div>`; });
+        }
+        if(p.skills.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--green);font-weight:600;">Skills:</div>';
+            p.skills.forEach(s=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${s.name}</div>`; });
+        }
+        if(p.talisman.length){
+            html+='<div style="margin-top:6px;font-size:0.72rem;color:var(--orange-light);font-weight:600;">Talisman:</div>';
+            p.talisman.forEach(c=>{ html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${c.name}${c.setId?' ('+c.setId+')':''}</div>`; });
+        }
+        html+='<div style="margin-top:8px;padding:6px;background:rgba(74,127,181,0.1);border:1px solid var(--blue);border-radius:4px;font-size:0.72rem;color:var(--blue);">';
+        html+='<strong>Note:</strong> Wowhead guide pages may not include exact per-item affix rolls. Detected stat values and aspects will be imported.';
+        html+='</div>';
+    }
+    preview.innerHTML=html;
+    document.getElementById('wowheadImportBtn').disabled=(p.detected.length===0);
+}
+
+function previewWowheadParse(){
+    const text=document.getElementById('wowheadTextarea').value;
+    if(!text.trim()){toast('Paste the Wowhead page text first');return;}
+    wowheadParsed=parseWowheadText(text);
+    showWowheadPreview(wowheadParsed);
+}
+
+function doWowheadImport(){
+    if(!wowheadParsed||wowheadParsed.detected.length===0){toast('Preview first');return;}
+    const p=wowheadParsed;
+
+    // Set class
+    if(p.class && CLASSES[p.class]){
+        state.selectedClass=p.class;
+        document.getElementById('mainStatLabel').textContent=CLASSES[p.class].stat;
+        buildClassSelector();buildSkillSelector();
+    }
+    const cls=state.selectedClass;
+
+    // Reset
+    state.gearAffixes={};state.gearAspects={};state.multipliers=[];state.charms=[];
+    affixCounter=0;multCounter=0;charmCounter=0;
+
+    // Equipment aspects → gear slots + multipliers
+    const wowSlotMap={'helm':'helm','chest armor':'chest','chest':'chest','gloves':'gloves','pants':'pants','boots':'boots','amulet':'amulet','ring 1':'ring1','ring 2':'ring2','ring':'ring1','main hand':'wep1','weapon':'wep1','two-handed':'wep1','off-hand':'offhand','offhand':'offhand'};
+    let ringCount=0;
+    p.equipment.forEach(eq=>{
+        let slot=wowSlotMap[(eq.slot||'').toLowerCase()];
+        if(!slot){
+            // Assign to next empty slot
+            const used=new Set(Object.keys(state.gearAspects));
+            const allSlots=['helm','chest','gloves','pants','boots','amulet','ring1','ring2','wep1','offhand'];
+            slot=allSlots.find(s=>!used.has(s));
+        }
+        if((eq.slot||'').toLowerCase()==='ring'){
+            ringCount++;
+            slot=ringCount<=1?'ring1':'ring2';
+        }
+        if(slot){
+            state.gearAspects[slot]=eq.name;
+            state.multipliers.push({id:'mult_'+(multCounter++),name:eq.name+' ('+slot+')',source:'aspect',bucket:'allMult',value:0,enabled:false});
+        }
+    });
+
+    // Stat values → gear affixes
+    const statSlotMap={crit_mult:'amulet',vuln_mult:'gloves',all_mult:'chest',additive:'helm'};
+    p.affixes.forEach(af=>{
+        const slot=statSlotMap[af.bucket]||'helm';
+        state.gearAffixes[slot]=state.gearAffixes[slot]||[];
+        state.gearAffixes[slot].push({id:'afx_'+(affixCounter++),type:af.bucket,value:af.value,label:af.name});
+    });
+
+    // Main stat
+    const mainStatKey={barbarian:'strength',druid:'willpower',necromancer:'intelligence',rogue:'dexterity',sorcerer:'intelligence',spiritborn:'dexterity',paladin:'strength',warlock:'intelligence'};
+    const msAffix=p.affixes.find(a=>a.name.toLowerCase()===mainStatKey[cls]);
+    if(msAffix) document.getElementById('mainStat').value=Math.round(msAffix.value);
+
+    // Talisman
+    p.talisman.forEach(ch=>{
+        state.charms.push({id:'charm_'+(charmCounter++),name:ch.name,size:1,setId:ch.setId||'',affixes:[{type:'additive',value:0}]});
+    });
+
+    // Paragon boards
+    initParagonState();
+    const classBoards=PARAGON_BOARDS[cls]||[];
+    const classParagon=state.paragon[cls]||[];
+    p.paragonBoards.forEach((pb,i)=>{
+        // Try to match by name
+        const matchIdx=classBoards.findIndex(cb=>cb.name.toLowerCase()===pb.name.toLowerCase());
+        if(matchIdx>=0 && classParagon[matchIdx]){
+            classParagon[matchIdx].attached=true;
+            classParagon[matchIdx].legendaryActive=true;
+        }
+    });
+    if(classParagon.length) classParagon[0].attached=true;
+
+    // Rebuild UI
+    buildGearSlots();
+    GEAR_SLOTS.forEach(slot=>renderAffixes(slot.id));
+    renderMultLibrary();renderTalisman();renderParagonBoards();onSkillChange();recalc();
+
+    const buildName='Wowhead '+(cls.charAt(0).toUpperCase()+cls.slice(1))+' Import';
+    document.getElementById('buildName').value=buildName;
+    closeWowheadModal();
+
+    toast(`Wowhead import! ${p.equipment.length} gear/aspects, ${p.affixes.length} stats, ${p.talisman.length} charms`);
 }
 
 init();
