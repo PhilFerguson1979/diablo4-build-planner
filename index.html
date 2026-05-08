@@ -235,6 +235,75 @@
 
         .glyph-summary{margin-top:12px;}
         .glyph-summary-row{display:flex;justify-content:space-between;padding:3px 8px;font-size:0.72rem;background:var(--bg-input);border-radius:3px;margin-bottom:3px;}
+
+        /* ═══ SKILL TREE ═══ */
+        .skill-tree-wrap{overflow-x:auto;padding-bottom:12px;}
+        .skill-tree{display:flex;gap:6px;min-width:max-content;}
+        .skill-tier{min-width:140px;background:var(--bg-slot);border:1px solid var(--border);border-radius:8px;padding:10px 8px;}
+        .skill-tier-header{text-align:center;font-family:'Cinzel',serif;font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+        .skill-tier-req{text-align:center;font-size:0.6rem;color:var(--text-dim);margin-bottom:8px;}
+        .skill-tier.locked{opacity:0.4;pointer-events:none;}
+        .skill-tier.locked .skill-tier-header{color:var(--text-dim);}
+        .skill-group{margin-bottom:10px;}
+        .skill-node{display:flex;align-items:center;gap:6px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all 0.15s;background:var(--bg-input);margin-bottom:3px;position:relative;}
+        .skill-node:hover{border-color:var(--gold);background:var(--bg-hover);}
+        .skill-node.allocated{border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.08);}
+        .skill-node.maxed{border-color:var(--gold);background:rgba(201,168,76,0.15);box-shadow:0 0 8px rgba(201,168,76,0.2);}
+        .skill-node.active-skill{border-color:var(--orange);background:rgba(212,115,13,0.15);box-shadow:0 0 10px rgba(212,115,13,0.25);}
+        .skill-node.locked-node{opacity:0.35;pointer-events:none;}
+        .skill-node-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;}
+        .skill-node-icon.basic{background:rgba(224,221,213,0.15);color:var(--text);}
+        .skill-node-icon.core{background:rgba(74,127,181,0.2);color:var(--blue);}
+        .skill-node-icon.defense{background:rgba(74,140,92,0.2);color:var(--green);}
+        .skill-node-icon.companion{background:rgba(123,82,171,0.2);color:var(--purple);}
+        .skill-node-icon.mastery{background:rgba(255,107,53,0.15);color:var(--crit-color);}
+        .skill-node-icon.ultimate{background:rgba(201,168,76,0.2);color:var(--gold);}
+        .skill-node-icon.keypassive{background:rgba(196,30,30,0.2);color:var(--red);}
+        .skill-node-icon.passive{background:rgba(138,135,120,0.15);color:var(--text-dim);}
+        .skill-node-info{flex:1;min-width:0;}
+        .skill-node-name{font-size:0.72rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .skill-node-pts{font-size:0.6rem;color:var(--text-dim);font-family:'Courier New',monospace;}
+        .skill-node-desc{font-size:0.58rem;color:var(--text-dim);line-height:1.3;margin-top:1px;}
+        .skill-node-pts-badge{font-size:0.62rem;font-family:'Courier New',monospace;font-weight:700;color:var(--gold);flex-shrink:0;min-width:28px;text-align:center;}
+        .skill-upgrades{margin-left:16px;border-left:2px solid var(--border);padding-left:6px;}
+        .skill-upgrades .skill-node{padding:3px 6px;}
+        .skill-upgrades .skill-node-icon{width:22px;height:22px;font-size:0.55rem;}
+        .skill-choice-label{font-size:0.55rem;color:var(--text-dim);padding:1px 4px;background:var(--bg-dark);border-radius:2px;position:absolute;top:-6px;right:4px;text-transform:uppercase;letter-spacing:0.5px;}
+        .skill-summary-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:var(--bg-slot);border:1px solid var(--border);border-radius:6px;font-size:0.72rem;}
+        .skill-summary-bar span{color:var(--text-dim);}
+        .skill-summary-bar .ss-val{color:var(--gold);font-family:'Courier New',monospace;font-weight:600;}
+        .skill-active-select{margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+        .skill-active-select label{font-size:0.72rem;color:var(--text-label);font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+
+        /* ═══ VISUAL PARAGON BOARD ═══ */
+        .paragon-boards-strip{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;align-items:flex-start;}
+        .paragon-board-wrapper{flex-shrink:0;}
+        .paragon-board-label{text-align:center;font-family:'Cinzel',serif;font-size:0.75rem;font-weight:700;color:var(--text-label);margin-bottom:6px;letter-spacing:1px;}
+        .paragon-board-grid{display:grid;grid-template-columns:repeat(11,26px);grid-template-rows:repeat(11,26px);gap:1px;background:var(--bg-dark);border:2px solid var(--border);border-radius:8px;padding:3px;position:relative;}
+        .paragon-board-grid.detached{opacity:0.3;pointer-events:none;}
+        .pn{width:26px;height:26px;border-radius:50%;border:1px solid transparent;cursor:pointer;transition:all 0.12s;display:flex;align-items:center;justify-content:center;font-size:0.5rem;font-weight:700;}
+        .pn:hover:not(.pn-empty){transform:scale(1.2);z-index:2;}
+        .pn-empty{cursor:default;background:transparent;}
+        .pn-normal{background:var(--bg-input);border-color:rgba(42,42,58,0.5);}
+        .pn-normal.pn-active{background:rgba(224,221,213,0.25);border-color:var(--text-dim);box-shadow:0 0 4px rgba(224,221,213,0.15);}
+        .pn-magic{background:rgba(74,127,181,0.12);border-color:rgba(74,127,181,0.3);}
+        .pn-magic.pn-active{background:rgba(74,127,181,0.35);border-color:var(--blue);box-shadow:0 0 5px rgba(74,127,181,0.3);}
+        .pn-rare{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.25);}
+        .pn-rare.pn-active{background:rgba(201,168,76,0.3);border-color:var(--gold);box-shadow:0 0 5px rgba(201,168,76,0.3);}
+        .pn-legendary{background:rgba(245,166,35,0.15);border-color:rgba(245,166,35,0.4);width:30px;height:30px;margin:-2px;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
+        .pn-legendary.pn-active{background:rgba(245,166,35,0.45);border-color:var(--orange);box-shadow:0 0 8px rgba(245,166,35,0.4);}
+        .pn-glyph{background:rgba(123,82,171,0.15);border-color:rgba(123,82,171,0.4);width:32px;height:32px;margin:-3px;border-radius:6px;border-width:2px;}
+        .pn-glyph.pn-active{background:rgba(123,82,171,0.4);border-color:var(--purple);box-shadow:0 0 10px rgba(123,82,171,0.4);}
+        .pn-gate{background:rgba(196,30,30,0.1);border-color:rgba(196,30,30,0.3);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);width:24px;height:24px;margin:1px;}
+        .pn-gate.pn-active{background:rgba(196,30,30,0.35);border-color:var(--red);}
+        .paragon-board-connector{display:flex;align-items:center;color:var(--border);font-size:1.2rem;padding:0 2px;align-self:center;}
+        .paragon-board-controls{display:flex;gap:6px;margin-top:6px;justify-content:center;flex-wrap:wrap;}
+        .paragon-board-controls button{padding:3px 8px;font-size:0.62rem;}
+        .paragon-board-info{text-align:center;font-size:0.65rem;color:var(--text-dim);margin-top:4px;}
+        .paragon-board-info .pbi-val{color:var(--gold);font-family:'Courier New',monospace;font-weight:600;}
+        .paragon-legend{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;font-size:0.62rem;color:var(--text-dim);}
+        .paragon-legend-item{display:flex;align-items:center;gap:3px;}
+        .paragon-legend-dot{width:10px;height:10px;border-radius:50%;border:1px solid;}
     </style>
 </head>
 <body>
@@ -331,16 +400,23 @@
             <div class="tab-content" id="tab-paragon">
                 <div class="panel">
                     <div class="panel-title">Paragon Boards & Glyphs — <span id="paragonClassName" style="color:var(--orange-light)">Rogue</span></div>
-                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">
-                        Attach boards, activate legendary nodes, and slot glyphs. All bonuses feed into the damage formula.
-                        Paragon Points from normal/magic/rare nodes can be entered per board.
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:8px;">
+                        Click boards to attach/detach. Click nodes on attached boards to allocate points. All bonuses feed into the damage formula.
                     </p>
-                    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+                    <div class="paragon-legend" id="paragonLegend">
+                        <div class="paragon-legend-item"><div class="paragon-legend-dot pn-normal pn-active"></div>Normal</div>
+                        <div class="paragon-legend-item"><div class="paragon-legend-dot pn-magic pn-active" style="border-radius:50%;width:10px;height:10px;"></div>Magic</div>
+                        <div class="paragon-legend-item"><div class="paragon-legend-dot pn-rare pn-active" style="border-radius:50%;width:10px;height:10px;"></div>Rare</div>
+                        <div class="paragon-legend-item"><div class="paragon-legend-dot" style="background:rgba(245,166,35,0.4);border:1px solid var(--orange);width:10px;height:10px;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);"></div>Legendary</div>
+                        <div class="paragon-legend-item"><div class="paragon-legend-dot" style="background:rgba(123,82,171,0.4);border:1px solid var(--purple);border-radius:3px;width:10px;height:10px;"></div>Glyph</div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
                         <span style="font-size:0.72rem;color:var(--text-dim);">Total Paragon Points:</span>
                         <input type="number" id="totalParagonPts" value="225" min="0" max="300" style="width:70px;" onchange="recalc()">
                         <span style="font-size:0.72rem;color:var(--text-dim);margin-left:12px;">Allocated:</span>
                         <span id="allocatedPts" style="font-size:0.78rem;font-family:'Courier New',monospace;color:var(--gold)">0</span>
                     </div>
+                    <div class="paragon-boards-strip" id="paragonBoardsStrip"></div>
                     <div id="paragonBoardList"></div>
                     <div class="glyph-summary" id="paragonSummary"></div>
                 </div>
@@ -375,16 +451,24 @@
             <!-- SKILLS TAB -->
             <div class="tab-content" id="tab-skills">
                 <div class="panel">
-                    <div class="panel-title">Active Skill</div>
-                    <div style="display:grid;grid-template-columns:1fr 90px;gap:10px;margin-bottom:10px;">
-                        <div class="input-group"><label>Skill</label><select id="skillSelect" onchange="onSkillChange()"></select></div>
-                        <div class="input-group"><label>Rank</label><input type="number" id="skillRank" value="1" min="1" max="20" onchange="onSkillChange()"></div>
+                    <div class="panel-title">Skill Tree — <span id="skillTreeClassName" style="color:var(--orange-light)">Rogue</span></div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:8px;">
+                        Click skills to allocate points (left=add, right-click=remove). Double-click an active skill to set it as your primary damage skill.
+                        Passive bonuses feed into the damage formula.
+                    </p>
+                    <div class="skill-summary-bar" id="skillSummaryBar">
+                        <span>Points: <span class="ss-val" id="skillPtsUsed">0</span>/<span class="ss-val" id="skillPtsTotal">58</span></span>
+                        <span>Active: <span class="ss-val" id="skillActiveLabel">None</span></span>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-                        <div class="input-group"><label>Coefficient %</label><input type="number" id="skillCoeff" value="45" step="0.1" readonly style="color:var(--orange);"></div>
-                        <div class="input-group"><label>Weapon Type</label><select id="weaponType" onchange="recalc()"><option value="melee">Melee</option><option value="ranged">Ranged</option><option value="dual">Dual Wield</option></select></div>
-                        <div class="input-group"><label>Tags</label><input type="text" id="skillTags" readonly style="background:var(--bg-input);border:1px solid var(--border);border-radius:5px;padding:8px 10px;color:var(--text-dim);font-size:0.78rem;width:100%;"></div>
+                    <div class="skill-active-select">
+                        <label>Active Skill:</label>
+                        <select id="skillSelect" onchange="onSkillChange()" style="min-width:180px;"></select>
+                        <div class="input-group" style="margin-bottom:0;"><label>Rank</label><input type="number" id="skillRank" value="1" min="1" max="20" style="width:60px;" onchange="onSkillChange()"></div>
+                        <div class="input-group" style="margin-bottom:0;"><label>Coefficient %</label><input type="number" id="skillCoeff" value="45" step="0.1" readonly style="color:var(--orange);width:80px;"></div>
+                        <div class="input-group" style="margin-bottom:0;"><label>Weapon Type</label><select id="weaponType" onchange="recalc()"><option value="melee">Melee</option><option value="ranged">Ranged</option><option value="dual">Dual Wield</option></select></div>
+                        <input type="text" id="skillTags" readonly style="background:var(--bg-input);border:1px solid var(--border);border-radius:5px;padding:6px 10px;color:var(--text-dim);font-size:0.72rem;max-width:200px;">
                     </div>
+                    <div class="skill-tree-wrap" id="skillTreeWrap"></div>
                 </div>
             </div>
 
@@ -818,13 +902,222 @@ const PARAGON_BOARDS = {
 };
 
 // ═══════════════════════════════════════════════════
+// SKILL TREE DATA (per class: tiers with skills and upgrades)
+// ═══════════════════════════════════════════════════
+const SKILL_TREES={
+rogue:{tiers:[
+{name:'Basic',tier:'basic',reqPts:0,skills:[
+{id:'blade_shift',name:'Blade Shift',coeff:45,tags:'Basic,Melee',speed:1.5,maxPts:5,upgrades:[
+{id:'enh_blade_shift',name:'Enhanced Blade Shift',desc:'Move freely through enemies',maxPts:1},
+{id:'fund_blade_shift',name:'Fundamental Blade Shift',desc:'Daze on 3rd hit',maxPts:1,choice:'A'},
+{id:'prim_blade_shift',name:'Primary Blade Shift',desc:'+15% dmg while moving',maxPts:1,choice:'B',bucket:'additive',valPer:15}]},
+{id:'invig_strike',name:'Invigorating Strike',coeff:46,tags:'Basic,Melee',speed:1.4,maxPts:5,upgrades:[
+{id:'enh_invig',name:'Enhanced Invig Strike',desc:'Heal on hit vs CC\'d',maxPts:1},
+{id:'fund_invig',name:'Fundamental Invig',desc:'Energy on hit',maxPts:1,choice:'A'},
+{id:'prim_invig',name:'Primary Invig',desc:'+8% Crit per Basic',maxPts:1,choice:'B',bucket:'critMult',valPer:8}]},
+{id:'puncture',name:'Puncture',coeff:36,tags:'Basic,Ranged',speed:1.8,maxPts:5,upgrades:[
+{id:'enh_puncture',name:'Enhanced Puncture',desc:'Slow on hit',maxPts:1},
+{id:'fund_puncture',name:'Fundamental Puncture',desc:'Vuln on 3rd hit',maxPts:1,choice:'A'},
+{id:'prim_puncture',name:'Primary Puncture',desc:'+3 energy per hit',maxPts:1,choice:'B'}]},
+{id:'forceful_arrow',name:'Forceful Arrow',coeff:49,tags:'Basic,Ranged',speed:1.2,maxPts:5,upgrades:[
+{id:'enh_forceful',name:'Enhanced Forceful Arrow',desc:'Vuln every 3rd cast',maxPts:1},
+{id:'fund_forceful',name:'Fundamental Forceful',desc:'Knockback',maxPts:1,choice:'A'},
+{id:'prim_forceful',name:'Primary Forceful',desc:'+20% dmg to Vuln',maxPts:1,choice:'B',bucket:'vulnMult',valPer:20}]},
+{id:'heartseeker',name:'Heartseeker',coeff:44,tags:'Basic,Ranged',speed:1.3,maxPts:5,upgrades:[
+{id:'enh_heartseeker',name:'Enhanced Heartseeker',desc:'+3% Crit per cast',maxPts:1},
+{id:'fund_heartseeker',name:'Fundamental Heartseeker',desc:'Crit auto-seeks',maxPts:1,choice:'A'},
+{id:'prim_heartseeker',name:'Primary Heartseeker',desc:'+4 energy on Crit',maxPts:1,choice:'B'}]},
+]},
+{name:'Core',tier:'core',reqPts:2,skills:[
+{id:'twisting_blades',name:'Twisting Blades',coeff:63,tags:'Core,Melee',speed:1.1,maxPts:5,upgrades:[
+{id:'enh_twisting',name:'Enhanced Twisting Blades',desc:'+20% on return hit',maxPts:1,bucket:'additive',valPer:20},
+{id:'adv_twisting',name:'Advanced Twisting',desc:'Reduce CD on return',maxPts:1,choice:'A'},
+{id:'imp_twisting',name:'Improved Twisting',desc:'Daze on impale',maxPts:1,choice:'B'}]},
+{id:'flurry',name:'Flurry',coeff:31,tags:'Core,Melee',speed:2.0,maxPts:5,upgrades:[
+{id:'enh_flurry',name:'Enhanced Flurry',desc:'Vuln & Stun to CC\'d',maxPts:1},
+{id:'adv_flurry',name:'Advanced Flurry',desc:'+8% per hit',maxPts:1,choice:'A',bucket:'additive',valPer:8},
+{id:'imp_flurry',name:'Improved Flurry',desc:'Heal per enemy',maxPts:1,choice:'B'}]},
+{id:'rapid_fire',name:'Rapid Fire',coeff:48,tags:'Core,Ranged',speed:1.8,maxPts:5,upgrades:[
+{id:'enh_rapid',name:'Enhanced Rapid Fire',desc:'+5% per subsequent hit',maxPts:1,bucket:'additive',valPer:5},
+{id:'adv_rapid',name:'Advanced Rapid Fire',desc:'Vuln with each hit',maxPts:1,choice:'A'},
+{id:'imp_rapid',name:'Improved Rapid Fire',desc:'Extra projectiles',maxPts:1,choice:'B'}]},
+{id:'pen_shot',name:'Penetrating Shot',coeff:70,tags:'Core,Ranged',speed:0.9,maxPts:5,upgrades:[
+{id:'enh_pen',name:'Enhanced Pen Shot',desc:'+10% per enemy pierced',maxPts:1,bucket:'additive',valPer:10},
+{id:'adv_pen',name:'Advanced Pen Shot',desc:'Slow on hit',maxPts:1,choice:'A'},
+{id:'imp_pen',name:'Improved Pen Shot',desc:'Knockdown on 3+',maxPts:1,choice:'B'}]},
+{id:'barrage',name:'Barrage',coeff:40,tags:'Core,Ranged',speed:1.4,maxPts:5,upgrades:[
+{id:'enh_barrage',name:'Enhanced Barrage',desc:'1 guaranteed Crit arrow',maxPts:1},
+{id:'adv_barrage',name:'Advanced Barrage',desc:'+12% Crit Dmg',maxPts:1,choice:'A',bucket:'critMult',valPer:12},
+{id:'imp_barrage',name:'Improved Barrage',desc:'Extra ricochet',maxPts:1,choice:'B'}]},
+{id:'dance_of_knives',name:'Dance of Knives',coeff:15,tags:'Core,Melee',speed:3.5,maxPts:5,upgrades:[
+{id:'enh_dok',name:'Enhanced Dance of Knives',desc:'Immune during channel',maxPts:1},
+{id:'adv_dok',name:'Advanced Dance',desc:'+2% per enemy hit',maxPts:1,choice:'A',bucket:'additive',valPer:2},
+{id:'imp_dok',name:'Improved Dance',desc:'Pull enemies in',maxPts:1,choice:'B'}]},
+]},
+{name:'Agility',tier:'defense',reqPts:6,skills:[
+{id:'shadow_step',name:'Shadow Step',coeff:72,tags:'Agility,Melee',speed:0.8,maxPts:5,upgrades:[
+{id:'enh_ss',name:'Enhanced Shadow Step',desc:'+8% Crit for 3s',maxPts:1,bucket:'critMult',valPer:8},
+{id:'meth_ss',name:'Methodical Shadow Step',desc:'Stun on hit',maxPts:1,choice:'A'},
+{id:'disc_ss',name:'Disciplined Shadow Step',desc:'-3s CD on kill',maxPts:1,choice:'B'}]},
+{id:'dash',name:'Dash',coeff:63,tags:'Agility,Melee',speed:0.7,maxPts:5,upgrades:[
+{id:'enh_dash',name:'Enhanced Dash',desc:'+15% Crit for 5s',maxPts:1,bucket:'critMult',valPer:15},
+{id:'meth_dash',name:'Methodical Dash',desc:'Daze on hit',maxPts:1,choice:'A'},
+{id:'disc_dash',name:'Disciplined Dash',desc:'-0.5s CD per hit',maxPts:1,choice:'B'}]},
+{id:'weapon_mastery',name:'Weapon Mastery',maxPts:3,passive:true,desc:'+4% dmg per rank',bucket:'additive',valPer:4},
+{id:'sturdy',name:'Sturdy',maxPts:3,passive:true,desc:'+4% Close DR per rank'},
+]},
+{name:'Subterfuge',tier:'companion',reqPts:11,skills:[
+{id:'concealment',name:'Concealment',maxPts:5,desc:'Stealth for 4s',upgrades:[
+{id:'enh_conc',name:'Enhanced Concealment',desc:'+50% move speed in stealth',maxPts:1},
+{id:'count_conc',name:'Countering Concealment',desc:'+10% Crit for 4s after',maxPts:1,choice:'A',bucket:'critMult',valPer:10},
+{id:'sub_conc',name:'Subverting Concealment',desc:'Unstoppable on use',maxPts:1,choice:'B'}]},
+{id:'smoke_grenade',name:'Smoke Grenade',maxPts:5,desc:'Daze enemies',upgrades:[
+{id:'enh_smoke',name:'Enhanced Smoke Grenade',desc:'Vuln on Daze',maxPts:1},
+{id:'count_smoke',name:'Countering Smoke',desc:'+15% dmg to Dazed',maxPts:1,choice:'A',bucket:'additive',valPer:15},
+{id:'sub_smoke',name:'Subverting Smoke',desc:'+20% speed for 5s',maxPts:1,choice:'B'}]},
+{id:'exploit',name:'Exploit',maxPts:3,passive:true,desc:'+6% dmg to Healthy & Injured',bucket:'additive',valPer:6},
+{id:'malice',name:'Malice',maxPts:3,passive:true,desc:'+3% dmg to Vuln per rank',bucket:'vulnMult',valPer:3},
+]},
+{name:'Imbuement',tier:'mastery',reqPts:16,skills:[
+{id:'poison_imb',name:'Poison Imbuement',maxPts:5,desc:'Imbue poison dmg',upgrades:[
+{id:'enh_pimb',name:'Enhanced Poison Imb',desc:'+30% Poison Dmg',maxPts:1,bucket:'additive',valPer:30},
+{id:'mix_pimb',name:'Mixed Poison Imb',desc:'AoE on kill',maxPts:1,choice:'A'},
+{id:'blnd_pimb',name:'Blended Poison Imb',desc:'+25% DoT',maxPts:1,choice:'B',bucket:'dotMult',valPer:25}]},
+{id:'cold_imb',name:'Cold Imbuement',maxPts:5,desc:'Imbue cold dmg',upgrades:[
+{id:'enh_cimb',name:'Enhanced Cold Imb',desc:'Vuln to Chilled',maxPts:1},
+{id:'mix_cimb',name:'Mixed Cold Imb',desc:'AoE Freeze',maxPts:1,choice:'A'},
+{id:'blnd_cimb',name:'Blended Cold Imb',desc:'+25% to Chilled',maxPts:1,choice:'B',bucket:'additive',valPer:25}]},
+{id:'shadow_imb',name:'Shadow Imbuement',maxPts:5,desc:'Imbue shadow dmg',upgrades:[
+{id:'enh_simb',name:'Enhanced Shadow Imb',desc:'+25% infect dmg',maxPts:1,bucket:'additive',valPer:25},
+{id:'mix_simb',name:'Mixed Shadow Imb',desc:'+15% DoT',maxPts:1,choice:'A',bucket:'dotMult',valPer:15},
+{id:'blnd_simb',name:'Blended Shadow Imb',desc:'Vuln on explosion',maxPts:1,choice:'B'}]},
+{id:'precision_imb',name:'Precision Imbuement',maxPts:3,passive:true,desc:'+5% Crit per rank for imbued',bucket:'critMult',valPer:5},
+]},
+{name:'Ultimate',tier:'ultimate',reqPts:23,skills:[
+{id:'death_trap',name:'Death Trap',coeff:250,tags:'Ultimate,Trap',speed:0.3,maxPts:1,upgrades:[
+{id:'prime_dt',name:'Prime Death Trap',desc:'Pull enemies in',maxPts:1},
+{id:'sup_dt',name:'Supreme Death Trap',desc:'-10s CD per kill',maxPts:1}]},
+{id:'rain_of_arrows',name:'Rain of Arrows',coeff:200,tags:'Ultimate,Ranged',speed:0.25,maxPts:1,upgrades:[
+{id:'prime_roa',name:'Prime Rain of Arrows',desc:'Immobilize on 2nd wave',maxPts:1},
+{id:'sup_roa',name:'Supreme Rain of Arrows',desc:'+20% to Vuln in area',maxPts:1,bucket:'vulnMult',valPer:20}]},
+{id:'innervation',name:'Innervation',maxPts:3,passive:true,desc:'+3% Lucky Hit: energy',},
+{id:'adrenaline_rush',name:'Adrenaline Rush',maxPts:3,passive:true,desc:'+5% energy regen per rank'},
+]},
+{name:'Key Passive',tier:'keypassive',reqPts:33,skills:[
+{id:'momentum',name:'Momentum',maxPts:1,passive:true,keyPassive:true,desc:'x20% dmg after Cutthroat on Stunned,Dazed or Frozen',bucket:'global',valPer:20},
+{id:'close_quarters',name:'Close Quarters Combat',maxPts:1,passive:true,keyPassive:true,desc:'x20% Close Dmg, +10% AS',bucket:'global',valPer:20},
+{id:'precision',name:'Precision',maxPts:1,passive:true,keyPassive:true,desc:'Crits grant stackable +2% Crit Dmg, up to +20%',bucket:'critMult',valPer:20},
+{id:'victimize',name:'Victimize',maxPts:1,passive:true,keyPassive:true,desc:'Vuln explosions deal +23% base dmg',bucket:'additive',valPer:23},
+{id:'exposure',name:'Exposure',maxPts:1,passive:true,keyPassive:true,desc:'Lucky Hit: reduce trap CD & Vuln for 3s'},
+]}
+]},
+barbarian:{tiers:[
+{name:'Basic',tier:'basic',reqPts:0,skills:[
+{id:'bash',name:'Bash',coeff:50,tags:'Basic,Melee',speed:1.3,maxPts:5,upgrades:[
+{id:'enh_bash',name:'Enhanced Bash',desc:'+20% Overpower chance',maxPts:1},
+{id:'bat_bash',name:'Battle Bash',desc:'+10% dmg to stunned',maxPts:1,choice:'A',bucket:'additive',valPer:10},
+{id:'com_bash',name:'Combat Bash',desc:'Fortify on hit',maxPts:1,choice:'B'}]},
+{id:'frenzy',name:'Frenzy',coeff:40,tags:'Basic,Melee',speed:2.0,maxPts:5,upgrades:[
+{id:'enh_frenzy',name:'Enhanced Frenzy',desc:'+2% AS per stack',maxPts:1},
+{id:'bat_frenzy',name:'Battle Frenzy',desc:'+8% dmg per stack',maxPts:1,choice:'A',bucket:'additive',valPer:8},
+{id:'com_frenzy',name:'Combat Frenzy',desc:'Heal on hit',maxPts:1,choice:'B'}]},
+{id:'flay',name:'Flay',coeff:42,tags:'Basic,Melee',speed:1.4,maxPts:5,upgrades:[
+{id:'enh_flay',name:'Enhanced Flay',desc:'Bleed + Vuln',maxPts:1},
+{id:'bat_flay',name:'Battle Flay',desc:'+20% DoT dmg',maxPts:1,choice:'A',bucket:'dotMult',valPer:20},
+{id:'com_flay',name:'Combat Flay',desc:'Thorns bonus',maxPts:1,choice:'B'}]},
+{id:'lunging_strike',name:'Lunging Strike',coeff:50,tags:'Basic,Melee',speed:1.1,maxPts:5,upgrades:[
+{id:'enh_lunge',name:'Enhanced Lunging Strike',desc:'Heal on kill',maxPts:1},
+{id:'bat_lunge',name:'Battle Lunging',desc:'+30% Crit Dmg',maxPts:1,choice:'A',bucket:'critMult',valPer:30},
+{id:'com_lunge',name:'Combat Lunging',desc:'Berserking on Crit',maxPts:1,choice:'B'}]},
+]},
+{name:'Core',tier:'core',reqPts:2,skills:[
+{id:'hota',name:'Hammer of the Ancients',coeff:100,tags:'Core,Melee',speed:0.8,maxPts:5,upgrades:[
+{id:'enh_hota',name:'Enhanced HotA',desc:'+5% per Fury above 50',maxPts:1,bucket:'additive',valPer:5},
+{id:'fur_hota',name:'Furious HotA',desc:'+10% Overpower',maxPts:1,choice:'A',bucket:'overpower',valPer:10},
+{id:'vio_hota',name:'Violent HotA',desc:'+15% after Overpow',maxPts:1,choice:'B',bucket:'additive',valPer:15}]},
+{id:'upheaval',name:'Upheaval',coeff:105,tags:'Core,Melee',speed:0.7,maxPts:5,upgrades:[
+{id:'enh_upheaval',name:'Enhanced Upheaval',desc:'Stagger bosses',maxPts:1},
+{id:'fur_upheaval',name:'Furious Upheaval',desc:'+8% per Berserking stack',maxPts:1,choice:'A',bucket:'additive',valPer:8},
+{id:'vio_upheaval',name:'Violent Upheaval',desc:'+20% Overpower',maxPts:1,choice:'B',bucket:'overpower',valPer:20}]},
+{id:'double_swing',name:'Double Swing',coeff:58,tags:'Core,Melee',speed:1.2,maxPts:5,upgrades:[]},
+{id:'whirlwind',name:'Whirlwind',coeff:35,tags:'Core,Melee',speed:3.0,maxPts:5,upgrades:[
+{id:'enh_ww',name:'Enhanced Whirlwind',desc:'+Fury per hit',maxPts:1},
+{id:'fur_ww',name:'Furious Whirlwind',desc:'+8% Crit per 2s',maxPts:1,choice:'A',bucket:'critMult',valPer:8},
+{id:'vio_ww',name:'Violent Whirlwind',desc:'+30% after 2s channel',maxPts:1,choice:'B',bucket:'additive',valPer:30}]},
+{id:'rend',name:'Rend',coeff:48,tags:'Core,Melee,DoT',speed:1.0,maxPts:5,upgrades:[
+{id:'enh_rend',name:'Enhanced Rend',desc:'+20% Vuln Dmg',maxPts:1,bucket:'vulnMult',valPer:20},
+{id:'fur_rend',name:'Furious Rend',desc:'+15% DoT',maxPts:1,choice:'A',bucket:'dotMult',valPer:15},
+{id:'vio_rend',name:'Violent Rend',desc:'+12% for bleed',maxPts:1,choice:'B',bucket:'additive',valPer:12}]},
+]},
+{name:'Defensive',tier:'defense',reqPts:6,skills:[
+{id:'ground_stomp',name:'Ground Stomp',maxPts:5,desc:'Stun enemies',upgrades:[]},
+{id:'rallying_cry',name:'Rallying Cry',maxPts:5,desc:'+Fury gen & move speed',upgrades:[]},
+{id:'iron_skin',name:'Iron Skin',maxPts:5,desc:'Barrier for 5s',upgrades:[]},
+{id:'imposing_pres',name:'Imposing Presence',maxPts:3,passive:true,desc:'+5% Max Life per rank'},
+{id:'martial_vigor',name:'Martial Vigor',maxPts:3,passive:true,desc:'+4% DR per rank'},
+]},
+{name:'Brawling',tier:'companion',reqPts:11,skills:[
+{id:'war_cry',name:'War Cry',maxPts:5,desc:'+15% dmg for party',bucket:'additive',valPer:15,upgrades:[]},
+{id:'charge',name:'Charge',maxPts:5,coeff:60,tags:'Brawling,Melee',speed:0.5,upgrades:[]},
+{id:'booming_voice',name:'Booming Voice',maxPts:3,passive:true,desc:'+8% Shout duration per rank'},
+{id:'aggressive_res',name:'Aggressive Resistance',maxPts:3,passive:true,desc:'+4% DR while Berserking'},
+{id:'guttural_yell',name:'Guttural Yell',maxPts:3,passive:true,desc:'+8% dmg to Slow per rank',bucket:'additive',valPer:8},
+]},
+{name:'Weapon Mastery',tier:'mastery',reqPts:16,skills:[
+{id:'death_blow',name:'Death Blow',coeff:120,tags:'Mastery,Melee',speed:0.4,maxPts:5,upgrades:[]},
+{id:'steel_grasp',name:'Steel Grasp',coeff:40,tags:'Mastery,Melee',speed:0.8,maxPts:5,upgrades:[]},
+{id:'pit_fighter',name:'Pit Fighter',maxPts:3,passive:true,desc:'+3% Close Dmg per rank',bucket:'additive',valPer:3},
+{id:'thick_skin',name:'Thick Skin',maxPts:3,passive:true,desc:'+Thorns per rank'},
+{id:'hamstring',name:'Hamstring',maxPts:3,passive:true,desc:'Bleed: Slow enemies'},
+]},
+{name:'Ultimate',tier:'ultimate',reqPts:23,skills:[
+{id:'call_ancients',name:'Call of the Ancients',coeff:180,tags:'Ultimate,Melee',speed:0.2,maxPts:1,upgrades:[]},
+{id:'iron_maelstrom',name:'Iron Maelstrom',coeff:200,tags:'Ultimate,Melee',speed:0.2,maxPts:1,upgrades:[]},
+{id:'wrath_berserker',name:'Wrath of the Berserker',maxPts:1,desc:'Berserking + Unstoppable',upgrades:[]},
+{id:'heavy_handed',name:'Heavy Handed',maxPts:3,passive:true,desc:'+5% Crit per rank',bucket:'critMult',valPer:5},
+{id:'wallop',name:'Wallop',maxPts:3,passive:true,desc:'+5% Overpower per rank',bucket:'overpower',valPer:5},
+]},
+{name:'Key Passive',tier:'keypassive',reqPts:33,skills:[
+{id:'unconstrained',name:'Unconstrained',maxPts:1,passive:true,keyPassive:true,desc:'x25% Berserking Dmg, +25% max duration',bucket:'global',valPer:25},
+{id:'walking_arsenal',name:'Walking Arsenal',maxPts:1,passive:true,keyPassive:true,desc:'x10% per weapon type used',bucket:'global',valPer:10},
+{id:'unbridled_rage',name:'Unbridled Rage',maxPts:1,passive:true,keyPassive:true,desc:'x135% Core Skill Dmg, 2x cost',bucket:'global',valPer:135},
+{id:'gushing_wounds',name:'Gushing Wounds',maxPts:1,passive:true,keyPassive:true,desc:'Bleed Crits deal x100% more',bucket:'critMult',valPer:100},
+]}
+]},
+};
+
+// Auto-generate trees for classes without explicit data from existing SKILLS
+function autoGenTree(cls){
+const skills=SKILLS[cls]||[];
+const tierMap={};
+skills.forEach(s=>{
+  const tag=(s.tags||'').split(',')[0].trim()||'Core';
+  if(!tierMap[tag])tierMap[tag]=[];
+  tierMap[tag].push({id:(cls+'_'+s.name).replace(/[^a-z0-9]/gi,'_').toLowerCase(),name:s.name,coeff:s.coeff,tags:s.tags,speed:s.speed,maxPts:5,upgrades:[]});
+});
+const tierOrder=['Basic','Core','Defensive','Agility','Companion','Subterfuge','Mastery','Imbuement','Conj','Wrath','Brawling','Macabre','Curse','Mobility','Ultimate'];
+const tiers=[];let reqPts=0;
+tierOrder.forEach(tname=>{
+  if(tierMap[tname]){tiers.push({name:tname,tier:tname.toLowerCase(),reqPts,skills:tierMap[tname]});reqPts+=tiers[tiers.length-1].skills.length;}
+});
+// Catch any remaining
+Object.entries(tierMap).forEach(([tname,skills])=>{
+  if(!tiers.find(t=>t.name===tname)){tiers.push({name:tname,tier:tname.toLowerCase(),reqPts,skills});reqPts+=skills.length;}
+});
+return {tiers};
+}
+Object.keys(SKILLS).forEach(cls=>{if(!SKILL_TREES[cls])SKILL_TREES[cls]=autoGenTree(cls);});
+
+// ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
 const state = {
     selectedClass:'rogue', isCrit:false, isVuln:false, isDot:false, isOP:false,
     gearAffixes:{}, gearAspects:{}, gemSelections:{}, runeSelections:{}, multipliers:[],
     charms:[], // {id, name, size, setId, affixes:[{type,value}]}
-    paragon:{}, // keyed by class: [{boardIdx, attached, legendaryActive, legendaryValue, glyphId, glyphLevel, normalPts, magicPts, rarePts}]
+    paragon:{}, // keyed by class: [{boardIdx, attached, legendaryActive, legendaryValue, glyphId, glyphLevel, normalPts, magicPts, rarePts, activeNodes:[]}]
+    skillTree:{}, // keyed by class: { [skillId]: pointsAllocated }
+    activeSkillId:'', // the skill selected as primary for damage calc
 };
 let affixCounter=0, multCounter=0, charmCounter=0, sortCol='fullDmg', sortDir=-1;
 
@@ -834,7 +1127,7 @@ let affixCounter=0, multCounter=0, charmCounter=0, sortCol='fullDmg', sortDir=-1
 function init(){
     buildClassSelector(); buildGearSlots(); buildGemSlots(); buildSkillSelector();
     initParagonState(); bindInputs(); refreshBuildList();
-    renderTalisman(); renderParagonBoards(); recalc();
+    renderTalisman(); renderParagonBoards(); renderSkillTree(); recalc();
     document.querySelectorAll('.tab-btn').forEach(btn=>{
         btn.addEventListener('click',()=>{
             document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -844,6 +1137,7 @@ function init(){
             if(btn.dataset.tab==='theorycraft'){renderSkillTable();renderStatWeights();}
             if(btn.dataset.tab==='talisman') renderTalisman();
             if(btn.dataset.tab==='paragon') renderParagonBoards();
+            if(btn.dataset.tab==='skills') renderSkillTree();
         });
     });
 }
@@ -859,8 +1153,12 @@ function initParagonState(){
             state.paragon[cls]=PARAGON_BOARDS[cls].map((_,i)=>({
                 boardIdx:i, attached:false, legendaryActive:false,
                 legendaryValue:PARAGON_BOARDS[cls][i].legendary.value,
-                glyphId:'', glyphLevel:1, normalPts:0, magicPts:0, rarePts:0
+                glyphId:'', glyphLevel:1, normalPts:0, magicPts:0, rarePts:0,
+                activeNodes:[]
             }));
+        } else {
+            // Ensure existing state has activeNodes
+            state.paragon[cls].forEach(ps=>{if(!ps.activeNodes)ps.activeNodes=[];});
         }
     });
 }
@@ -873,7 +1171,7 @@ function buildClassSelector(){
     Object.keys(CLASSES).forEach(cls=>{
         const b=document.createElement('button'); b.className='class-btn'+(cls===state.selectedClass?' active':'');
         b.textContent=cls.charAt(0).toUpperCase()+cls.slice(1);
-        b.onclick=()=>{state.selectedClass=cls;document.getElementById('mainStatLabel').textContent=CLASSES[cls].stat;document.querySelectorAll('.class-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');buildSkillSelector();renderParagonBoards();recalc();};
+        b.onclick=()=>{state.selectedClass=cls;document.getElementById('mainStatLabel').textContent=CLASSES[cls].stat;document.querySelectorAll('.class-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');buildSkillSelector();renderParagonBoards();renderSkillTree();recalc();};
         c.appendChild(b);
     });
 }
@@ -931,10 +1229,183 @@ function updateGem(s,g){state.gemSelections[s]=g;recalc();}
 function updateRune(slotId,type,val){state.runeSelections[slotId]=state.runeSelections[slotId]||{condition:'none',effect:'none'};state.runeSelections[slotId][type]=val;recalc();}
 
 // ═══════════════════════════════════════════════════
-// SKILLS
+// SKILLS — Tree Builder + Selector
 // ═══════════════════════════════════════════════════
-function buildSkillSelector(){const sel=document.getElementById('skillSelect');const skills=SKILLS[state.selectedClass]||[];sel.innerHTML=skills.map((s,i)=>`<option value="${i}">${s.name} (${s.coeff}%)</option>`).join('');onSkillChange();}
-function onSkillChange(){const skills=SKILLS[state.selectedClass]||[];const idx=parseInt(document.getElementById('skillSelect').value)||0;const skill=skills[idx];if(!skill)return;const rank=parseInt(document.getElementById('skillRank').value)||1;const scaled=Math.round(skill.coeff*(1+(rank-1)*0.1)*10)/10;document.getElementById('skillCoeff').value=scaled;document.getElementById('skillTags').value=skill.tags;recalc();}
+function buildSkillSelector(){
+    const sel=document.getElementById('skillSelect');
+    const skills=SKILLS[state.selectedClass]||[];
+    sel.innerHTML=skills.map((s,i)=>`<option value="${i}">${s.name} (${s.coeff}%)</option>`).join('');
+    // Also populate from skill tree active skills
+    const tree=SKILL_TREES[state.selectedClass];
+    if(tree){
+        const st=state.skillTree[state.selectedClass]||{};
+        const activeSkills=[];
+        tree.tiers.forEach(tier=>{tier.skills.forEach(sk=>{
+            if(sk.coeff && (st[sk.id]||0)>0) activeSkills.push(sk);
+        });});
+        if(activeSkills.length>0){
+            sel.innerHTML=activeSkills.map(s=>`<option value="${s.id}">${s.name} (${s.coeff}%)</option>`).join('')+
+                '<option disabled>───────────</option>'+
+                skills.map((s,i)=>`<option value="${i}">${s.name} (${s.coeff}%)</option>`).join('');
+        }
+    }
+    onSkillChange();
+}
+function onSkillChange(){
+    const cls=state.selectedClass;
+    const selVal=document.getElementById('skillSelect').value;
+    const rank=parseInt(document.getElementById('skillRank').value)||1;
+    // Try matching from skill tree first
+    const tree=SKILL_TREES[cls];
+    let skill=null;
+    if(tree){
+        tree.tiers.forEach(tier=>{tier.skills.forEach(sk=>{
+            if(sk.id===selVal && sk.coeff) skill=sk;
+        });});
+    }
+    // Fallback to SKILLS array index
+    if(!skill){
+        const skills=SKILLS[cls]||[];
+        const idx=parseInt(selVal)||0;
+        skill=skills[idx];
+    }
+    if(!skill) return;
+    const st=state.skillTree[cls]||{};
+    const allocatedRank=st[skill.id]||0;
+    const effectiveRank=allocatedRank>0?allocatedRank:rank;
+    const scaled=Math.round(skill.coeff*(1+(effectiveRank-1)*0.1)*10)/10;
+    document.getElementById('skillCoeff').value=scaled;
+    document.getElementById('skillTags').value=skill.tags||'';
+    state.activeSkillId=skill.id||selVal;
+    recalc();
+}
+
+function renderSkillTree(){
+    const cls=state.selectedClass;
+    const tree=SKILL_TREES[cls];
+    if(!tree){document.getElementById('skillTreeWrap').innerHTML='<p style="color:var(--text-dim)">No skill tree data for this class.</p>';return;}
+    document.getElementById('skillTreeClassName').textContent=cls.charAt(0).toUpperCase()+cls.slice(1);
+    const st=state.skillTree[cls]=state.skillTree[cls]||{};
+    const totalPts=Object.values(st).reduce((s,v)=>s+v,0);
+    document.getElementById('skillPtsUsed').textContent=totalPts;
+    // Count active skill
+    const activeId=state.activeSkillId;
+    let activeName='None';
+    tree.tiers.forEach(t=>t.skills.forEach(s=>{if(s.id===activeId&&s.coeff)activeName=s.name;}));
+    document.getElementById('skillActiveLabel').textContent=activeName;
+
+    const wrap=document.getElementById('skillTreeWrap');
+    let html='<div class="skill-tree">';
+    tree.tiers.forEach((tier,ti)=>{
+        const tierPts=totalPts;
+        const locked=tierPts<tier.reqPts;
+        html+=`<div class="skill-tier${locked?' locked':''}" data-tier="${ti}">`;
+        html+=`<div class="skill-tier-header">${tier.name}</div>`;
+        if(tier.reqPts>0) html+=`<div class="skill-tier-req">${tier.reqPts} pts required</div>`;
+        tier.skills.forEach(sk=>{
+            const pts=st[sk.id]||0;
+            const maxed=pts>=sk.maxPts;
+            const isActive=sk.id===activeId;
+            const isPassive=sk.passive;
+            const tierCls=tier.tier||'basic';
+            html+=`<div class="skill-group">`;
+            html+=`<div class="skill-node${pts>0?' allocated':''}${maxed?' maxed':''}${isActive?' active-skill':''}" onclick="allocSkill('${sk.id}',event)" oncontextmenu="deallocSkill('${sk.id}',event)" ondblclick="setActiveSkill('${sk.id}')" title="${sk.desc||sk.name}${sk.coeff?' ('+sk.coeff+'% coeff)':''}">`;
+            html+=`<div class="skill-node-icon ${tierCls}">${isPassive?'P':pts||'·'}</div>`;
+            html+=`<div class="skill-node-info"><div class="skill-node-name">${sk.name}</div>`;
+            if(sk.desc&&isPassive) html+=`<div class="skill-node-desc">${sk.desc}</div>`;
+            html+=`</div>`;
+            html+=`<div class="skill-node-pts-badge">${pts}/${sk.maxPts}</div>`;
+            html+=`</div>`;
+            // Upgrades
+            if(sk.upgrades&&sk.upgrades.length>0&&pts>0){
+                html+=`<div class="skill-upgrades">`;
+                sk.upgrades.forEach(upg=>{
+                    const upts=st[upg.id]||0;
+                    const umaxed=upts>=upg.maxPts;
+                    // Check if choice is locked (other choice taken)
+                    let choiceLocked=false;
+                    if(upg.choice){
+                        const otherChoice=sk.upgrades.find(u=>u.choice&&u.choice!==upg.choice&&u.choice!=='');
+                        if(otherChoice&&(st[otherChoice.id]||0)>0) choiceLocked=true;
+                    }
+                    html+=`<div class="skill-node${upts>0?' allocated':''}${umaxed?' maxed':''}${choiceLocked?' locked-node':''}" onclick="allocSkill('${upg.id}',event)" oncontextmenu="deallocSkill('${upg.id}',event)" title="${upg.desc||upg.name}">`;
+                    if(upg.choice) html+=`<span class="skill-choice-label">${upg.choice}</span>`;
+                    html+=`<div class="skill-node-icon passive">${upts||'·'}</div>`;
+                    html+=`<div class="skill-node-info"><div class="skill-node-name">${upg.name}</div>`;
+                    if(upg.desc) html+=`<div class="skill-node-desc">${upg.desc}</div>`;
+                    html+=`</div>`;
+                    html+=`<div class="skill-node-pts-badge">${upts}/${upg.maxPts}</div>`;
+                    html+=`</div>`;
+                });
+                html+=`</div>`;
+            }
+            html+=`</div>`;
+        });
+        html+=`</div>`;
+    });
+    html+=`</div>`;
+    wrap.innerHTML=html;
+}
+
+function allocSkill(id,e){
+    if(e)e.preventDefault();
+    const cls=state.selectedClass;
+    const st=state.skillTree[cls]=state.skillTree[cls]||{};
+    const tree=SKILL_TREES[cls];if(!tree)return;
+    // Find the skill/upgrade node
+    let node=null,parentSkill=null,tier=null;
+    tree.tiers.forEach(t=>{t.skills.forEach(sk=>{
+        if(sk.id===id){node=sk;tier=t;}
+        (sk.upgrades||[]).forEach(u=>{if(u.id===id){node=u;parentSkill=sk;tier=t;}});
+    });});
+    if(!node)return;
+    // Check tier unlock
+    const totalPts=Object.values(st).reduce((s,v)=>s+v,0);
+    if(totalPts<tier.reqPts)return;
+    // Check parent skill allocated for upgrades
+    if(parentSkill&&!(st[parentSkill.id]>0))return;
+    // Check choice lock
+    if(node.choice&&parentSkill){
+        const other=parentSkill.upgrades.find(u=>u.choice&&u.choice!==node.choice);
+        if(other&&(st[other.id]||0)>0)return;
+    }
+    // Allocate
+    const cur=st[id]||0;
+    if(cur<node.maxPts){st[id]=cur+1;renderSkillTree();buildSkillSelector();recalc();}
+}
+function deallocSkill(id,e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    const cls=state.selectedClass;
+    const st=state.skillTree[cls];if(!st)return;
+    if((st[id]||0)>0){
+        st[id]--;
+        if(st[id]<=0)delete st[id];
+        // Also remove upgrade points if parent skill removed
+        const tree=SKILL_TREES[cls];
+        tree.tiers.forEach(t=>{t.skills.forEach(sk=>{
+            if(sk.id===id&&(st[id]||0)===0){
+                (sk.upgrades||[]).forEach(u=>{delete st[u.id];});
+            }
+        });});
+        renderSkillTree();buildSkillSelector();recalc();
+    }
+}
+function setActiveSkill(id){
+    const cls=state.selectedClass;
+    const tree=SKILL_TREES[cls];if(!tree)return;
+    let found=null;
+    tree.tiers.forEach(t=>t.skills.forEach(sk=>{if(sk.id===id&&sk.coeff)found=sk;}));
+    if(found){
+        state.activeSkillId=id;
+        const sel=document.getElementById('skillSelect');
+        // Set dropdown to this skill
+        for(let i=0;i<sel.options.length;i++){
+            if(sel.options[i].value===id){sel.selectedIndex=i;break;}
+        }
+        onSkillChange();
+        renderSkillTree();
+    }
+}
 
 // ═══════════════════════════════════════════════════
 // TALISMAN
@@ -1070,73 +1541,162 @@ function getActiveSetBonuses(){
 // ═══════════════════════════════════════════════════
 // PARAGON
 // ═══════════════════════════════════════════════════
+// Generate a diamond-shaped 11x11 board layout
+function genBoardLayout(){
+    const grid=[];const c=5;
+    for(let r=0;r<11;r++){
+        for(let col=0;col<11;col++){
+            const dist=Math.abs(r-c)+Math.abs(col-c);
+            if(dist>5){grid.push('empty');continue;}
+            if(r===c&&col===c){grid.push('glyph');continue;}
+            // Gates at edges
+            if((r===0&&col===c)||(r===10&&col===c)||(r===c&&col===0)||(r===c&&col===10)){grid.push('gate');continue;}
+            // Legendary at top-center area
+            if(r===2&&col===c){grid.push('legendary');continue;}
+            // Rare nodes at specific positions
+            if(dist===3&&(r+col)%3===0){grid.push('rare');continue;}
+            // Magic nodes in inner ring
+            if(dist<=2&&dist>0){grid.push('magic');continue;}
+            grid.push('normal');
+        }
+    }
+    return grid;
+}
+const BOARD_LAYOUT=genBoardLayout();
+
 function renderParagonBoards(){
     const cls=state.selectedClass;
     document.getElementById('paragonClassName').textContent=cls.charAt(0).toUpperCase()+cls.slice(1);
     initParagonState();
     const boards=PARAGON_BOARDS[cls]||[];
     const pState=state.paragon[cls]||[];
+
+    // Visual board strip
+    const strip=document.getElementById('paragonBoardsStrip');
+    strip.innerHTML='';
+    boards.forEach((board,idx)=>{
+        const ps=pState[idx]||{};
+        if(!ps.activeNodes) ps.activeNodes=[];
+        if(idx>0){
+            const conn=document.createElement('div');
+            conn.className='paragon-board-connector';
+            conn.textContent='⟶';
+            strip.appendChild(conn);
+        }
+        const wrapper=document.createElement('div');
+        wrapper.className='paragon-board-wrapper';
+        let bhtml=`<div class="paragon-board-label">${board.name}</div>`;
+        bhtml+=`<div class="paragon-board-grid${ps.attached?'':' detached'}" id="pbgrid-${idx}" onclick="onBoardGridClick(${idx},event)">`;
+        for(let i=0;i<121;i++){
+            const nodeType=BOARD_LAYOUT[i];
+            if(nodeType==='empty'){bhtml+=`<div class="pn pn-empty"></div>`;continue;}
+            const isActive=ps.activeNodes.includes(i);
+            const isLeg=nodeType==='legendary';
+            const isGlyph=nodeType==='glyph';
+            let cls2=`pn pn-${nodeType}${isActive||((isLeg&&ps.legendaryActive)||(isGlyph&&ps.glyphId))?' pn-active':''}`;
+            let label='';
+            if(isLeg) label='★';
+            else if(isGlyph) label=ps.glyphId?'G':'◈';
+            else if(nodeType==='gate') label='◇';
+            else if(nodeType==='rare') label='◆';
+            bhtml+=`<div class="${cls2}" data-ni="${i}" data-nt="${nodeType}" title="${nodeType}${isLeg?' — '+board.legendary.name:''}${isGlyph&&ps.glyphId?' — '+ps.glyphId:''}">${label}</div>`;
+        }
+        bhtml+=`</div>`;
+        // Controls below board
+        bhtml+=`<div class="paragon-board-controls">`;
+        bhtml+=`<button class="sb-btn${ps.attached?' primary':''}" onclick="toggleBoard(${idx})" style="font-size:0.6rem;">${ps.attached?'✓ Attached':'Attach'}</button>`;
+        if(ps.attached){
+            bhtml+=`<button class="sb-btn" onclick="clearBoardNodes(${idx})" style="font-size:0.6rem;">Clear Nodes</button>`;
+        }
+        bhtml+=`</div>`;
+        // Board info
+        const nCount=ps.activeNodes.filter(i=>BOARD_LAYOUT[i]==='normal').length;
+        const mCount=ps.activeNodes.filter(i=>BOARD_LAYOUT[i]==='magic').length;
+        const rCount=ps.activeNodes.filter(i=>BOARD_LAYOUT[i]==='rare').length;
+        bhtml+=`<div class="paragon-board-info">`;
+        bhtml+=`<span class="pbi-val">${nCount}</span>N <span class="pbi-val">${mCount}</span>M <span class="pbi-val">${rCount}</span>R`;
+        bhtml+=`</div>`;
+        wrapper.innerHTML=bhtml;
+        strip.appendChild(wrapper);
+    });
+
+    // Detailed controls list (glyph, legendary) below the visual strip
     const container=document.getElementById('paragonBoardList');
     container.innerHTML='';
-
     boards.forEach((board,idx)=>{
-        const ps=pState[idx]||{attached:false,legendaryActive:false,legendaryValue:board.legendary.value,glyphId:'',glyphLevel:1,normalPts:0,magicPts:0,rarePts:0};
+        const ps=pState[idx]||{};
+        if(!ps.attached) return;
         const card=document.createElement('div');
-        card.className='paragon-board-card'+(ps.attached?' attached':'');
+        card.className='paragon-board-card attached';
         card.id='pboard-'+idx;
-
-        let html=`<div class="pb-header">
-            <span class="pb-name">${board.name}</span>
-            <button class="pb-toggle${ps.attached?' on':''}" onclick="toggleBoard(${idx})">${ps.attached?'Attached':'Detached'}</button>
+        let html=`<div class="pb-header"><span class="pb-name">${board.name}</span></div>`;
+        // Legendary node
+        html+=`<div class="pb-legendary${ps.legendaryActive?' active':''}">
+            <input type="checkbox" ${ps.legendaryActive?'checked':''} onchange="toggleLegendary(${idx},this.checked)">
+            <div style="flex:1;">
+                <div class="pb-legendary-name">${board.legendary.name}</div>
+                <div class="pb-legendary-desc">${board.legendary.desc}</div>
+            </div>
+            <input type="number" value="${ps.legendaryValue}" step="1" style="width:60px;font-size:0.75rem;padding:3px 5px;" onchange="updateLegendaryVal(${idx},this.value)">
+            <span class="pb-legendary-val">${board.legendary.bucket}</span>
         </div>`;
-
-        if(ps.attached){
-            // Legendary node
-            html+=`<div class="pb-legendary${ps.legendaryActive?' active':''}">
-                <input type="checkbox" ${ps.legendaryActive?'checked':''} onchange="toggleLegendary(${idx},this.checked)">
-                <div style="flex:1;">
-                    <div class="pb-legendary-name">${board.legendary.name}</div>
-                    <div class="pb-legendary-desc">${board.legendary.desc}</div>
-                </div>
-                <input type="number" value="${ps.legendaryValue}" step="1" style="width:60px;font-size:0.75rem;padding:3px 5px;" onchange="updateLegendaryVal(${idx},this.value)">
-                <span class="pb-legendary-val">${board.legendary.bucket}</span>
+        // Glyph socket
+        if(board.hasGlyph){
+            const glyph=GLYPHS.find(g=>g.id===ps.glyphId);
+            const glyphVal=glyph?(glyph.base+glyph.perLvl*(ps.glyphLevel-1)).toFixed(1):0;
+            html+=`<div class="pb-glyph">
+                <select onchange="updateBoardGlyph(${idx},this.value)">
+                    <option value="">-- No Glyph --</option>
+                    ${GLYPHS.map(g=>`<option value="${g.id}"${g.id===ps.glyphId?' selected':''}>${g.name} — ${g.desc}</option>`).join('')}
+                </select>
+                <input type="number" value="${ps.glyphLevel}" min="1" max="21" placeholder="Lvl" onchange="updateGlyphLevel(${idx},this.value)">
+                <span style="font-size:0.68rem;color:var(--text-dim);">Lvl</span>
             </div>`;
-
-            // Glyph socket
-            if(board.hasGlyph){
-                const glyph=GLYPHS.find(g=>g.id===ps.glyphId);
-                const glyphVal=glyph?(glyph.base+glyph.perLvl*(ps.glyphLevel-1)).toFixed(1):0;
-                html+=`<div class="pb-glyph">
-                    <select onchange="updateBoardGlyph(${idx},this.value)">
-                        <option value="">-- No Glyph --</option>
-                        ${GLYPHS.map(g=>`<option value="${g.id}"${g.id===ps.glyphId?' selected':''}>${g.name} — ${g.desc}</option>`).join('')}
-                    </select>
-                    <input type="number" value="${ps.glyphLevel}" min="1" max="21" placeholder="Lvl" onchange="updateGlyphLevel(${idx},this.value)">
-                    <span style="font-size:0.68rem;color:var(--text-dim);">Lvl</span>
-                </div>`;
-                if(glyph){
-                    html+=`<div class="pb-glyph-info">${glyph.name}: +${glyphVal}% ${glyph.desc} (${glyph.bucket||'defensive'})</div>`;
-                }
-            }
-
-            // Node point allocation
-            html+=`<div class="pb-nodes">
-                <div class="pb-node-input"><label>Normal Pts</label><input type="number" value="${ps.normalPts}" min="0" onchange="updateNodePts(${idx},'normalPts',this.value)"></div>
-                <div class="pb-node-input"><label>Magic Pts</label><input type="number" value="${ps.magicPts}" min="0" onchange="updateNodePts(${idx},'magicPts',this.value)"></div>
-                <div class="pb-node-input"><label>Rare Pts</label><input type="number" value="${ps.rarePts}" min="0" onchange="updateNodePts(${idx},'rarePts',this.value)"></div>
-            </div>`;
+            if(glyph) html+=`<div class="pb-glyph-info">${glyph.name}: +${glyphVal}% ${glyph.desc} (${glyph.bucket||'defensive'})</div>`;
         }
         card.innerHTML=html;
         container.appendChild(card);
     });
-
     updateParagonSummary();
+}
+
+function onBoardGridClick(boardIdx,e){
+    const node=e.target.closest('[data-ni]');
+    if(!node)return;
+    const ni=parseInt(node.dataset.ni);
+    const nt=node.dataset.nt;
+    const cls=state.selectedClass;
+    const ps=state.paragon[cls][boardIdx];
+    if(!ps||!ps.attached)return;
+    if(!ps.activeNodes) ps.activeNodes=[];
+    if(nt==='legendary'){
+        ps.legendaryActive=!ps.legendaryActive;
+    } else if(nt==='glyph'){
+        // Toggle glyph highlight — glyph selection happens in dropdown below
+        // Just visual feedback
+    } else if(nt!=='empty'&&nt!=='gate'){
+        const idx=ps.activeNodes.indexOf(ni);
+        if(idx>=0) ps.activeNodes.splice(idx,1);
+        else ps.activeNodes.push(ni);
+        // Sync point counts from active nodes
+        ps.normalPts=ps.activeNodes.filter(i=>BOARD_LAYOUT[i]==='normal').length;
+        ps.magicPts=ps.activeNodes.filter(i=>BOARD_LAYOUT[i]==='magic').length;
+        ps.rarePts=ps.activeNodes.filter(i=>BOARD_LAYOUT[i]==='rare').length;
+    }
+    renderParagonBoards();recalc();
+}
+
+function clearBoardNodes(boardIdx){
+    const cls=state.selectedClass;
+    const ps=state.paragon[cls][boardIdx];
+    if(ps){ps.activeNodes=[];ps.normalPts=0;ps.magicPts=0;ps.rarePts=0;}
+    renderParagonBoards();recalc();
 }
 
 function toggleBoard(idx){
     const ps=state.paragon[state.selectedClass];
     ps[idx].attached=!ps[idx].attached;
-    if(!ps[idx].attached){ps[idx].legendaryActive=false;ps[idx].glyphId='';ps[idx].glyphLevel=1;ps[idx].normalPts=0;ps[idx].magicPts=0;ps[idx].rarePts=0;}
+    if(!ps[idx].attached){ps[idx].legendaryActive=false;ps[idx].glyphId='';ps[idx].glyphLevel=1;ps[idx].normalPts=0;ps[idx].magicPts=0;ps[idx].rarePts=0;ps[idx].activeNodes=[];}
     renderParagonBoards();recalc();
 }
 function toggleLegendary(idx,checked){state.paragon[state.selectedClass][idx].legendaryActive=checked;renderParagonBoards();recalc();}
@@ -1325,6 +1885,31 @@ function aggregateBuckets(){
         // Rare nodes give small all damage (approx 2% per point)
         b.allMult+=ps.rarePts*2;
     });
+
+    // Skill tree passives
+    const stCls=state.selectedClass;
+    const stState=state.skillTree[stCls]||{};
+    const stTree=SKILL_TREES[stCls];
+    if(stTree){
+        stTree.tiers.forEach(tier=>{tier.skills.forEach(sk=>{
+            const pts=stState[sk.id]||0;
+            // Passive skills with bucket
+            if(sk.bucket&&sk.valPer&&pts>0){
+                const val=sk.valPer*pts;
+                if(sk.bucket==='global') b.globals.push({value:val,name:sk.name});
+                else if(b.hasOwnProperty(sk.bucket)) b[sk.bucket]+=val;
+            }
+            // Upgrade nodes with bucket
+            (sk.upgrades||[]).forEach(upg=>{
+                const upts=stState[upg.id]||0;
+                if(upts>0&&upg.bucket&&upg.valPer){
+                    const val=upg.valPer*upts;
+                    if(upg.bucket==='global') b.globals.push({value:val,name:upg.name});
+                    else if(b.hasOwnProperty(upg.bucket)) b[upg.bucket]+=val;
+                }
+            });
+        });});
+    }
 
     // Manual overrides
     const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
@@ -1519,11 +2104,12 @@ const STORAGE_KEY='d4_builds_v3';
 function getBuilds(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{};}catch(e){return {};}}
 function setBuilds(b){localStorage.setItem(STORAGE_KEY,JSON.stringify(b));}
 function refreshBuildList(){const sel=document.getElementById('buildList');const builds=getBuilds();sel.innerHTML='<option value="">-- Select --</option>';Object.keys(builds).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});}
-function getBuildData(){return{version:3,selectedClass:state.selectedClass,mainStat:document.getElementById('mainStat').value,enemyDR:document.getElementById('enemyDR').value,gearAffixes:state.gearAffixes,gearAspects:state.gearAspects,gemSelections:state.gemSelections,runeSelections:state.runeSelections,multipliers:state.multipliers,charms:state.charms,paragon:state.paragon,skillSelect:document.getElementById('skillSelect').value,skillRank:document.getElementById('skillRank').value,weaponType:document.getElementById('weaponType').value,isCrit:state.isCrit,isVuln:state.isVuln,isDot:state.isDot,isOP:state.isOP,manualWeaponDmg:document.getElementById('manualWeaponDmg').value,manualAdditive:document.getElementById('manualAdditive').value,manualAllMult:document.getElementById('manualAllMult').value,manualCritMult:document.getElementById('manualCritMult').value,manualVulnMult:document.getElementById('manualVulnMult').value,manualDotMult:document.getElementById('manualDotMult').value,manualOverpower:document.getElementById('manualOverpower').value,manualMainStat:document.getElementById('manualMainStat').value,totalParagonPts:document.getElementById('totalParagonPts').value};}
+function getBuildData(){return{version:4,selectedClass:state.selectedClass,mainStat:document.getElementById('mainStat').value,enemyDR:document.getElementById('enemyDR').value,gearAffixes:state.gearAffixes,gearAspects:state.gearAspects,gemSelections:state.gemSelections,runeSelections:state.runeSelections,multipliers:state.multipliers,charms:state.charms,paragon:state.paragon,skillTree:state.skillTree,activeSkillId:state.activeSkillId,skillSelect:document.getElementById('skillSelect').value,skillRank:document.getElementById('skillRank').value,weaponType:document.getElementById('weaponType').value,isCrit:state.isCrit,isVuln:state.isVuln,isDot:state.isDot,isOP:state.isOP,manualWeaponDmg:document.getElementById('manualWeaponDmg').value,manualAdditive:document.getElementById('manualAdditive').value,manualAllMult:document.getElementById('manualAllMult').value,manualCritMult:document.getElementById('manualCritMult').value,manualVulnMult:document.getElementById('manualVulnMult').value,manualDotMult:document.getElementById('manualDotMult').value,manualOverpower:document.getElementById('manualOverpower').value,manualMainStat:document.getElementById('manualMainStat').value,totalParagonPts:document.getElementById('totalParagonPts').value};}
 function loadBuildData(data){
     if(!data)return;
     state.selectedClass=data.selectedClass||'rogue';state.gearAffixes=data.gearAffixes||{};state.gearAspects=data.gearAspects||{};state.gemSelections=data.gemSelections||{};state.runeSelections=data.runeSelections||{};
     state.multipliers=data.multipliers||[];state.charms=data.charms||[];state.paragon=data.paragon||{};
+    state.skillTree=data.skillTree||{};state.activeSkillId=data.activeSkillId||'';
     state.isCrit=data.isCrit||false;state.isVuln=data.isVuln||false;state.isDot=data.isDot||false;state.isOP=data.isOP||false;
     affixCounter=0;multCounter=0;charmCounter=0;
     Object.values(state.gearAffixes).forEach(a=>a.forEach(x=>{const n=parseInt(x.id.split('_')[1])||0;if(n>=affixCounter)affixCounter=n+1;}));
@@ -1534,7 +2120,7 @@ function loadBuildData(data){
     if(data.totalParagonPts)document.getElementById('totalParagonPts').value=data.totalParagonPts;
     ['manualWeaponDmg','manualAdditive','manualAllMult','manualCritMult','manualVulnMult','manualDotMult','manualOverpower','manualMainStat'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=data[id]||0;});
     buildClassSelector();buildGearSlots();GEAR_SLOTS.forEach(s=>renderAffixes(s.id));buildGemSlots();buildSkillSelector();
-    initParagonState();renderMultLibrary();renderTalisman();renderParagonBoards();
+    initParagonState();renderMultLibrary();renderTalisman();renderParagonBoards();renderSkillTree();
     if(data.skillSelect)document.getElementById('skillSelect').value=data.skillSelect;
     if(data.skillRank)document.getElementById('skillRank').value=data.skillRank;
     if(data.weaponType)document.getElementById('weaponType').value=data.weaponType;
