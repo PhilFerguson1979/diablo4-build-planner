@@ -1553,14 +1553,13 @@ function parseMaxrollText(text){
         });
     }
 
-    // Parse talisman — between "Talisman" header and "Oath" or "Penitent" or next section
-    // Maxroll format: "Talisman\nSwiftness\nFer of Righteous Will\n..." then "Penitent Greaves\nOath"
-    const talismanMatch=text.match(/Talisman\s*\n([\s\S]*?)(?=\n(?:Penitent|Oath|Notes|Edit\n|Skills|Paragon|Mercenary)\b)/i);
+    // Parse talisman — between "Talisman" header and "Oath" or next section
+    // Maxroll format: "Talisman\nSwiftness\nFer of Righteous Will\n...\nPenitent Greaves\nOath"
+    const talismanMatch=text.match(/(?:^|\n)Talisman\s*\n([\s\S]*?)(?=\nOath\b|\nNotes\b|\nEdit\n|\nSkills\b|\nParagon\b|\nMercenary\b)/i);
     if(talismanMatch){
         const charmLines=talismanMatch[1].split('\n').map(l=>l.trim()).filter(l=>
             l.length>1 &&
-            !l.match(/^(Edit|Notes|Prev|Next|Stat Priority|Collapse|Variant|Equipment|Talisman|Soul Shards)/i) &&
-            !l.match(/^(Legendary|Rare|Magic|Common|Normal)\s/i)
+            !l.match(/^(Edit|Notes|Prev|Next|Stat Priority|Collapse|Variant|Equipment|Talisman|Soul Shards|Penitent|Legendary|Rare|Magic|Common|Normal\s)/i)
         );
         charmLines.forEach(line=>{ result.talisman.push(line); });
     }
