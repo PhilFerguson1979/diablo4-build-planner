@@ -484,16 +484,22 @@
 <div class="modal-overlay" id="maxrollOverlay" onclick="if(event.target===this)closeMaxrollModal()">
     <div class="modal" style="max-width:800px;">
         <h2 style="color:var(--orange);">Import from Maxroll</h2>
-        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:8px;">
-            Open your build on <a href="https://maxroll.gg/d4/planner" target="_blank" style="color:var(--orange)">maxroll.gg/d4/planner</a>,
-            press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong>, and paste below.
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:6px;">
+            <strong>Option 1 (Recommended):</strong> Paste your Maxroll build URL to import full item data with all affixes.
         </p>
-        <textarea id="maxrollTextarea" style="height:180px;" placeholder="Paste the full page text from your Maxroll build here..."></textarea>
-        <div id="maxrollPreview" style="display:none;margin-top:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:12px;max-height:250px;overflow-y:auto;">
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <input type="text" id="maxrollUrlInput" style="flex:1;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.85rem;" placeholder="https://maxroll.gg/d4/planner/o59jtp03">
+            <button class="sb-btn primary" onclick="fetchMaxrollBuild()" id="maxrollFetchBtn">Fetch Build</button>
+        </div>
+        <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:6px;">
+            <strong>Option 2:</strong> Paste page text (Ctrl+A, Ctrl+C from Maxroll page) — less detailed, no per-item affixes.
+        </p>
+        <textarea id="maxrollTextarea" style="height:120px;" placeholder="Paste the full page text from your Maxroll build here (fallback method)..."></textarea>
+        <div id="maxrollPreview" style="display:none;margin-top:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:12px;max-height:300px;overflow-y:auto;">
         </div>
         <div class="modal-btns">
             <button class="sb-btn" onclick="closeMaxrollModal()">Cancel</button>
-            <button class="sb-btn" onclick="previewMaxrollParse()" style="border-color:var(--blue);color:var(--blue);">Preview</button>
+            <button class="sb-btn" onclick="previewMaxrollParse()" style="border-color:var(--blue);color:var(--blue);">Preview Text</button>
             <button class="sb-btn primary" id="maxrollImportBtn" onclick="doMaxrollImport()" disabled>Import Build</button>
         </div>
     </div>
@@ -1416,12 +1422,395 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // MAXROLL IMPORT PARSER
 // ═══════════════════════════════════════════════════
 let maxrollParsed=null;
+let maxrollApiData=null;
+
+// Known Maxroll affix NID → our affix type mapping (D4 S13)
+// Values < 1 are percentages (0.12 = 12%), values >= 1 are flat amounts
+const NID_MAP={
+    1829570:{type:'main_stat',label:'Strength',flat:true},
+    1829592:{type:'main_stat',label:'Armor/Life',flat:true},
+    1829560:{type:'crit_mult',label:'Crit Chance %',pct:true},
+    1829582:{type:'crit_mult',label:'Crit Damage %',pct:true},
+    1829586:{type:'crit_mult',label:'Crit Damage %',pct:true},
+    1829598:{type:'additive',label:'Movement Speed %',pct:true},
+    1829594:{type:'main_stat',label:'Thorns',flat:true},
+    1829664:{type:'additive',label:'Damage %',pct:true},
+    1829666:{type:'main_stat',label:'Max Life',flat:true},
+    1829668:{type:'main_stat',label:'Max Life',flat:true},
+    1829588:{type:'vuln_mult',label:'Vuln Damage %',pct:true},
+    1834175:{type:'additive',label:'Damage Reduction %',pct:true},
+    1928803:{type:'additive',label:'Block Damage %',pct:true},
+    2497240:{type:'main_stat',label:'Resolve',flat:true},
+    2520249:{type:'main_stat',label:'Resolve',flat:true},
+    2558672:{type:'all_mult',label:'All Damage %',pct:true},
+    2589252:{type:'main_stat',label:'Max Minions',flat:true},
+    2602159:{type:'main_stat',label:'Strength',flat:true},
+    2602166:{type:'additive',label:'CDR %',pct:true},
+    2602182:{type:'all_mult',label:'All Damage %',pct:true},
+    2605602:{type:'main_stat',label:'Armor',flat:true},
+    2609197:{type:'main_stat',label:'Skill Ranks',flat:true},
+    2611719:{type:'additive_skill',label:'Skill Damage %',pct:true},  // temper
+    2615143:{type:'main_stat',label:'Armor',flat:true},
+    2619737:{type:'additive',label:'Damage %',pct:true},
+    2619742:{type:'additive',label:'Damage %',pct:true},
+    2619758:{type:'additive',label:'Damage %',pct:true},
+    2619760:{type:'additive',label:'Damage %',pct:true},
+    2620512:{type:'additive',label:'Damage %',pct:true},
+    2620503:{type:'additive',label:'Damage %',pct:true},
+    2620567:{type:'main_stat',label:'Strength',flat:true},
+    2625638:{type:'main_stat',label:'Thorns',flat:true},
+    1862266:{type:'main_stat',label:'Thorns',flat:true},
+    1862301:{type:'main_stat',label:'Life',flat:true},
+    1862348:{type:'additive',label:'Damage %',pct:true},  // temper
+    1862359:{type:'additive_skill',label:'Skill Damage %',pct:true},  // temper
+};
+
+// Maxroll item slot IDs → our gear slot IDs
+const MAXROLL_SLOT_MAP={
+    'Helm':'helm','Chest':'chest','Gloves':'gloves','Pants':'pants','Boots':'boots',
+    'Amulet':'amulet','Ring1':'ring1','Ring2':'ring2','1HSword':'wep1','1HShield':'offhand',
+    '2HSword':'wep1','2HMace':'wep1','2HAxe':'wep1','Staff':'wep1','Bow':'wep1',
+    'Crossbow':'wep1','Scythe':'wep1','Dagger':'wep1','Polearm':'wep1','Wand':'wep1',
+    '1HMace':'wep1','1HAxe':'wep1','Focus':'offhand',
+};
+
+// Maxroll class IDs → our class names
+const MAXROLL_CLASS_MAP={0:'barbarian',1:'druid',2:'necromancer',3:'rogue',4:'sorcerer',5:'spiritborn',6:'paladin',7:'warlock'};
+
+async function fetchMaxrollBuild(){
+    const urlInput=document.getElementById('maxrollUrlInput').value.trim();
+    const preview=document.getElementById('maxrollPreview');
+    preview.style.display='block';
+    preview.innerHTML='<div style="color:var(--blue);font-size:0.8rem;">Fetching build data...</div>';
+
+    // Extract build code from URL
+    const codeMatch=urlInput.match(/maxroll\.gg\/d4\/planner\/([a-zA-Z0-9]+)/);
+    if(!codeMatch){
+        // Maybe they just pasted the code directly
+        const directCode=urlInput.match(/^[a-zA-Z0-9]{6,12}$/);
+        if(!directCode){
+            preview.innerHTML='<div style="color:var(--red);font-size:0.8rem;">Invalid URL. Paste a Maxroll build URL like: https://maxroll.gg/d4/planner/o59jtp03</div>';
+            return;
+        }
+    }
+    const buildCode=codeMatch?codeMatch[1]:urlInput.trim();
+
+    try{
+        const resp=await fetch('https://planners.maxroll.gg/profiles/d4/'+buildCode);
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const json=await resp.json();
+        maxrollApiData=json;
+
+        // Parse the nested data string
+        const buildData=typeof json.data==='string'?JSON.parse(json.data):json.data;
+        const profile=buildData.profiles[0];
+        const items=buildData.items;
+        const cls=MAXROLL_CLASS_MAP[profile.class]||'paladin';
+
+        // Build preview
+        let html='<div style="font-size:0.78rem;font-weight:600;color:var(--gold);margin-bottom:8px;">API Build Data Loaded: '+json.name+'</div>';
+        html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.75rem;">';
+        html+=`<span style="color:var(--text-label)">Class</span><span style="color:var(--gold-light)">${cls.charAt(0).toUpperCase()+cls.slice(1)}</span>`;
+        html+=`<span style="color:var(--text-label)">Level</span><span style="color:var(--gold-light)">${profile.level}</span>`;
+        html+=`<span style="color:var(--text-label)">Season</span><span style="color:var(--gold-light)">${profile.season||'13'}</span>`;
+        html+=`<span style="color:var(--text-label)">Items</span><span style="color:var(--gold-light)">${Object.keys(items).length} pieces</span>`;
+        html+='</div>';
+
+        // Show items detail
+        html+='<div style="margin-top:10px;font-size:0.72rem;">';
+        const itemSlotRef=profile.items; // maps slot position → item id in items{}
+        Object.entries(items).forEach(([itemKey,item])=>{
+            const slotType=item.id?item.id.split('_')[0]:'Unknown';
+            const isTalisman=item.id&&item.id.includes('Talisman');
+            if(isTalisman) return; // show separately
+            const affixCount=(item.explicits?item.explicits.length:0)+(item.tempered?item.tempered.length:0);
+            const aspectCount=item.aspects?item.aspects.length:0;
+            html+=`<div style="padding:3px 6px;background:var(--bg-slot);border-radius:3px;margin-bottom:2px;">`;
+            html+=`<span style="color:var(--purple);font-weight:500;">${item.name||item.id}</span>`;
+            html+=` <span style="color:var(--text-dim)">iLvl ${item.power||'?'}</span>`;
+            html+=` <span style="color:var(--green);">${affixCount} affixes</span>`;
+            if(aspectCount) html+=` <span style="color:var(--orange-light);">${aspectCount} aspect</span>`;
+            html+='</div>';
+        });
+        html+='</div>';
+
+        // Talisman charms
+        const charms=Object.values(items).filter(i=>i.id&&i.id.includes('Talisman'));
+        if(charms.length){
+            html+='<div style="margin-top:8px;font-size:0.72rem;color:var(--orange-light);font-weight:600;">Talisman ('+charms.length+' charms):</div>';
+            charms.forEach(c=>{
+                html+=`<div style="font-size:0.7rem;color:var(--text-dim);padding-left:8px;">${c.name||c.id}</div>`;
+            });
+        }
+
+        html+='<div style="margin-top:10px;padding:8px;background:rgba(74,140,92,0.1);border:1px solid var(--green);border-radius:4px;font-size:0.72rem;color:var(--green);">';
+        html+='<strong>Full API import</strong> — includes per-item affixes with exact values, tempered stats, aspects, sockets, paragon boards, skill tree, and oath.';
+        html+='</div>';
+
+        preview.innerHTML=html;
+        document.getElementById('maxrollImportBtn').disabled=false;
+        // Store parsed data for the import button
+        maxrollParsed=null; // clear text-based parse
+    }catch(e){
+        preview.innerHTML=`<div style="color:var(--red);font-size:0.8rem;">Failed to fetch: ${e.message}. Try the text paste method instead.</div>`;
+        maxrollApiData=null;
+    }
+}
+
+function doMaxrollApiImport(){
+    if(!maxrollApiData) return false;
+    try{
+        const buildData=typeof maxrollApiData.data==='string'?JSON.parse(maxrollApiData.data):maxrollApiData.data;
+        const profile=buildData.profiles[0];
+        const items=buildData.items;
+        const cls=MAXROLL_CLASS_MAP[profile.class]||'paladin';
+
+        // ── 1. Set class ──
+        if(CLASSES[cls]){
+            state.selectedClass=cls;
+            document.getElementById('mainStatLabel').textContent=CLASSES[cls].stat;
+            buildClassSelector();buildSkillSelector();
+        }
+
+        // ── 2. Reset gear ──
+        state.gearAffixes={};
+        state.gearAspects={};
+        state.multipliers=[];
+        state.charms=[];
+        affixCounter=0; multCounter=0; charmCounter=0;
+
+        // ── 3. Map items to gear slots ──
+        // profile.items maps position→item key: {4:8, 5:9, ...}
+        // Known position mapping (D4 planner standard):
+        // 4=Helm, 5=Chest, 6=Offhand/Shield, 7=Gloves, 13=Wep1, 14=Amulet, 15=Ring1, 16=Ring2, 17=Pants, 18=Boots
+        const POS_TO_SLOT={4:'helm',5:'chest',6:'offhand',7:'gloves',13:'wep1',14:'amulet',15:'ring1',16:'ring2',17:'pants',18:'boots'};
+        // Also try to infer from item ID prefixes
+        const ID_PREFIX_TO_SLOT={
+            'Helm':'helm','Chest':'chest','Gloves':'gloves','Pants':'pants','Boots':'boots',
+            'Amulet':'amulet','Ring':'ring1','1HSword':'wep1','1HShield':'offhand',
+            '2HSword':'wep1','2HMace':'wep1','1HMace':'wep1','Staff':'wep1','Bow':'wep1',
+        };
+
+        let ringIdx=0;
+        let totalAffixes=0;
+
+        Object.entries(profile.items).forEach(([posStr,itemKey])=>{
+            const item=items[String(itemKey)];
+            if(!item) return;
+            if(item.id&&item.id.includes('Talisman')) return; // handle separately
+
+            // Determine gear slot
+            let slot=POS_TO_SLOT[parseInt(posStr)];
+            if(!slot && item.id){
+                const prefix=item.id.split('_')[0];
+                slot=ID_PREFIX_TO_SLOT[prefix];
+                // Handle second ring
+                if(prefix==='Ring'){
+                    ringIdx++;
+                    slot=ringIdx<=1?'ring1':'ring2';
+                }
+            }
+            if(!slot) return;
+
+            // Set aspect name
+            state.gearAspects[slot]=item.name||item.id.split('_').pop();
+            state.gearAffixes[slot]=state.gearAffixes[slot]||[];
+
+            // Process explicit affixes
+            if(item.explicits){
+                item.explicits.forEach(ex=>{
+                    const nidInfo=NID_MAP[ex.nid];
+                    const val=ex.values[0]||0;
+                    const affixType=nidInfo?nidInfo.type:'additive';
+                    const displayVal=nidInfo&&nidInfo.pct?Math.round(val*1000)/10:Math.round(val*100)/100;
+                    state.gearAffixes[slot].push({
+                        id:'afx_'+(affixCounter++),
+                        type:affixType,
+                        value:displayVal,
+                        label:nidInfo?nidInfo.label:'Affix #'+ex.nid,
+                        nid:ex.nid,
+                        greater:ex.greater||false
+                    });
+                    totalAffixes++;
+                });
+            }
+
+            // Process tempered affixes
+            if(item.tempered){
+                item.tempered.forEach(tmp=>{
+                    const nidInfo=NID_MAP[tmp.nid];
+                    const val=tmp.values[0]||0;
+                    const affixType=nidInfo?nidInfo.type:'additive_skill';
+                    const displayVal=nidInfo&&nidInfo.pct?Math.round(val*1000)/10:Math.round(val*100)/100;
+                    state.gearAffixes[slot].push({
+                        id:'afx_'+(affixCounter++),
+                        type:affixType,
+                        value:displayVal,
+                        label:(nidInfo?nidInfo.label:'Temper #'+tmp.nid)+' [T]',
+                        nid:tmp.nid,
+                        greater:tmp.greater||false
+                    });
+                    totalAffixes++;
+                });
+            }
+
+            // Process aspects → add as multiplier entries
+            if(item.aspects){
+                item.aspects.forEach(asp=>{
+                    const aspVal=asp.values[0]||0;
+                    state.multipliers.push({
+                        id:'mult_'+(multCounter++),
+                        name:(item.name||'Aspect')+' ('+slot+')',
+                        source:'aspect',
+                        bucket:'allMult',
+                        value:typeof aspVal==='number'&&aspVal<1?Math.round(aspVal*1000)/10:Math.round(aspVal*10)/10,
+                        enabled:true
+                    });
+                });
+            }
+        });
+
+        // ── 4. Talisman charms ──
+        Object.values(items).forEach(item=>{
+            if(!item.id||!item.id.includes('Talisman')) return;
+            const isSet=item.id.includes('Set');
+            let setId='';
+            // Try to match set charms to our CHARM_SETS
+            if(isSet){
+                const charmName=(item.name||'').toLowerCase();
+                Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+                    if(cs.name.toLowerCase()===charmName||charmName.includes(cs.name.toLowerCase())){
+                        setId=sid;
+                    }
+                });
+                // Match by "of SetName" pattern in charm name
+                const ofMatch=(item.name||'').match(/\bof\s+(.+)$/i);
+                if(ofMatch && !setId){
+                    const sn=ofMatch[1].toLowerCase().trim();
+                    Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+                        if(cs.name.toLowerCase()===sn) setId=sid;
+                    });
+                }
+            }
+            const charm={
+                id:'charm_'+(charmCounter++),
+                name:item.name||item.id,
+                size:1,
+                setId:setId,
+                affixes:[]
+            };
+            if(item.explicits){
+                item.explicits.forEach(ex=>{
+                    const nidInfo=NID_MAP[ex.nid];
+                    const val=ex.values[0]||0;
+                    charm.affixes.push({
+                        type:nidInfo?nidInfo.type:'additive',
+                        value:nidInfo&&nidInfo.pct?Math.round(val*1000)/10:Math.round(val*100)/100
+                    });
+                });
+            }
+            if(charm.affixes.length===0) charm.affixes.push({type:'additive',value:0});
+            state.charms.push(charm);
+        });
+
+        // ── 5. Paragon boards ──
+        initParagonState();
+        const classBoards=PARAGON_BOARDS[cls]||[];
+        const classParagon=state.paragon[cls]||[];
+        let boardsAttached=0, glyphsSlotted=0;
+
+        if(profile.paragon&&profile.paragon.steps&&profile.paragon.steps[0]){
+            const paragonData=profile.paragon.steps[0].data;
+            paragonData.forEach(pb=>{
+                // Extract board name from ID like "Paragon_Paladin_00"
+                const boardId=pb.id;
+                const nodeCount=Object.keys(pb.nodes||{}).length;
+                // Match to our boards by index or name
+                const idxMatch=boardId.match(/_(\d+)$/);
+                let matchIdx=-1;
+                if(idxMatch) matchIdx=parseInt(idxMatch[1]);
+                if(matchIdx>=0 && matchIdx<classBoards.length && classParagon[matchIdx]){
+                    const ps=classParagon[matchIdx];
+                    ps.attached=true;
+                    ps.legendaryActive=true;
+                    ps.normalPts=Math.min(nodeCount,30);
+                    boardsAttached++;
+
+                    // Match glyph
+                    if(pb.glyph){
+                        const glyphName=pb.glyph.split('_').pop().toLowerCase();
+                        // Try direct match, then partial
+                        let glyph=GLYPHS.find(g=>g.id===glyphName)||GLYPHS.find(g=>g.name.toLowerCase()===glyphName);
+                        if(!glyph){
+                            // Fuzzy: glyph ID like "Rare_055_Willpower_Side" → try last meaningful word
+                            const parts=pb.glyph.split('_').map(p=>p.toLowerCase());
+                            glyph=GLYPHS.find(g=>parts.includes(g.id)||parts.includes(g.name.toLowerCase()));
+                        }
+                        if(glyph){
+                            ps.glyphId=glyph.id;
+                            ps.glyphLevel=pb.glyphLevel||25;
+                            glyphsSlotted++;
+                        }
+                    }
+                }
+            });
+        }
+
+        // ── 6. Oath ──
+        if(profile.oath){
+            const oathName=profile.oath.replace(/^Paladin_Oath_/,'').replace(/_/g,' ');
+            state.multipliers.push({
+                id:'mult_'+(multCounter++),
+                name:'Oath: '+oathName,
+                source:'oath',
+                bucket:'global',
+                value:0,
+                enabled:false
+            });
+        }
+
+        // ── 7. Calculate main stat from gear affixes ──
+        let totalMainStat=0;
+        Object.values(state.gearAffixes).forEach(affixes=>{
+            affixes.forEach(a=>{
+                if(a.type==='main_stat' && a.label && a.label.includes('Strength')){
+                    totalMainStat+=a.value;
+                }
+            });
+        });
+        if(totalMainStat>0){
+            document.getElementById('mainStat').value=Math.round(totalMainStat);
+        }
+
+        // ── 8. Rebuild UI ──
+        buildGearSlots();
+        GEAR_SLOTS.forEach(slot=>renderAffixes(slot.id));
+        renderMultLibrary();
+        renderTalisman();
+        renderParagonBoards();
+        onSkillChange();
+        recalc();
+
+        const buildName=maxrollApiData.name||('Maxroll '+cls.charAt(0).toUpperCase()+cls.slice(1));
+        document.getElementById('buildName').value=buildName;
+        closeMaxrollModal();
+
+        toast(`API import! ${totalAffixes} affixes, ${state.charms.length} charms, ${boardsAttached} boards, ${glyphsSlotted} glyphs`);
+        return true;
+    }catch(e){
+        console.error('API import error:',e);
+        toast('API import error: '+e.message);
+        return false;
+    }
+}
 
 function openMaxrollImport(){
+    document.getElementById('maxrollUrlInput').value='';
     document.getElementById('maxrollTextarea').value='';
     document.getElementById('maxrollPreview').style.display='none';
     document.getElementById('maxrollImportBtn').disabled=true;
     maxrollParsed=null;
+    maxrollApiData=null;
     document.getElementById('maxrollOverlay').classList.add('show');
 }
 function closeMaxrollModal(){document.getElementById('maxrollOverlay').classList.remove('show');}
@@ -1695,7 +2084,12 @@ function previewMaxrollParse(){
 }
 
 function doMaxrollImport(){
-    if(!maxrollParsed||maxrollParsed.detected.length===0){toast('Preview first');return;}
+    // Try API import first (from URL fetch)
+    if(maxrollApiData){
+        if(doMaxrollApiImport()) return;
+    }
+    // Fall back to text-based import
+    if(!maxrollParsed||maxrollParsed.detected.length===0){toast('Preview first or paste a Maxroll URL');return;}
     const p=maxrollParsed;
     const cls=p.class||state.selectedClass;
     let importLog=[];
