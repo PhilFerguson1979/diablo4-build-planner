@@ -648,6 +648,14 @@ const CHARM_SETS = {
         {count:2,desc:'+15% Lightning Damage',bucket:'additive',value:15},
         {count:3,desc:'+20% All Damage',bucket:'allMult',value:20},
         {count:5,desc:'x25% All Damage Multiplier',bucket:'allMult',value:25}]},
+    sunderednight:{name:'Sundered Night',pieces:['Fer of Sundered Night','Phoba of Sundered Night','Mlor of Sundered Night','Berú of Sundered Night','Linta of Sundered Night'],bonuses:[
+        {count:2,desc:'+15% Holy Damage',bucket:'additive',value:15},
+        {count:3,desc:'+20% Aura Potency',bucket:'additive',value:20},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+    wardofdawn:{name:'Ward of Dawn',pieces:['Fer of Ward of Dawn','Phoba of Ward of Dawn','Mlor of Ward of Dawn','Berú of Ward of Dawn','Linta of Ward of Dawn'],bonuses:[
+        {count:2,desc:'+15% Block Damage',bucket:'additive',value:15},
+        {count:3,desc:'+20% Thorns',bucket:'additive',value:20},
+        {count:5,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
 };
 
 // ═══════════════════════════════════════════════════
@@ -2473,14 +2481,15 @@ function parseMobalyticsText(text){
 
     // Equipment/Aspects — Mobalytics lists gear with aspect names
     // Pattern: numbered slots like "1\nAspect Name" or "Helm\nAspect of Something"
-    const slotNames=['Helm','Chest Armor','Gloves','Pants','Boots','Amulet','Ring 1','Ring 2','Main Hand','Off-Hand','Offhand'];
-    const aspectPattern=/(?:Aspect of [A-Za-z' ]+|[A-Za-z']+ of [A-Za-z' ]+(?:'s)?)/gi;
+    const slotNames=['Helm','Chest Armor','Chest armor','Gloves','Pants','Boots','Amulet','Ring 1','Ring 2','Main Hand','Off-Hand','Offhand','Weapon'];
+    const aspectPattern=/(?:Aspect of [A-Za-z' ]+|[A-Za-z']+ Aspect\b|Heir of [A-Za-z' ]+|Mantle of [A-Za-z' ]+|Ward of [A-Za-z' ]+|[A-Za-z']+ of [A-Za-z' ]+(?:'s)?)/gi;
     const aspectMatches=text.match(aspectPattern)||[];
-    // Deduplicate and filter out non-aspects
+    // Deduplicate and filter out non-aspects and non-D4 phrases
     const seenAspects=new Set();
+    const aspectBlocklist=/of the (Year|Day|Month|Week|build|page|game)|Table of Contents|Source of|Because of|amount of|instead of|combination of|benefits of|number of|lack of/i;
     aspectMatches.forEach(asp=>{
         const clean=asp.trim();
-        if(clean.length>8 && !seenAspects.has(clean.toLowerCase()) && !/of the (Year|Day|Month|Week)/i.test(clean)){
+        if(clean.length>8 && !seenAspects.has(clean.toLowerCase()) && !aspectBlocklist.test(clean)){
             seenAspects.add(clean.toLowerCase());
             result.equipment.push({slot:'unknown',name:clean});
         }
@@ -2494,9 +2503,9 @@ function parseMobalyticsText(text){
         const slotIdx=text.indexOf(sn);
         if(slotIdx===-1) return;
         const after=text.substring(slotIdx,slotIdx+200);
-        const aspMatch=after.match(/(?:Aspect of [A-Za-z' ]+|Heir of [A-Za-z' ]+|Mantle of [A-Za-z' ]+|[A-Za-z']+'s [A-Za-z' ]+)/i);
+        const aspMatch=after.match(/(?:Aspect of [A-Za-z' ]+|[A-Za-z']+ Aspect\b|Heir of [A-Za-z' ]+|Mantle of [A-Za-z' ]+|Ward of [A-Za-z' ]+|[A-Za-z']+'s [A-Za-z' ]+)/i);
         if(aspMatch){
-            const normalized=sn.toLowerCase().replace(/\s+/g,'').replace('chestarmor','chest').replace('mainhand','wep1').replace('off-hand','offhand').replace('ring1','ring1').replace('ring2','ring2');
+            const normalized=sn.toLowerCase().replace(/\s+/g,'').replace(/chestarmor/,'chest').replace('mainhand','wep1').replace('off-hand','offhand').replace('weapon','wep1');
             slotAspectMap[normalized]=aspMatch[0];
         }
     });
@@ -2515,15 +2524,15 @@ function parseMobalyticsText(text){
     }
 
     // Affix Priority — Mobalytics shows "Offensive Affix Priority", "Defensive Affix Priority"
-    const offAffixMatch=text.match(/Offensive Affix Priority\s*\n([\s\S]*?)(?=\n(?:Defensive|Utility|Tempering)\s*Affix\b|\n(?:Paragon|Equipment|Talisman|Mercenary)\b)/i);
+    const offAffixMatch=text.match(/Offensive Affix Priority\s*\n([\s\S]*?)(?=\n(?:Defensive|Utility|Tempering)\s*Affix\b|\n(?:Paragon|Equipment|Talismans?|Mercenary|Skill\s+Tree|To know)\b)/i);
     if(offAffixMatch){
         const lines=offAffixMatch[1].split('\n').filter(l=>l.trim().length>2);
         lines.forEach(l=>{
             const clean=l.trim();
-            if(clean.length>3 && clean.length<60){
+            if(clean.length>3 && clean.length<60 && !/^(It'?s\b|To\b|We\b|Our\b|This\b|The\b)/i.test(clean)){
                 let bucket='additive';
-                if(/crit\s*chance/i.test(clean)) bucket='crit_mult';
-                else if(/crit\s*damage/i.test(clean)) bucket='crit_mult';
+                if(/crit.*chance/i.test(clean)) bucket='crit_mult';
+                else if(/crit.*damage/i.test(clean)) bucket='crit_mult';
                 else if(/vuln/i.test(clean)) bucket='vuln_mult';
                 else if(/all.*damage|phys.*damage/i.test(clean)) bucket='all_mult';
                 else if(/attack speed|strength|dexterity|intelligence|willpower/i.test(clean)) bucket='additive';
@@ -2545,12 +2554,14 @@ function parseMobalyticsText(text){
     if(Object.keys(result.paragonStats).length) result.detected.push('Paragon stats found');
 
     // Talisman charms
-    const talismanMatch=text.match(/(?:Talisman|Charms)\s*\n([\s\S]*?)(?=\n(?:Paragon|Equipment|Oath|Mercenary|Build\s+Variants)\b)/i);
+    // Talisman — first try structured section, then scan for set names anywhere
+    const talismanMatch=text.match(/(?:Talismans?|Charms)\s*\n([\s\S]*?)(?=\n(?:Paragon|Equipment|Oath|Mercenary|Build\s+Variants|Skill\s+Tree|Talisman\s+Priority)\b)/i);
+    const variantNames=new Set(['push','speed','endgame','starter','track build','show all','talisman priority','core items and requirements']);
     if(talismanMatch){
         const charmLines=talismanMatch[1].split('\n').filter(l=>l.trim().length>3);
         charmLines.forEach(l=>{
             const name=l.trim();
-            if(name.length>3 && name.length<60 && !/^\d+$/.test(name) && !/Penitent/i.test(name)){
+            if(name.length>3 && name.length<60 && !/^\d+$/.test(name) && !/Penitent/i.test(name) && !variantNames.has(name.toLowerCase()) && !/^(We want|We use|We take|Our |This |The |You |It |Make sure|Track Build|Show All)/i.test(name)){
                 let setId='';
                 const ofMatch=name.match(/\bof\s+(.+)$/i);
                 if(ofMatch){
@@ -2559,21 +2570,26 @@ function parseMobalyticsText(text){
                         if(cs.name.toLowerCase()===sn) setId=sid;
                     });
                 }
+                // Also check if the name IS a set name
+                if(!setId){
+                    Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+                        if(cs.name.toLowerCase()===name.toLowerCase()) setId=sid;
+                    });
+                }
                 result.talisman.push({name:name,setId:setId});
             }
         });
         if(result.talisman.length) result.detected.push(result.talisman.length+' charms');
     }
 
-    // Talisman set names from anywhere in text (e.g., "Sundered Night")
-    if(result.talisman.length===0){
-        Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
-            if(text.includes(cs.name)){
-                result.talisman.push({name:cs.name+' set',setId:sid});
-                result.detected.push('Talisman set: '+cs.name);
-            }
-        });
-    }
+    // Scan full text for charm set names mentioned anywhere (e.g., "Sundered Night")
+    const existingSetIds=new Set(result.talisman.map(t=>t.setId).filter(Boolean));
+    Object.entries(CHARM_SETS).forEach(([sid,cs])=>{
+        if(!existingSetIds.has(sid) && text.includes(cs.name)){
+            result.talisman.push({name:cs.name+' set',setId:sid});
+            result.detected.push('Talisman set: '+cs.name);
+        }
+    });
 
     // Store slot-aspect mapping for import
     result.slotAspectMap=slotAspectMap;
