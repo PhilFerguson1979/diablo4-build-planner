@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diablo 4 Build Planner — Lord of Hatred</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
+        :root {
+            --bg-dark:#0a0a0f;--bg-card:#12121a;--bg-input:#1a1a25;--bg-hover:#222233;--bg-slot:#151520;
+            --border:#2a2a3a;--border-focus:#8b4513;--text:#e0ddd5;--text-dim:#8a8778;--text-label:#b0a990;
+            --red:#c41e1e;--orange:#d4730d;--orange-light:#f5a623;--gold:#c9a84c;--gold-light:#e8d48b;
+            --blue:#4a7fb5;--purple:#7b52ab;--green:#4a8c5c;
+            --crit-color:#ff6b35;--vuln-color:#b44adb;--dot-color:#4adb7b;--all-dmg-color:#4a9bdb;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg-dark);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+        body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 20% 50%,rgba(139,69,19,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(196,30,30,0.05) 0%,transparent 50%);}
+        .app{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:16px;}
+        header{text-align:center;padding:20px 0 16px;margin-bottom:16px;border-bottom:1px solid var(--border);}
+        header h1{font-family:'Cinzel',serif;font-size:2rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(135deg,var(--gold),var(--gold-light),var(--orange-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        header .subtitle{font-size:0.8rem;color:var(--text-dim);margin-top:4px;letter-spacing:2px;text-transform:uppercase;}
+
+        .save-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:16px;}
+        .save-bar select,.save-bar input[type="text"]{padding:6px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.8rem;font-family:'Inter',sans-serif;}
+        .save-bar input[type="text"]{flex:1;min-width:120px;}
+        .save-bar select{min-width:160px;cursor:pointer;}
+        .save-bar select option{background:var(--bg-card);}
+        .sb-btn{padding:6px 14px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-dim);font-size:0.75rem;cursor:pointer;transition:all 0.2s;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+        .sb-btn:hover{background:var(--bg-hover);color:var(--text);}
+        .sb-btn.primary{border-color:var(--gold);color:var(--gold);}
+        .sb-btn.primary:hover{background:rgba(201,168,76,0.15);}
+        .sb-btn.danger{color:var(--red);}
+        .sb-btn.danger:hover{background:rgba(196,30,30,0.15);}
+        .save-bar .divider{width:1px;height:24px;background:var(--border);}
+
+        .formula-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:16px;font-family:'Courier New',monospace;font-size:0.7rem;color:var(--text-dim);line-height:1.8;overflow-x:auto;}
+        .formula-bar span{font-weight:600;}
+
+        .tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+        .tab-btn{padding:10px 18px;border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;background:var(--bg-card);color:var(--text-dim);font-size:0.72rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;position:relative;bottom:-1px;}
+        .tab-btn:hover{color:var(--text);}
+        .tab-btn.active{background:var(--bg-dark);color:var(--gold);border-bottom-color:var(--bg-dark);}
+        .tab-content{display:none;}
+        .tab-content.active{display:block;}
+
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;}
+        .panel-title{font-family:'Cinzel',serif;font-size:0.9rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+        .input-group{margin-bottom:10px;}
+        .input-group label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-label);margin-bottom:4px;font-weight:500;}
+        .input-group label .hint{font-size:0.68rem;color:var(--text-dim);font-weight:300;}
+        input[type="number"],select{width:100%;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:0.85rem;font-family:'Inter',sans-serif;}
+        input[type="number"]:focus,select:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 2px rgba(139,69,19,0.15);}
+        select{cursor:pointer;}
+        select option{background:var(--bg-card);color:var(--text);}
+        .section-divider{height:1px;background:var(--border);margin:14px 0;}
+        .section-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:10px;font-weight:600;}
+
+        .main-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+        @media(max-width:1100px){.main-layout{grid-template-columns:1fr;}}
+
+        .gear-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;}
+        .gear-slot{background:var(--bg-slot);border:1px solid var(--border);border-radius:8px;padding:10px;}
+        .gear-slot.has-item{border-color:rgba(201,168,76,0.3);}
+        .gear-slot-header{display:flex;justify-content:space-between;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+        .gear-slot-name{font-family:'Cinzel',serif;font-size:0.78rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;}
+        .affix-list{display:flex;flex-direction:column;gap:4px;}
+        .affix-row{display:grid;grid-template-columns:52px 1fr 72px auto;gap:5px;align-items:center;}
+        .affix-row select{font-size:0.72rem;padding:4px 5px;}
+        .affix-row input{font-size:0.78rem;padding:4px 6px;}
+        .affix-bucket-tag{font-size:0.58rem;padding:2px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;text-align:center;}
+        .tag-additive{background:rgba(224,221,213,0.1);color:var(--text-dim);}
+        .tag-crit-mult{background:rgba(255,107,53,0.15);color:var(--crit-color);}
+        .tag-vuln-mult{background:rgba(180,74,219,0.15);color:var(--vuln-color);}
+        .tag-all-mult{background:rgba(74,155,219,0.15);color:var(--all-dmg-color);}
+        .tag-dot-mult{background:rgba(74,219,123,0.15);color:var(--dot-color);}
+        .tag-global{background:rgba(232,212,139,0.15);color:var(--gold-light);}
+        .tag-stat{background:rgba(74,127,181,0.12);color:var(--blue);}
+        .tag-weapon{background:rgba(201,168,76,0.15);color:var(--gold);}
+
+        .btn-add-affix{width:100%;padding:4px;border:1px dashed var(--border);border-radius:4px;background:transparent;color:var(--text-dim);font-size:0.7rem;cursor:pointer;margin-top:4px;}
+        .btn-add-affix:hover{border-color:var(--gold);color:var(--gold);}
+        .btn-remove{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.85rem;padding:2px 4px;}
+        .btn-remove:hover{color:var(--red);}
+
+        .gem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+        .gem-slot{background:var(--bg-slot);border:1px solid var(--border);border-radius:6px;padding:8px;}
+        .gem-slot-label{font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+
+        /* Multiplier Library */
+        .mult-lib-grid{display:flex;flex-direction:column;gap:6px;}
+        .mult-row{display:grid;grid-template-columns:22px 1fr 110px 72px 70px auto;gap:6px;align-items:center;padding:6px 8px;background:var(--bg-slot);border:1px solid var(--border);border-radius:5px;transition:all 0.15s;}
+        .mult-row.disabled{opacity:0.35;border-color:transparent;}
+        .mult-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--gold);cursor:pointer;}
+        .mult-row input[type="text"]{background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.78rem;padding:5px 8px;font-family:'Inter',sans-serif;}
+        .mult-row input[type="text"]:focus{border-color:var(--border-focus);outline:none;}
+        .mult-row select{font-size:0.72rem;padding:4px 5px;}
+        .mult-row input[type="number"]{font-size:0.78rem;padding:4px 6px;}
+        .source-tag{font-size:0.58rem;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;white-space:nowrap;}
+        .src-paragon{background:rgba(74,127,181,0.15);color:var(--blue);}
+        .src-aspect{background:rgba(180,74,219,0.15);color:var(--vuln-color);}
+        .src-glyph{background:rgba(74,219,123,0.15);color:var(--dot-color);}
+        .src-passive{background:rgba(255,107,53,0.15);color:var(--crit-color);}
+        .src-unique{background:rgba(201,168,76,0.2);color:var(--gold);}
+        .src-oath{background:rgba(196,30,30,0.15);color:var(--red);}
+        .src-temper{background:rgba(224,221,213,0.1);color:var(--text-dim);}
+        .src-other{background:rgba(123,82,171,0.15);color:var(--purple);}
+
+        .mult-controls{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+        .mult-controls button{padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-dim);font-size:0.7rem;cursor:pointer;font-weight:500;}
+        .mult-controls button:hover{background:var(--bg-hover);color:var(--text);}
+
+        /* Skill Table */
+        .skill-table-wrap{overflow-x:auto;}
+        .skill-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+        .skill-table th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:600;white-space:nowrap;}
+        .skill-table td{padding:7px 10px;border-bottom:1px solid rgba(42,42,58,0.5);font-family:'Courier New',monospace;white-space:nowrap;}
+        .skill-table tr:hover{background:var(--bg-hover);}
+        .skill-table tr.active-row{background:rgba(201,168,76,0.08);}
+        .skill-table .col-name{font-family:'Inter',sans-serif;font-weight:500;color:var(--text);}
+        .best-badge{display:inline-block;font-size:0.55rem;padding:1px 5px;border-radius:3px;background:rgba(201,168,76,0.2);color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-left:6px;vertical-align:middle;}
+        .skill-table .bar-cell{position:relative;}
+        .dmg-bar{position:absolute;left:0;top:2px;bottom:2px;border-radius:2px;opacity:0.12;z-index:0;}
+        .skill-table td span{position:relative;z-index:1;}
+        .sort-btn{cursor:pointer;user-select:none;}
+        .sort-btn:hover{color:var(--gold);}
+        .sort-arrow{font-size:0.6rem;margin-left:3px;}
+
+        .damage-sidebar{position:sticky;top:16px;}
+        .final-damage{text-align:center;padding:18px 12px;background:linear-gradient(135deg,rgba(139,69,19,0.1),rgba(196,30,30,0.08));border:1px solid rgba(201,168,76,0.3);border-radius:8px;margin-bottom:14px;}
+        .fd-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px;}
+        .fd-value{font-family:'Cinzel',serif;font-size:2.2rem;font-weight:900;color:var(--gold-light);text-shadow:0 0 30px rgba(201,168,76,0.3);}
+        .fd-type{font-size:0.72rem;color:var(--text-dim);margin-top:4px;}
+
+        .breakdown{display:flex;flex-direction:column;gap:4px;}
+        .br-row{display:flex;justify-content:space-between;padding:6px 8px;background:var(--bg-input);border-radius:4px;border-left:3px solid var(--border);}
+        .br-row .br-label{font-size:0.7rem;color:var(--text-label);}
+        .br-row .br-value{font-size:0.78rem;font-weight:600;font-family:'Courier New',monospace;}
+        .br-row.b-wpn{border-left-color:var(--gold);}.br-row.b-wpn .br-value{color:var(--gold);}
+        .br-row.b-skill{border-left-color:var(--orange-light);}.br-row.b-skill .br-value{color:var(--orange-light);}
+        .br-row.b-coeff{border-left-color:var(--orange);}.br-row.b-coeff .br-value{color:var(--orange);}
+        .br-row.b-add{border-left-color:var(--text);}.br-row.b-add .br-value{color:var(--text);}
+        .br-row.b-all{border-left-color:var(--all-dmg-color);}.br-row.b-all .br-value{color:var(--all-dmg-color);}
+        .br-row.b-global{border-left-color:var(--gold-light);}.br-row.b-global .br-value{color:var(--gold-light);}
+        .br-row.b-crit{border-left-color:var(--crit-color);}.br-row.b-crit .br-value{color:var(--crit-color);}
+        .br-row.b-vuln{border-left-color:var(--vuln-color);}.br-row.b-vuln .br-value{color:var(--vuln-color);}
+        .br-row.b-dot{border-left-color:var(--dot-color);}.br-row.b-dot .br-value{color:var(--dot-color);}
+        .br-row.b-dr{border-left-color:var(--red);}.br-row.b-dr .br-value{color:var(--red);}
+        .br-row.b-final{background:linear-gradient(90deg,rgba(201,168,76,0.08),transparent);border-left-color:var(--gold);margin-top:3px;}
+        .br-row.b-final .br-label{color:var(--gold);font-weight:600;}
+        .br-row.b-final .br-value{color:var(--gold-light);font-size:0.85rem;}
+
+        .toggle-row{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+        .toggle-btn{flex:1;min-width:60px;padding:6px 8px;border:1px solid var(--border);border-radius:5px;background:var(--bg-input);color:var(--text-dim);font-size:0.7rem;font-weight:600;cursor:pointer;text-align:center;text-transform:uppercase;letter-spacing:0.5px;}
+        .toggle-btn:hover{background:var(--bg-hover);}
+        .toggle-btn.on-crit{background:rgba(255,107,53,0.15);border-color:var(--crit-color);color:var(--crit-color);}
+        .toggle-btn.on-vuln{background:rgba(180,74,219,0.15);border-color:var(--vuln-color);color:var(--vuln-color);}
+        .toggle-btn.on-dot{background:rgba(74,219,123,0.15);border-color:var(--dot-color);color:var(--dot-color);}
+        .toggle-btn.on-op{background:rgba(74,127,181,0.15);border-color:var(--blue);color:var(--blue);}
+
+        .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px;}
+        .compare-card{padding:7px;background:var(--bg-input);border-radius:4px;text-align:center;}
+        .compare-card .cc-label{font-size:0.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+        .compare-card .cc-value{font-size:0.9rem;font-weight:600;font-family:'Courier New',monospace;}
+
+        .class-select{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+        .class-btn{padding:5px 12px;border:1px solid var(--border);border-radius:16px;background:var(--bg-input);color:var(--text-dim);font-size:0.72rem;cursor:pointer;font-weight:500;}
+        .class-btn:hover{border-color:var(--gold);color:var(--text);}
+        .class-btn.active{background:rgba(201,168,76,0.15);border-color:var(--gold);color:var(--gold);}
+
+        .bucket-summary{background:var(--bg-input);border-radius:6px;padding:8px;margin-top:8px;font-size:0.7rem;color:var(--text-dim);}
+        .bucket-summary .bs-row{display:flex;justify-content:space-between;padding:2px 0;}
+        .bucket-summary .bs-row span:last-child{font-family:'Courier New',monospace;font-weight:500;}
+
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;justify-content:center;align-items:center;}
+        .modal-overlay.show{display:flex;}
+        .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;}
+        .modal h2{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);margin-bottom:12px;}
+        .modal textarea{width:100%;height:200px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Courier New',monospace;font-size:0.75rem;padding:10px;resize:vertical;}
+        .modal textarea:focus{outline:none;border-color:var(--border-focus);}
+        .modal-btns{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;}
+
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid var(--gold);border-radius:6px;padding:10px 20px;color:var(--gold);font-size:0.8rem;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+        .toast.show{opacity:1;}
+        footer{text-align:center;padding:16px;color:var(--text-dim);font-size:0.65rem;margin-top:20px;}
+        footer a{color:var(--gold);text-decoration:none;}
+
+        .active-count{display:inline-block;background:var(--gold);color:var(--bg-dark);font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle;}
+
+        /* TALISMAN */
+        .talisman-layout{display:grid;grid-template-columns:200px 1fr;gap:20px;}
+        @media(max-width:900px){.talisman-layout{grid-template-columns:1fr;}}
+        .talisman-grid{display:grid;grid-template-columns:repeat(4,44px);grid-template-rows:repeat(5,44px);gap:3px;background:var(--bg-input);border:2px solid var(--border);border-radius:8px;padding:8px;justify-content:center;}
+        .talisman-cell{width:44px;height:44px;background:var(--bg-slot);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--text-dim);cursor:default;transition:all 0.15s;}
+        .talisman-cell.occupied{border-color:var(--gold);background:rgba(201,168,76,0.1);}
+        .talisman-cell.set-piece{border-color:var(--green);background:rgba(74,140,92,0.15);}
+        .talisman-capacity{text-align:center;margin-top:8px;font-size:0.75rem;color:var(--text-dim);}
+        .talisman-capacity .cap-num{font-family:'Courier New',monospace;font-weight:600;color:var(--gold);}
+
+        .charm-card{background:var(--bg-slot);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px;}
+        .charm-card.is-set{border-color:var(--green);}
+        .charm-header{display:flex;justify-content:space-between;align-items:center;}
+        .charm-name-input{background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.78rem;padding:4px 8px;flex:1;margin-right:6px;}
+        .charm-affixes{display:flex;flex-direction:column;gap:4px;}
+        .charm-affix-row{display:grid;grid-template-columns:1fr 70px auto;gap:5px;align-items:center;}
+        .charm-affix-row select{font-size:0.72rem;padding:4px;}
+        .charm-affix-row input{font-size:0.78rem;padding:4px 6px;}
+
+        .set-bonus-card{background:var(--bg-slot);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:6px;}
+        .set-bonus-card.active-set{border-color:var(--green);background:rgba(74,140,92,0.08);}
+        .set-name{font-family:'Cinzel',serif;font-size:0.78rem;font-weight:700;color:var(--green);margin-bottom:4px;}
+        .set-tier{font-size:0.72rem;padding:2px 0;display:flex;justify-content:space-between;color:var(--text-dim);}
+        .set-tier.met{color:var(--green);font-weight:600;}
+
+        /* PARAGON */
+        .paragon-board-card{background:var(--bg-slot);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;transition:all 0.15s;}
+        .paragon-board-card.attached{border-color:rgba(74,127,181,0.5);background:rgba(74,127,181,0.05);}
+        .pb-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+        .pb-name{font-family:'Cinzel',serif;font-size:0.82rem;font-weight:700;color:var(--text-label);letter-spacing:1px;}
+        .pb-toggle{padding:4px 12px;border:1px solid var(--border);border-radius:4px;background:var(--bg-input);color:var(--text-dim);font-size:0.68rem;cursor:pointer;font-weight:600;text-transform:uppercase;}
+        .pb-toggle.on{background:rgba(74,127,181,0.2);border-color:var(--blue);color:var(--blue);}
+        .pb-legendary{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg-input);border-radius:4px;margin-bottom:6px;border-left:3px solid var(--orange);}
+        .pb-legendary.active{border-left-color:var(--gold);background:rgba(201,168,76,0.06);}
+        .pb-legendary input[type="checkbox"]{accent-color:var(--gold);cursor:pointer;}
+        .pb-legendary-name{font-size:0.75rem;font-weight:600;color:var(--orange-light);}
+        .pb-legendary-desc{font-size:0.68rem;color:var(--text-dim);}
+        .pb-legendary-val{font-size:0.72rem;font-family:'Courier New',monospace;color:var(--gold);}
+        .pb-glyph{display:grid;grid-template-columns:1fr 80px 60px;gap:6px;align-items:center;padding:6px 8px;background:var(--bg-input);border-radius:4px;border-left:3px solid var(--purple);}
+        .pb-glyph select{font-size:0.72rem;padding:4px;}
+        .pb-glyph input{font-size:0.78rem;padding:4px 6px;}
+        .pb-glyph-info{font-size:0.68rem;color:var(--text-dim);padding:2px 8px;}
+        .pb-nodes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;}
+        .pb-node-input label{font-size:0.68rem;color:var(--text-dim);}
+        .pb-node-input input{font-size:0.75rem;padding:4px 6px;width:100%;}
+
+        .glyph-summary{margin-top:12px;}
+        .glyph-summary-row{display:flex;justify-content:space-between;padding:3px 8px;font-size:0.72rem;background:var(--bg-input);border-radius:3px;margin-bottom:3px;}
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <h1>Diablo IV Build Planner</h1>
+        <div class="subtitle">Season 13 &bull; Lord of Hatred &bull; Full Theorycraft Suite</div>
+    </header>
+
+    <div class="save-bar">
+        <span style="font-size:0.72rem;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Builds:</span>
+        <select id="buildList" onchange="onBuildSelect()"><option value="">-- Select --</option></select>
+        <input type="text" id="buildName" placeholder="Build name...">
+        <button class="sb-btn primary" onclick="saveBuild()">Save</button>
+        <button class="sb-btn" onclick="loadSelectedBuild()">Load</button>
+        <button class="sb-btn danger" onclick="deleteSelectedBuild()">Delete</button>
+        <div class="divider"></div>
+        <button class="sb-btn" onclick="openExport()">Export</button>
+        <button class="sb-btn" onclick="openImport()">Import</button>
+    </div>
+
+    <div class="formula-bar">
+        <span style="color:var(--gold)">WeaponDmg</span> &times;
+        <span style="color:var(--orange-light)">(1+Stat/800)</span> &times;
+        <span style="color:var(--orange)">SkillCoeff</span> &times;
+        <span style="color:var(--text)">(1+&Sigma;Additive)</span> &times;
+        <span style="color:var(--all-dmg-color)">(1+&Sigma;AllDmgMult)</span> &times;
+        <span style="color:var(--gold-light)">&Pi;GlobalMults</span> &times;
+        <span style="color:var(--crit-color)">[Crit:1.5&times;(1+&Sigma;CritMult)]</span> &times;
+        <span style="color:var(--vuln-color)">[Vuln:1.2&times;(1+&Sigma;VulnMult)]</span> &times;
+        <span style="color:var(--dot-color)">[DoT:(1+&Sigma;DoTMult)]</span> &times;
+        <span style="color:var(--red)">0.20</span>
+    </div>
+
+    <div class="main-layout">
+        <div>
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="gear">Gear</button>
+                <button class="tab-btn" data-tab="talisman">Talisman</button>
+                <button class="tab-btn" data-tab="paragon">Paragon</button>
+                <button class="tab-btn" data-tab="multipliers">Multipliers<span class="active-count" id="multCountBadge">0</span></button>
+                <button class="tab-btn" data-tab="skills">Skills</button>
+                <button class="tab-btn" data-tab="theorycraft">Theorycraft</button>
+                <button class="tab-btn" data-tab="manual">Manual</button>
+            </div>
+
+            <!-- GEAR TAB -->
+            <div class="tab-content active" id="tab-gear">
+                <div class="panel">
+                    <div class="panel-title">Class & Core Stats</div>
+                    <div class="class-select" id="classSelect"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div class="input-group"><label><span id="mainStatLabel">Dexterity</span><span class="hint">Total from all sources</span></label><input type="number" id="mainStat" value="528" min="0"></div>
+                        <div class="input-group"><label>Enemy DR %<span class="hint">Default 80</span></label><input type="number" id="enemyDR" value="80" min="0" max="100"></div>
+                    </div>
+                </div>
+                <div class="panel"><div class="panel-title">Equipment</div><div class="gear-grid" id="gearGrid"></div></div>
+                <div class="panel"><div class="panel-title">Gems</div><div class="gem-grid" id="gemGrid"></div></div>
+            </div>
+
+            <!-- TALISMAN TAB -->
+            <div class="tab-content" id="tab-talisman">
+                <div class="panel">
+                    <div class="panel-title">Talisman</div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">
+                        Place charms into your Talisman (20 slots). Set charms from the same set grant bonus effects.
+                        All charm stats feed directly into the damage formula.
+                    </p>
+                    <div class="talisman-layout">
+                        <div>
+                            <div class="talisman-grid" id="talismanGrid"></div>
+                            <div class="talisman-capacity"><span class="cap-num" id="talismanUsed">0</span> / <span class="cap-num">20</span> slots</div>
+                            <div class="section-divider"></div>
+                            <div class="section-label">Set Bonuses</div>
+                            <div id="setBonusTracker"></div>
+                        </div>
+                        <div>
+                            <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                                <button class="sb-btn primary" onclick="addCharm()">+ Add Charm</button>
+                                <button class="sb-btn" onclick="addCharm('','',1,'',true)">+ Set Charm</button>
+                                <button class="sb-btn danger" onclick="clearAllCharms()">Clear All</button>
+                            </div>
+                            <div id="charmList" style="display:flex;flex-direction:column;gap:8px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARAGON TAB -->
+            <div class="tab-content" id="tab-paragon">
+                <div class="panel">
+                    <div class="panel-title">Paragon Boards & Glyphs — <span id="paragonClassName" style="color:var(--orange-light)">Rogue</span></div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">
+                        Attach boards, activate legendary nodes, and slot glyphs. All bonuses feed into the damage formula.
+                        Paragon Points from normal/magic/rare nodes can be entered per board.
+                    </p>
+                    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+                        <span style="font-size:0.72rem;color:var(--text-dim);">Total Paragon Points:</span>
+                        <input type="number" id="totalParagonPts" value="225" min="0" max="300" style="width:70px;" onchange="recalc()">
+                        <span style="font-size:0.72rem;color:var(--text-dim);margin-left:12px;">Allocated:</span>
+                        <span id="allocatedPts" style="font-size:0.78rem;font-family:'Courier New',monospace;color:var(--gold)">0</span>
+                    </div>
+                    <div id="paragonBoardList"></div>
+                    <div class="glyph-summary" id="paragonSummary"></div>
+                </div>
+            </div>
+
+            <!-- MULTIPLIERS TAB -->
+            <div class="tab-content" id="tab-multipliers">
+                <div class="panel">
+                    <div class="panel-title">Damage Multiplier Library</div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">
+                        Add every damage multiplier from your build: paragon nodes, aspects, glyphs, passives, oaths, uniques, tempers.
+                        Use checkboxes to toggle each one on/off for theorycrafting. All active multipliers feed into the damage formula.
+                    </p>
+                    <div class="mult-controls">
+                        <button onclick="toggleAllMults(true)">Enable All</button>
+                        <button onclick="toggleAllMults(false)">Disable All</button>
+                        <button onclick="toggleMultsBySource('paragon')">Toggle Paragon</button>
+                        <button onclick="toggleMultsBySource('aspect')">Toggle Aspects</button>
+                        <button onclick="toggleMultsBySource('glyph')">Toggle Glyphs</button>
+                        <button onclick="toggleMultsBySource('passive')">Toggle Passives</button>
+                        <button onclick="toggleMultsBySource('oath')">Toggle Oaths</button>
+                        <button onclick="toggleMultsBySource('unique')">Toggle Uniques</button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:22px 1fr 110px 72px 70px auto;gap:6px;padding:0 8px 4px;font-size:0.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">
+                        <span></span><span>Name</span><span>Source</span><span>Value</span><span>Bucket</span><span></span>
+                    </div>
+                    <div class="mult-lib-grid" id="multLibGrid"></div>
+                    <button class="btn-add-affix" onclick="addMultiplier()" style="margin-top:8px;">+ Add Multiplier</button>
+                </div>
+            </div>
+
+            <!-- SKILLS TAB -->
+            <div class="tab-content" id="tab-skills">
+                <div class="panel">
+                    <div class="panel-title">Active Skill</div>
+                    <div style="display:grid;grid-template-columns:1fr 90px;gap:10px;margin-bottom:10px;">
+                        <div class="input-group"><label>Skill</label><select id="skillSelect" onchange="onSkillChange()"></select></div>
+                        <div class="input-group"><label>Rank</label><input type="number" id="skillRank" value="1" min="1" max="20" onchange="onSkillChange()"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                        <div class="input-group"><label>Coefficient %</label><input type="number" id="skillCoeff" value="45" step="0.1" readonly style="color:var(--orange);"></div>
+                        <div class="input-group"><label>Weapon Type</label><select id="weaponType" onchange="recalc()"><option value="melee">Melee</option><option value="ranged">Ranged</option><option value="dual">Dual Wield</option></select></div>
+                        <div class="input-group"><label>Tags</label><input type="text" id="skillTags" readonly style="background:var(--bg-input);border:1px solid var(--border);border-radius:5px;padding:8px 10px;color:var(--text-dim);font-size:0.78rem;width:100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THEORYCRAFT TAB -->
+            <div class="tab-content" id="tab-theorycraft">
+                <div class="panel">
+                    <div class="panel-title">Skill Damage Comparison — All Multipliers</div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">
+                        Every skill calculated with ALL active multipliers, gear, gems, charms, and paragon.
+                        Toggle multipliers in the Multipliers tab to see impact.
+                    </p>
+                    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+                        <span style="font-size:0.72rem;color:var(--text-dim);">Rank:</span>
+                        <input type="number" id="theoryRank" value="1" min="1" max="20" style="width:60px;" onchange="renderSkillTable()">
+                        <span style="font-size:0.72rem;color:var(--text-dim);margin-left:8px;">Mode:</span>
+                        <select id="theoryMode" style="width:120px;" onchange="renderSkillTable()">
+                            <option value="hit">Per Hit</option>
+                            <option value="second">Per Second</option>
+                        </select>
+                    </div>
+                    <div class="skill-table-wrap">
+                        <table class="skill-table" id="skillTable">
+                            <thead><tr id="skillTableHead"></tr></thead>
+                            <tbody id="skillTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">Stat Weight Analysis</div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">How much +1% in each bucket increases your current damage.</p>
+                    <div id="statWeights"></div>
+                </div>
+            </div>
+
+            <!-- MANUAL TAB -->
+            <div class="tab-content" id="tab-manual">
+                <div class="panel">
+                    <div class="panel-title">Manual Bucket Overrides</div>
+                    <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">These ADD to gear/multiplier/paragon/charm contributions.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div class="input-group"><label>+ Weapon Damage</label><input type="number" id="manualWeaponDmg" value="0" min="0"></div>
+                        <div class="input-group"><label>+ Additive %</label><input type="number" id="manualAdditive" value="0" step="0.1"></div>
+                        <div class="input-group"><label>+ All/Elem Mult %</label><input type="number" id="manualAllMult" value="0" step="0.1"></div>
+                        <div class="input-group"><label>+ Crit Mult %</label><input type="number" id="manualCritMult" value="0" step="0.1"></div>
+                        <div class="input-group"><label>+ Vuln Mult %</label><input type="number" id="manualVulnMult" value="0" step="0.1"></div>
+                        <div class="input-group"><label>+ DoT Mult %</label><input type="number" id="manualDotMult" value="0" step="0.1"></div>
+                        <div class="input-group"><label>+ Overpower %</label><input type="number" id="manualOverpower" value="0" step="0.1"></div>
+                        <div class="input-group"><label>+ Main Stat</label><input type="number" id="manualMainStat" value="0" min="0"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DAMAGE SIDEBAR -->
+        <div>
+            <div class="panel damage-sidebar">
+                <div class="panel-title">Damage Output</div>
+                <div class="final-damage">
+                    <div class="fd-label">Final Damage</div>
+                    <div class="fd-value" id="finalDamage">0</div>
+                    <div class="fd-type" id="hitTypeLabel">Normal Hit</div>
+                </div>
+                <div class="toggle-row">
+                    <button class="toggle-btn" id="tCrit" onclick="toggle('crit')">Crit</button>
+                    <button class="toggle-btn" id="tVuln" onclick="toggle('vuln')">Vuln</button>
+                    <button class="toggle-btn" id="tDot" onclick="toggle('dot')">DoT</button>
+                    <button class="toggle-btn" id="tOp" onclick="toggle('op')">OP</button>
+                </div>
+                <div class="breakdown" id="breakdown"></div>
+                <div class="section-label" style="margin-top:12px;">Quick Compare</div>
+                <div class="compare-grid">
+                    <div class="compare-card"><div class="cc-label">Normal</div><div class="cc-value" id="cmpNorm">--</div></div>
+                    <div class="compare-card"><div class="cc-label">Crit</div><div class="cc-value" id="cmpCrit" style="color:var(--crit-color)">--</div></div>
+                    <div class="compare-card"><div class="cc-label">Vuln</div><div class="cc-value" id="cmpVuln" style="color:var(--vuln-color)">--</div></div>
+                    <div class="compare-card"><div class="cc-label">Crit+Vuln</div><div class="cc-value" id="cmpCV" style="color:var(--gold-light)">--</div></div>
+                </div>
+                <div class="section-divider"></div>
+                <div class="section-label">Active Multipliers<span class="active-count" id="sidebarMultCount">0</span></div>
+                <div id="sidebarMultList" style="font-size:0.7rem;color:var(--text-dim);max-height:200px;overflow-y:auto;"></div>
+                <div class="section-divider"></div>
+                <div class="section-label">Bucket Summary</div>
+                <div class="bucket-summary" id="bucketSummary"></div>
+            </div>
+        </div>
+    </div>
+    <footer>Formula: <a href="https://www.youtube.com/watch?v=2GKhCdxxqp8" target="_blank">Avarilyn — Damage Calc Deep Dive</a> &bull; Season 13</footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <h2 id="modalTitle">Export</h2>
+        <textarea id="modalTextarea"></textarea>
+        <div class="modal-btns">
+            <button class="sb-btn" onclick="closeModal()">Cancel</button>
+            <button class="sb-btn primary" id="modalAction">OK</button>
+        </div>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+const CLASSES={barbarian:{stat:'Strength'},druid:{stat:'Willpower'},necromancer:{stat:'Intelligence'},rogue:{stat:'Dexterity'},sorcerer:{stat:'Intelligence'},spiritborn:{stat:'Dexterity'},paladin:{stat:'Willpower'},warlock:{stat:'Intelligence'}};
+
+const GEAR_SLOTS=[
+    {id:'helm',name:'Helm',icon:'\u{1FA96}',socket:'armor'},{id:'chest',name:'Chest',icon:'\u{1F6E1}',socket:'armor'},
+    {id:'gloves',name:'Gloves',icon:'\u{1F9E4}',socket:'none'},{id:'pants',name:'Pants',icon:'\u{1F456}',socket:'armor'},
+    {id:'boots',name:'Boots',icon:'\u{1F462}',socket:'none'},{id:'amulet',name:'Amulet',icon:'\u{1F4FF}',socket:'jewelry'},
+    {id:'ring1',name:'Ring 1',icon:'\u{1F48D}',socket:'jewelry'},{id:'ring2',name:'Ring 2',icon:'\u{1F48D}',socket:'jewelry'},
+    {id:'wep1',name:'Weapon 1',icon:'⚔',socket:'weapon'},{id:'wep2',name:'Weapon 2',icon:'\u{1F5E1}',socket:'weapon'},
+    {id:'offhand',name:'Offhand',icon:'\u{1F6E1}',socket:'none'},
+];
+
+const AFFIX_TYPES=[
+    {id:'weapon_dmg',label:'+ Weapon Damage',bucket:'weapon',prefix:'+'},{id:'main_stat',label:'+ Main Stat',bucket:'stat',prefix:'+'},
+    {id:'all_stats',label:'+ All Stats',bucket:'stat',prefix:'+'},{id:'additive',label:'+ Additive Damage %',bucket:'additive',prefix:'+'},
+    {id:'additive_phys',label:'+ Physical Damage %',bucket:'additive',prefix:'+'},{id:'additive_skill',label:'+ Skill Damage %',bucket:'additive',prefix:'+'},
+    {id:'additive_close',label:'+ Close Damage %',bucket:'additive',prefix:'+'},{id:'additive_distant',label:'+ Distant Damage %',bucket:'additive',prefix:'+'},
+    {id:'overpower_add',label:'+ Overpower Damage %',bucket:'overpower',prefix:'+'},
+    {id:'crit_mult',label:'x Crit Strike Multiplier %',bucket:'critMult',prefix:'x'},{id:'vuln_mult',label:'x Vulnerable Multiplier %',bucket:'vulnMult',prefix:'x'},
+    {id:'all_mult',label:'x All Damage Multiplier %',bucket:'allMult',prefix:'x'},{id:'phys_mult',label:'x Physical Dmg Mult %',bucket:'allMult',prefix:'x'},
+    {id:'poison_mult',label:'x Poison Dmg Mult %',bucket:'allMult',prefix:'x'},{id:'shadow_mult',label:'x Shadow Dmg Mult %',bucket:'allMult',prefix:'x'},
+    {id:'fire_mult',label:'x Fire Dmg Mult %',bucket:'allMult',prefix:'x'},{id:'cold_mult',label:'x Cold Dmg Mult %',bucket:'allMult',prefix:'x'},
+    {id:'lightning_mult',label:'x Lightning Dmg Mult %',bucket:'allMult',prefix:'x'},
+    {id:'dot_mult',label:'x DoT Multiplier %',bucket:'dotMult',prefix:'x'},{id:'global_mult',label:'x Global Multiplier %',bucket:'global',prefix:'x'},
+];
+const TAG_CLS={weapon:'tag-weapon',stat:'tag-stat',additive:'tag-additive',overpower:'tag-additive',critMult:'tag-crit-mult',vulnMult:'tag-vuln-mult',allMult:'tag-all-mult',dotMult:'tag-dot-mult',global:'tag-global'};
+const TAG_LBL={weapon:'WPN',stat:'STAT',additive:'ADD',overpower:'OP+',critMult:'CRIT',vulnMult:'VULN',allMult:'ALL',dotMult:'DOT',global:'MULT'};
+
+const MULT_SOURCES=['paragon','aspect','glyph','passive','unique','oath','temper','other'];
+const MULT_BUCKETS=[
+    {id:'additive',label:'Additive %'},{id:'critMult',label:'Crit Mult %'},{id:'vulnMult',label:'Vuln Mult %'},
+    {id:'allMult',label:'All/Elem Mult %'},{id:'dotMult',label:'DoT Mult %'},{id:'global',label:'Global (x) %'},
+    {id:'overpower',label:'Overpower %'},{id:'stat',label:'Main Stat (+)'},{id:'weapon',label:'Weapon Dmg (+)'},
+];
+
+const GEM_TYPES={
+    weapon:[{id:'none',label:'No Gem',bucket:null,value:0},{id:'ruby_w',label:'Ruby -- Overpower',bucket:'overpower',value:40},{id:'emerald_w',label:'Emerald -- Crit Mult',bucket:'critMult',value:30},{id:'sapphire_w',label:'Sapphire -- Vuln Mult',bucket:'vulnMult',value:30},{id:'topaz_w',label:'Topaz -- Additive',bucket:'additive',value:20},{id:'amethyst_w',label:'Amethyst -- DoT Mult',bucket:'dotMult',value:30},{id:'skull_w',label:'Skull -- Life on Hit',bucket:null,value:0},{id:'diamond_w',label:'Diamond -- All Dmg Mult',bucket:'allMult',value:15}],
+    armor:[{id:'none',label:'No Gem',bucket:null,value:0},{id:'ruby_a',label:'Ruby -- Max Life',bucket:null,value:0},{id:'sapphire_a',label:'Sapphire -- Armor',bucket:null,value:0},{id:'topaz_a',label:'Topaz -- DR',bucket:null,value:0}],
+    jewelry:[{id:'none',label:'No Gem',bucket:null,value:0},{id:'ruby_j',label:'Ruby -- Fire Res',bucket:null,value:0},{id:'emerald_j',label:'Emerald -- Poison Res',bucket:null,value:0},{id:'sapphire_j',label:'Sapphire -- Cold Res',bucket:null,value:0},{id:'topaz_j',label:'Topaz -- Light Res',bucket:null,value:0},{id:'diamond_j',label:'Diamond -- All Res',bucket:null,value:0}],
+};
+
+const SKILLS={
+    rogue:[{name:'Blade Shift',coeff:45,tags:'Basic, Melee',speed:1.5},{name:'Invigorating Strike',coeff:46,tags:'Basic, Melee',speed:1.4},{name:'Puncture',coeff:36,tags:'Basic, Ranged',speed:1.8},{name:'Forceful Arrow',coeff:49,tags:'Basic, Ranged',speed:1.2},{name:'Heartseeker',coeff:44,tags:'Basic, Ranged',speed:1.3},{name:'Twisting Blades',coeff:63,tags:'Core, Melee',speed:1.1},{name:'Flurry',coeff:31,tags:'Core, Melee',speed:2.0},{name:'Rapid Fire',coeff:48,tags:'Core, Ranged',speed:1.8},{name:'Penetrating Shot',coeff:70,tags:'Core, Ranged',speed:0.9},{name:'Barrage',coeff:40,tags:'Core, Ranged',speed:1.4},{name:'Dance of Knives',coeff:15,tags:'Core, Melee',speed:3.5},{name:'Shadow Step',coeff:72,tags:'Agility, Melee',speed:0.8},{name:'Dash',coeff:63,tags:'Agility, Melee',speed:0.7},{name:'Death Trap',coeff:250,tags:'Ultimate, Trap',speed:0.3},{name:'Rain of Arrows',coeff:200,tags:'Ultimate, Ranged',speed:0.25}],
+    barbarian:[{name:'Bash',coeff:50,tags:'Basic, Melee',speed:1.3},{name:'Frenzy',coeff:40,tags:'Basic, Melee',speed:2.0},{name:'Flay',coeff:42,tags:'Basic, Melee',speed:1.4},{name:'Lunging Strike',coeff:50,tags:'Basic, Melee',speed:1.1},{name:'Hammer of the Ancients',coeff:100,tags:'Core, Melee',speed:0.8},{name:'Upheaval',coeff:105,tags:'Core, Melee',speed:0.7},{name:'Double Swing',coeff:58,tags:'Core, Melee',speed:1.2},{name:'Whirlwind',coeff:35,tags:'Core, Melee',speed:3.0},{name:'Rend',coeff:48,tags:'Core, Melee, DoT',speed:1.0}],
+    sorcerer:[{name:'Fire Bolt',coeff:40,tags:'Basic, Fire',speed:1.5},{name:'Frost Bolt',coeff:36,tags:'Basic, Cold',speed:1.4},{name:'Arc Lash',coeff:42,tags:'Basic, Lightning',speed:1.6},{name:'Spark',coeff:25,tags:'Basic, Lightning',speed:2.2},{name:'Fireball',coeff:60,tags:'Core, Fire',speed:1.0},{name:'Frozen Orb',coeff:34,tags:'Core, Cold',speed:1.1},{name:'Ice Shards',coeff:31,tags:'Core, Cold',speed:2.0},{name:'Chain Lightning',coeff:42,tags:'Core, Lightning',speed:1.3},{name:'Charged Bolts',coeff:26,tags:'Core, Lightning',speed:1.5},{name:'Incinerate',coeff:40,tags:'Core, Fire',speed:2.5},{name:'Ball Lightning',coeff:18,tags:'Conj, Lightning',speed:3.0},{name:'Meteor',coeff:120,tags:'Mastery, Fire',speed:0.5},{name:'Blizzard',coeff:120,tags:'Mastery, Cold',speed:0.4}],
+    druid:[{name:'Storm Strike',coeff:48,tags:'Basic, Lightning',speed:1.3},{name:'Claw',coeff:46,tags:'Basic, Melee',speed:1.5},{name:'Maul',coeff:50,tags:'Basic, Melee',speed:1.1},{name:'Wind Shear',coeff:35,tags:'Basic, Ranged',speed:1.6},{name:'Tornado',coeff:35,tags:'Core, Ranged',speed:1.4},{name:'Pulverize',coeff:66,tags:'Core, Melee',speed:0.9},{name:'Shred',coeff:25,tags:'Core, Melee',speed:2.5},{name:'Landslide',coeff:75,tags:'Core, Earth',speed:0.8},{name:'Lightning Storm',coeff:32,tags:'Core, Lightning',speed:2.0}],
+    necromancer:[{name:'Bone Splinters',coeff:22,tags:'Basic, Bone',speed:2.0},{name:'Decompose',coeff:30,tags:'Basic, Shadow',speed:1.5},{name:'Hemorrhage',coeff:40,tags:'Basic, Blood',speed:1.3},{name:'Reap',coeff:44,tags:'Basic, Melee',speed:1.2},{name:'Bone Spear',coeff:85,tags:'Core, Bone',speed:0.9},{name:'Blight',coeff:40,tags:'Core, Shadow, DoT',speed:1.0},{name:'Sever',coeff:63,tags:'Core, Shadow',speed:1.1},{name:'Blood Surge',coeff:50,tags:'Core, Blood',speed:1.0},{name:'Blood Lance',coeff:68,tags:'Core, Blood',speed:0.9}],
+    spiritborn:[{name:'Thunderspike',coeff:50,tags:'Basic, Melee',speed:1.4},{name:'Rock Splitter',coeff:45,tags:'Basic, Melee',speed:1.3},{name:'Thrash',coeff:42,tags:'Basic, Melee',speed:1.5},{name:'Soar',coeff:80,tags:'Core, Melee',speed:0.8},{name:'Quill Volley',coeff:20,tags:'Core, Ranged',speed:2.5},{name:'Stinger',coeff:55,tags:'Core, Melee',speed:1.2},{name:'The Hunter',coeff:90,tags:'Core, Melee',speed:0.7},{name:'Touch of Death',coeff:60,tags:'Core, Melee',speed:1.0}],
+    paladin:[{name:'Smite',coeff:48,tags:'Basic, Melee',speed:1.3},{name:'Holy Bolt',coeff:38,tags:'Basic, Ranged',speed:1.5},{name:'Blessed Hammer',coeff:55,tags:'Core, Holy',speed:1.1},{name:'Judgment',coeff:100,tags:'Core, Holy',speed:0.7},{name:'Steed Charge',coeff:60,tags:'Mobility, Melee',speed:0.5}],
+    warlock:[{name:'Umbral Chains',coeff:35,tags:'Basic, Shadow',speed:1.4},{name:'Dark Prison',coeff:60,tags:'Core, Shadow',speed:1.0},{name:'Nether Step',coeff:45,tags:'Mobility, Shadow',speed:0.8},{name:'Apocalypse',coeff:150,tags:'Ultimate, Fire',speed:0.3}],
+};
+
+// ═══════════════════════════════════════════════════
+// TALISMAN DATA
+// ═══════════════════════════════════════════════════
+const TALISMAN_SLOTS = 20;
+const CHARM_SIZES = [{id:1,label:'Small (1 slot)'},{id:2,label:'Medium (2 slots)'},{id:3,label:'Large (3 slots)'},{id:4,label:'Grand (4 slots)'}];
+
+const CHARM_SETS = {
+    ironblood:{name:'Ironblood',pieces:['Ironblood Crest','Ironblood Band','Ironblood Edge'],bonuses:[
+        {count:2,desc:'+20% Additive Damage',bucket:'additive',value:20},
+        {count:3,desc:'x15% All Damage Multiplier',bucket:'allMult',value:15}]},
+    marauder:{name:"Marauder's",pieces:["Marauder's Fang","Marauder's Hide","Marauder's Claw"],bonuses:[
+        {count:2,desc:'+25% Crit Multiplier',bucket:'critMult',value:25},
+        {count:3,desc:'x12% Global Multiplier',bucket:'global',value:12}]},
+    starlight:{name:'Starlight',pieces:['Starlight Shard','Starlight Prism','Starlight Core'],bonuses:[
+        {count:2,desc:'+20% Vulnerable Multiplier',bucket:'vulnMult',value:20},
+        {count:3,desc:'+30 Main Stat',bucket:'stat',value:30}]},
+    venom:{name:'Serpent Venom',pieces:['Venom Fang','Venom Scale','Venom Heart'],bonuses:[
+        {count:2,desc:'+25% DoT Multiplier',bucket:'dotMult',value:25},
+        {count:3,desc:'x10% All Damage Multiplier',bucket:'allMult',value:10}]},
+    warlord:{name:'Warlord',pieces:['Warlord Sigil','Warlord Plate','Warlord Crown'],bonuses:[
+        {count:2,desc:'+30% Overpower Damage',bucket:'overpower',value:30},
+        {count:3,desc:'+15% Additive Damage',bucket:'additive',value:15}]},
+    shadowfiend:{name:'Shadowfiend',pieces:['Shadowfiend Mask','Shadowfiend Cloak'],bonuses:[
+        {count:2,desc:'x20% All Damage Multiplier',bucket:'allMult',value:20}]},
+};
+
+// ═══════════════════════════════════════════════════
+// PARAGON DATA
+// ═══════════════════════════════════════════════════
+const GLYPHS = [
+    {id:'exploit',name:'Exploit',desc:'Vulnerable Damage',bucket:'vulnMult',base:12,perLvl:1.0},
+    {id:'ambush',name:'Ambush',desc:'Damage to CC\'d enemies',bucket:'additive',base:15,perLvl:1.5},
+    {id:'control',name:'Control',desc:'Damage to Slowed/Stunned',bucket:'additive',base:18,perLvl:1.2},
+    {id:'crusher',name:'Crusher',desc:'Overpower Damage',bucket:'overpower',base:20,perLvl:2.0},
+    {id:'revenge',name:'Revenge',desc:'Close Damage',bucket:'additive',base:12,perLvl:1.0},
+    {id:'territorial',name:'Territorial',desc:'Close Damage',bucket:'additive',base:15,perLvl:1.2},
+    {id:'tracker',name:'Tracker',desc:'Distant Damage',bucket:'additive',base:15,perLvl:1.2},
+    {id:'undaunted',name:'Undaunted',desc:'Damage while Fortified',bucket:'additive',base:14,perLvl:1.0},
+    {id:'weaponmaster',name:'Weaponmaster',desc:'All Damage Multiplier',bucket:'allMult',base:8,perLvl:0.8},
+    {id:'diminish',name:'Diminish',desc:'Damage Reduction (defensive)',bucket:null,base:0,perLvl:0},
+    {id:'chip',name:'Chip',desc:'Basic Skill Damage',bucket:'additive',base:20,perLvl:1.5},
+    {id:'combat',name:'Combat',desc:'Core Skill Damage',bucket:'additive',base:18,perLvl:1.5},
+    {id:'adept',name:'Adept',desc:'All Damage Multiplier',bucket:'allMult',base:10,perLvl:1.0},
+    {id:'turf',name:'Turf',desc:'Close Damage while Healthy',bucket:'additive',base:16,perLvl:1.2},
+    {id:'overwhelm',name:'Overwhelm',desc:'Overpower Damage',bucket:'overpower',base:25,perLvl:2.0},
+    {id:'sacrificial',name:'Sacrificial',desc:'Crit Damage Multiplier',bucket:'critMult',base:12,perLvl:1.0},
+    {id:'torch',name:'Torch',desc:'Fire Damage Multiplier',bucket:'allMult',base:10,perLvl:1.0},
+    {id:'winter',name:'Winter',desc:'Cold Damage Multiplier',bucket:'allMult',base:10,perLvl:1.0},
+    {id:'charged',name:'Charged',desc:'Lightning Damage Multiplier',bucket:'allMult',base:10,perLvl:1.0},
+    {id:'darkness',name:'Darkness',desc:'Shadow Damage Multiplier',bucket:'allMult',base:10,perLvl:1.0},
+    {id:'bane',name:'Bane',desc:'Poison Damage Multiplier',bucket:'allMult',base:10,perLvl:1.0},
+    {id:'bloodfeeder',name:'Bloodfeeder',desc:'Blood Skill Damage',bucket:'additive',base:18,perLvl:1.5},
+    {id:'essence',name:'Essence',desc:'DoT Multiplier',bucket:'dotMult',base:12,perLvl:1.0},
+];
+
+const PARAGON_BOARDS = {
+    rogue:[
+        {name:'Starting Board',legendary:{name:'Prime',desc:'x10% damage while Healthy',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Deadly Ambush',legendary:{name:'Deadly Ambush',desc:'+30% Crit damage to Trapped',bucket:'critMult',value:30,editable:true},hasGlyph:true},
+        {name:'Tricks of the Trade',legendary:{name:'Tricks of the Trade',desc:'x12% damage per combo point',bucket:'global',value:12,editable:true},hasGlyph:true},
+        {name:'Exploit Weakness',legendary:{name:'Exploit Weakness',desc:'+25% Vulnerable Damage',bucket:'vulnMult',value:25,editable:true},hasGlyph:true},
+        {name:'No Witnesses',legendary:{name:'No Witnesses',desc:'+20% Ultimate Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Eldritch Bounty',legendary:{name:'Eldritch Bounty',desc:'x15% All Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:"Leyrana's Instinct",legendary:{name:"Leyrana's Instinct",desc:'+20% Core Skill Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Cheap Shot',legendary:{name:'Cheap Shot',desc:'+25% to CC\'d enemies',bucket:'additive',value:25,editable:true},hasGlyph:true},
+    ],
+    barbarian:[
+        {name:'Starting Board',legendary:{name:'Raw Power',desc:'x10% while Berserking',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Blood Rage',legendary:{name:'Blood Rage',desc:'x15% while Berserking',bucket:'global',value:15,editable:true},hasGlyph:true},
+        {name:'Carnage',legendary:{name:'Carnage',desc:'+20% Core Skill Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Decimator',legendary:{name:'Decimator',desc:'+25% to Injured enemies',bucket:'additive',value:25,editable:true},hasGlyph:true},
+        {name:'Fleshrender',legendary:{name:'Fleshrender',desc:'+30% Overpower Damage',bucket:'overpower',value:30,editable:true},hasGlyph:true},
+        {name:'Bone Breaker',legendary:{name:'Bone Breaker',desc:'+20% Crit Multiplier',bucket:'critMult',value:20,editable:true},hasGlyph:true},
+        {name:'Warbringer',legendary:{name:'Warbringer',desc:'x12% All Damage',bucket:'allMult',value:12,editable:true},hasGlyph:true},
+        {name:'Weapons Master',legendary:{name:'Weapons Master',desc:'x10% with Two-Handed',bucket:'global',value:10,editable:true},hasGlyph:true},
+    ],
+    sorcerer:[
+        {name:'Starting Board',legendary:{name:'Elemental Balance',desc:'x10% Elemental Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Burning Instinct',legendary:{name:'Burning Instinct',desc:'x15% Fire Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Ceaseless Conduit',legendary:{name:'Ceaseless Conduit',desc:'x15% Lightning Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Enchantment Master',legendary:{name:'Enchantment Master',desc:'+20% Enchantment Skill Dmg',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Frigid Fate',legendary:{name:'Frigid Fate',desc:'x15% Cold Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Searing Heat',legendary:{name:'Searing Heat',desc:'+25% Fire Crit Damage',bucket:'critMult',value:25,editable:true},hasGlyph:true},
+        {name:'Static Surge',legendary:{name:'Static Surge',desc:'+20% Lightning Crit Damage',bucket:'critMult',value:20,editable:true},hasGlyph:true},
+        {name:'Elemental Summoner',legendary:{name:'Elemental Summoner',desc:'+20% Conjuration Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+    ],
+    druid:[
+        {name:'Starting Board',legendary:{name:'Survival Instincts',desc:'x10% while in Werewolf',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Ancestral Guidance',legendary:{name:'Ancestral Guidance',desc:'x12% All Damage',bucket:'allMult',value:12,editable:true},hasGlyph:true},
+        {name:'Inner Beast',legendary:{name:'Inner Beast',desc:'+20% Companion Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Lust for Carnage',legendary:{name:'Lust for Carnage',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
+        {name:'Thunderstruck',legendary:{name:'Thunderstruck',desc:'x15% Storm Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Earthen Devastation',legendary:{name:'Earthen Devastation',desc:'+30% Earth Skill Damage',bucket:'additive',value:30,editable:true},hasGlyph:true},
+        {name:'Heightened Malice',legendary:{name:'Heightened Malice',desc:'x10% per Poisoned enemy',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Constricting Tendrils',legendary:{name:'Constricting Tendrils',desc:'+20% to Immobilized',bucket:'additive',value:20,editable:true},hasGlyph:true},
+    ],
+    necromancer:[
+        {name:'Starting Board',legendary:{name:'Bone Graft',desc:'x10% Bone Skill Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Cult Leader',legendary:{name:'Cult Leader',desc:'+20% Minion & Self Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Scent of Death',legendary:{name:'Scent of Death',desc:'+25% Corpse Skill Damage',bucket:'additive',value:25,editable:true},hasGlyph:true},
+        {name:'Blood Begets Blood',legendary:{name:'Blood Begets Blood',desc:'x15% Blood Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Flesh Eater',legendary:{name:'Flesh Eater',desc:'+30% Overpower Damage',bucket:'overpower',value:30,editable:true},hasGlyph:true},
+        {name:'Wither',legendary:{name:'Wither',desc:'+25% Shadow DoT Damage',bucket:'dotMult',value:25,editable:true},hasGlyph:true},
+        {name:'Bone Spirit',legendary:{name:'Bone Spirit',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
+        {name:'Hulking Monstrosity',legendary:{name:'Hulking Monstrosity',desc:'x12% while Golem active',bucket:'global',value:12,editable:true},hasGlyph:true},
+    ],
+    spiritborn:[
+        {name:'Starting Board',legendary:{name:'Spirit Surge',desc:'x10% Spirit Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Jaguar Ferocity',legendary:{name:'Jaguar Ferocity',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
+        {name:'Eagle Precision',legendary:{name:'Eagle Precision',desc:'x15% Ranged Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Gorilla Might',legendary:{name:'Gorilla Might',desc:'+30% Overpower Damage',bucket:'overpower',value:30,editable:true},hasGlyph:true},
+        {name:'Centipede Venom',legendary:{name:'Centipede Venom',desc:'+25% DoT Multiplier',bucket:'dotMult',value:25,editable:true},hasGlyph:true},
+        {name:'Ancestral Vigor',legendary:{name:'Ancestral Vigor',desc:'x12% All Damage',bucket:'allMult',value:12,editable:true},hasGlyph:true},
+        {name:'Harmonious Balance',legendary:{name:'Harmonious Balance',desc:'x10% per Spirit type',bucket:'global',value:10,editable:true},hasGlyph:true},
+        {name:'Primal Fury',legendary:{name:'Primal Fury',desc:'+20% Basic Skill Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+    ],
+    paladin:[
+        {name:'Starting Board',legendary:{name:'Divine Fervor',desc:'x10% Holy Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Righteous Path',legendary:{name:'Righteous Path',desc:'+20% Core Skill Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Crusade',legendary:{name:'Crusade',desc:'x15% All Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Zealotry',legendary:{name:'Zealotry',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
+        {name:'Bulwark',legendary:{name:'Bulwark',desc:'+30% Overpower Damage',bucket:'overpower',value:30,editable:true},hasGlyph:true},
+        {name:'Consecration',legendary:{name:'Consecration',desc:'x12% in Consecrated Ground',bucket:'global',value:12,editable:true},hasGlyph:true},
+    ],
+    warlock:[
+        {name:'Starting Board',legendary:{name:'Dark Covenant',desc:'x10% Shadow Damage',bucket:'allMult',value:10,editable:true},hasGlyph:true},
+        {name:'Infernal Pact',legendary:{name:'Infernal Pact',desc:'x15% Fire Damage',bucket:'allMult',value:15,editable:true},hasGlyph:true},
+        {name:'Soul Harvest',legendary:{name:'Soul Harvest',desc:'+25% DoT Multiplier',bucket:'dotMult',value:25,editable:true},hasGlyph:true},
+        {name:'Demonbind',legendary:{name:'Demonbind',desc:'+20% Summon Damage',bucket:'additive',value:20,editable:true},hasGlyph:true},
+        {name:'Hellfire',legendary:{name:'Hellfire',desc:'+25% Crit Multiplier',bucket:'critMult',value:25,editable:true},hasGlyph:true},
+        {name:'Doom',legendary:{name:'Doom',desc:'x12% All Damage',bucket:'allMult',value:12,editable:true},hasGlyph:true},
+    ],
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+const state = {
+    selectedClass:'rogue', isCrit:false, isVuln:false, isDot:false, isOP:false,
+    gearAffixes:{}, gemSelections:{}, multipliers:[],
+    charms:[], // {id, name, size, setId, affixes:[{type,value}]}
+    paragon:{}, // keyed by class: [{boardIdx, attached, legendaryActive, legendaryValue, glyphId, glyphLevel, normalPts, magicPts, rarePts}]
+};
+let affixCounter=0, multCounter=0, charmCounter=0, sortCol='fullDmg', sortDir=-1;
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+function init(){
+    buildClassSelector(); buildGearSlots(); buildGemSlots(); buildSkillSelector();
+    initParagonState(); bindInputs(); refreshBuildList();
+    renderTalisman(); renderParagonBoards(); recalc();
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+            if(btn.dataset.tab==='theorycraft'){renderSkillTable();renderStatWeights();}
+            if(btn.dataset.tab==='talisman') renderTalisman();
+            if(btn.dataset.tab==='paragon') renderParagonBoards();
+        });
+    });
+}
+function bindInputs(){
+    ['mainStat','enemyDR','manualWeaponDmg','manualAdditive','manualAllMult','manualCritMult','manualVulnMult','manualDotMult','manualOverpower','manualMainStat'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.addEventListener('input',recalc);
+    });
+}
+
+function initParagonState(){
+    Object.keys(PARAGON_BOARDS).forEach(cls=>{
+        if(!state.paragon[cls]){
+            state.paragon[cls]=PARAGON_BOARDS[cls].map((_,i)=>({
+                boardIdx:i, attached:false, legendaryActive:false,
+                legendaryValue:PARAGON_BOARDS[cls][i].legendary.value,
+                glyphId:'', glyphLevel:1, normalPts:0, magicPts:0, rarePts:0
+            }));
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════
+// CLASS
+// ═══════════════════════════════════════════════════
+function buildClassSelector(){
+    const c=document.getElementById('classSelect'); c.innerHTML='';
+    Object.keys(CLASSES).forEach(cls=>{
+        const b=document.createElement('button'); b.className='class-btn'+(cls===state.selectedClass?' active':'');
+        b.textContent=cls.charAt(0).toUpperCase()+cls.slice(1);
+        b.onclick=()=>{state.selectedClass=cls;document.getElementById('mainStatLabel').textContent=CLASSES[cls].stat;document.querySelectorAll('.class-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');buildSkillSelector();renderParagonBoards();recalc();};
+        c.appendChild(b);
+    });
+}
+
+// ═══════════════════════════════════════════════════
+// GEAR
+// ═══════════════════════════════════════════════════
+function buildGearSlots(){const g=document.getElementById('gearGrid');g.innerHTML='';GEAR_SLOTS.forEach(slot=>{state.gearAffixes[slot.id]=state.gearAffixes[slot.id]||[];const d=document.createElement('div');d.className='gear-slot';d.id='slot-'+slot.id;d.innerHTML=`<div class="gear-slot-header"><span class="gear-slot-name">${slot.icon} ${slot.name}</span><span style="font-size:0.62rem;color:var(--text-dim)">${slot.socket!=='none'?slot.socket:''}</span></div><div class="affix-list" id="affixes-${slot.id}"></div><button class="btn-add-affix" onclick="addAffix('${slot.id}')">+ Affix</button>`;g.appendChild(d);});}
+function addAffix(s,t='additive',v=0){const id='afx_'+(affixCounter++);state.gearAffixes[s].push({id,type:t,value:v});renderAffixes(s);recalc();}
+function removeAffix(s,id){state.gearAffixes[s]=state.gearAffixes[s].filter(a=>a.id!==id);renderAffixes(s);recalc();}
+function renderAffixes(s){const c=document.getElementById('affixes-'+s);c.innerHTML='';state.gearAffixes[s].forEach(affix=>{const def=AFFIX_TYPES.find(a=>a.id===affix.type)||AFFIX_TYPES[0];const r=document.createElement('div');r.className='affix-row';r.innerHTML=`<span class="affix-bucket-tag ${TAG_CLS[def.bucket]}">${TAG_LBL[def.bucket]}</span><select onchange="updateAffixType('${s}','${affix.id}',this.value)">${AFFIX_TYPES.map(a=>`<option value="${a.id}"${a.id===affix.type?' selected':''}>${a.label}</option>`).join('')}</select><input type="number" value="${affix.value}" step="0.1" onchange="updateAffixVal('${s}','${affix.id}',this.value)" oninput="updateAffixVal('${s}','${affix.id}',this.value)"><button class="btn-remove" onclick="removeAffix('${s}','${affix.id}')">✕</button>`;c.appendChild(r);});const sl=document.getElementById('slot-'+s);if(sl)sl.classList.toggle('has-item',state.gearAffixes[s].length>0);}
+function updateAffixType(s,id,t){const a=state.gearAffixes[s].find(x=>x.id===id);if(a){a.type=t;renderAffixes(s);recalc();}}
+function updateAffixVal(s,id,v){const a=state.gearAffixes[s].find(x=>x.id===id);if(a){a.value=parseFloat(v)||0;recalc();}}
+
+// ═══════════════════════════════════════════════════
+// GEMS
+// ═══════════════════════════════════════════════════
+function buildGemSlots(){const g=document.getElementById('gemGrid');g.innerHTML='';GEAR_SLOTS.filter(s=>s.socket!=='none').forEach(slot=>{state.gemSelections[slot.id]=state.gemSelections[slot.id]||'none';const gems=GEM_TYPES[slot.socket];const d=document.createElement('div');d.className='gem-slot';d.innerHTML=`<div class="gem-slot-label">${slot.icon} ${slot.name}</div><select id="gem-${slot.id}" onchange="updateGem('${slot.id}',this.value)">${gems.map(g=>`<option value="${g.id}"${state.gemSelections[slot.id]===g.id?' selected':''}>${g.label}</option>`).join('')}</select>`;g.appendChild(d);});}
+function updateGem(s,g){state.gemSelections[s]=g;recalc();}
+
+// ═══════════════════════════════════════════════════
+// SKILLS
+// ═══════════════════════════════════════════════════
+function buildSkillSelector(){const sel=document.getElementById('skillSelect');const skills=SKILLS[state.selectedClass]||[];sel.innerHTML=skills.map((s,i)=>`<option value="${i}">${s.name} (${s.coeff}%)</option>`).join('');onSkillChange();}
+function onSkillChange(){const skills=SKILLS[state.selectedClass]||[];const idx=parseInt(document.getElementById('skillSelect').value)||0;const skill=skills[idx];if(!skill)return;const rank=parseInt(document.getElementById('skillRank').value)||1;const scaled=Math.round(skill.coeff*(1+(rank-1)*0.1)*10)/10;document.getElementById('skillCoeff').value=scaled;document.getElementById('skillTags').value=skill.tags;recalc();}
+
+// ═══════════════════════════════════════════════════
+// TALISMAN
+// ═══════════════════════════════════════════════════
+function addCharm(name='',setId='',size=1,affixType='additive',isSet=false){
+    const id='charm_'+(charmCounter++);
+    const charm={id, name:name||(isSet?'Set Charm':'Charm'), size, setId:isSet?Object.keys(CHARM_SETS)[0]:'',
+        affixes:[{type:affixType||'additive',value:0}]};
+    state.charms.push(charm);
+    renderTalisman(); recalc();
+}
+function removeCharm(id){state.charms=state.charms.filter(c=>c.id!==id);renderTalisman();recalc();}
+function clearAllCharms(){state.charms=[];renderTalisman();recalc();}
+
+function addCharmAffix(charmId){
+    const c=state.charms.find(x=>x.id===charmId);
+    if(c){c.affixes.push({type:'additive',value:0});renderTalisman();}
+}
+function removeCharmAffix(charmId,idx){
+    const c=state.charms.find(x=>x.id===charmId);
+    if(c&&c.affixes.length>1){c.affixes.splice(idx,1);renderTalisman();recalc();}
+}
+function updateCharmName(id,v){const c=state.charms.find(x=>x.id===id);if(c)c.name=v;}
+function updateCharmSize(id,v){const c=state.charms.find(x=>x.id===id);if(c){c.size=parseInt(v);renderTalisman();recalc();}}
+function updateCharmSet(id,v){const c=state.charms.find(x=>x.id===id);if(c){c.setId=v;renderTalisman();recalc();}}
+function updateCharmAffixType(charmId,idx,v){const c=state.charms.find(x=>x.id===charmId);if(c){c.affixes[idx].type=v;recalc();}}
+function updateCharmAffixVal(charmId,idx,v){const c=state.charms.find(x=>x.id===charmId);if(c){c.affixes[idx].value=parseFloat(v)||0;recalc();}}
+
+function renderTalisman(){
+    const used=state.charms.reduce((s,c)=>s+c.size,0);
+    document.getElementById('talismanUsed').textContent=used;
+
+    // Grid visualization
+    const grid=document.getElementById('talismanGrid');
+    grid.innerHTML='';
+    let filled=0;
+    for(let i=0;i<TALISMAN_SLOTS;i++){
+        const cell=document.createElement('div');
+        cell.className='talisman-cell';
+        if(i<used){
+            const charm=getCharmAtSlot(i);
+            cell.classList.add(charm&&charm.setId?'set-piece':'occupied');
+            cell.textContent=charm?charm.name.substring(0,3).toUpperCase():'';
+            cell.title=charm?charm.name:'';
+        }
+        grid.appendChild(cell);
+    }
+
+    // Charm list
+    const list=document.getElementById('charmList');
+    list.innerHTML='';
+    state.charms.forEach(charm=>{
+        const isSet=!!charm.setId;
+        const card=document.createElement('div');
+        card.className='charm-card'+(isSet?' is-set':'');
+        let h=`<div class="charm-header">
+            <input class="charm-name-input" value="${charm.name}" onchange="updateCharmName('${charm.id}',this.value)">
+            <select style="width:110px;font-size:0.72rem;padding:4px;" onchange="updateCharmSize('${charm.id}',this.value)">
+                ${CHARM_SIZES.map(s=>`<option value="${s.id}"${s.id===charm.size?' selected':''}>${s.label}</option>`).join('')}
+            </select>
+            <button class="btn-remove" onclick="removeCharm('${charm.id}')">✕</button>
+        </div>`;
+        if(isSet){
+            h+=`<div style="margin:4px 0;"><select style="width:100%;font-size:0.72rem;padding:4px;" onchange="updateCharmSet('${charm.id}',this.value)">
+                ${Object.entries(CHARM_SETS).map(([k,s])=>`<option value="${k}"${k===charm.setId?' selected':''}>${s.name}</option>`).join('')}
+            </select></div>`;
+        }
+        h+=`<div class="charm-affixes">`;
+        charm.affixes.forEach((affix,idx)=>{
+            h+=`<div class="charm-affix-row">
+                <select onchange="updateCharmAffixType('${charm.id}',${idx},this.value)">
+                    ${AFFIX_TYPES.map(a=>`<option value="${a.id}"${a.id===affix.type?' selected':''}>${a.label}</option>`).join('')}
+                </select>
+                <input type="number" value="${affix.value}" step="0.1" oninput="updateCharmAffixVal('${charm.id}',${idx},this.value)">
+                <button class="btn-remove" onclick="removeCharmAffix('${charm.id}',${idx})">✕</button>
+            </div>`;
+        });
+        h+=`</div><button class="btn-add-affix" onclick="addCharmAffix('${charm.id}')">+ Affix</button>`;
+        card.innerHTML=h;
+        list.appendChild(card);
+    });
+
+    // Set bonus tracker
+    renderSetBonuses();
+}
+
+function getCharmAtSlot(slotIdx){
+    let pos=0;
+    for(const c of state.charms){
+        if(slotIdx>=pos && slotIdx<pos+c.size) return c;
+        pos+=c.size;
+    }
+    return null;
+}
+
+function renderSetBonuses(){
+    const tracker=document.getElementById('setBonusTracker');
+    const setCounts={};
+    state.charms.forEach(c=>{if(c.setId)setCounts[c.setId]=(setCounts[c.setId]||0)+1;});
+
+    let html='';
+    Object.entries(CHARM_SETS).forEach(([setId,set])=>{
+        const count=setCounts[setId]||0;
+        if(count===0) return;
+        const hasActive=set.bonuses.some(b=>count>=b.count);
+        html+=`<div class="set-bonus-card${hasActive?' active-set':''}">
+            <div class="set-name">${set.name} (${count}/${set.pieces.length})</div>`;
+        set.bonuses.forEach(bonus=>{
+            const met=count>=bonus.count;
+            html+=`<div class="set-tier${met?' met':''}">
+                <span>(${bonus.count}) ${bonus.desc}</span>
+                <span>${met?'ACTIVE':'--'}</span>
+            </div>`;
+        });
+        html+=`</div>`;
+    });
+    if(!html) html='<div style="font-size:0.72rem;color:var(--text-dim);">No set charms equipped</div>';
+    tracker.innerHTML=html;
+}
+
+function getActiveSetBonuses(){
+    const setCounts={};
+    state.charms.forEach(c=>{if(c.setId)setCounts[c.setId]=(setCounts[c.setId]||0)+1;});
+    const bonuses=[];
+    Object.entries(setCounts).forEach(([setId,count])=>{
+        const set=CHARM_SETS[setId];
+        if(!set)return;
+        set.bonuses.forEach(b=>{if(count>=b.count)bonuses.push(b);});
+    });
+    return bonuses;
+}
+
+// ═══════════════════════════════════════════════════
+// PARAGON
+// ═══════════════════════════════════════════════════
+function renderParagonBoards(){
+    const cls=state.selectedClass;
+    document.getElementById('paragonClassName').textContent=cls.charAt(0).toUpperCase()+cls.slice(1);
+    initParagonState();
+    const boards=PARAGON_BOARDS[cls]||[];
+    const pState=state.paragon[cls]||[];
+    const container=document.getElementById('paragonBoardList');
+    container.innerHTML='';
+
+    boards.forEach((board,idx)=>{
+        const ps=pState[idx]||{attached:false,legendaryActive:false,legendaryValue:board.legendary.value,glyphId:'',glyphLevel:1,normalPts:0,magicPts:0,rarePts:0};
+        const card=document.createElement('div');
+        card.className='paragon-board-card'+(ps.attached?' attached':'');
+        card.id='pboard-'+idx;
+
+        let html=`<div class="pb-header">
+            <span class="pb-name">${board.name}</span>
+            <button class="pb-toggle${ps.attached?' on':''}" onclick="toggleBoard(${idx})">${ps.attached?'Attached':'Detached'}</button>
+        </div>`;
+
+        if(ps.attached){
+            // Legendary node
+            html+=`<div class="pb-legendary${ps.legendaryActive?' active':''}">
+                <input type="checkbox" ${ps.legendaryActive?'checked':''} onchange="toggleLegendary(${idx},this.checked)">
+                <div style="flex:1;">
+                    <div class="pb-legendary-name">${board.legendary.name}</div>
+                    <div class="pb-legendary-desc">${board.legendary.desc}</div>
+                </div>
+                <input type="number" value="${ps.legendaryValue}" step="1" style="width:60px;font-size:0.75rem;padding:3px 5px;" onchange="updateLegendaryVal(${idx},this.value)">
+                <span class="pb-legendary-val">${board.legendary.bucket}</span>
+            </div>`;
+
+            // Glyph socket
+            if(board.hasGlyph){
+                const glyph=GLYPHS.find(g=>g.id===ps.glyphId);
+                const glyphVal=glyph?(glyph.base+glyph.perLvl*(ps.glyphLevel-1)).toFixed(1):0;
+                html+=`<div class="pb-glyph">
+                    <select onchange="updateBoardGlyph(${idx},this.value)">
+                        <option value="">-- No Glyph --</option>
+                        ${GLYPHS.map(g=>`<option value="${g.id}"${g.id===ps.glyphId?' selected':''}>${g.name} — ${g.desc}</option>`).join('')}
+                    </select>
+                    <input type="number" value="${ps.glyphLevel}" min="1" max="21" placeholder="Lvl" onchange="updateGlyphLevel(${idx},this.value)">
+                    <span style="font-size:0.68rem;color:var(--text-dim);">Lvl</span>
+                </div>`;
+                if(glyph){
+                    html+=`<div class="pb-glyph-info">${glyph.name}: +${glyphVal}% ${glyph.desc} (${glyph.bucket||'defensive'})</div>`;
+                }
+            }
+
+            // Node point allocation
+            html+=`<div class="pb-nodes">
+                <div class="pb-node-input"><label>Normal Pts</label><input type="number" value="${ps.normalPts}" min="0" onchange="updateNodePts(${idx},'normalPts',this.value)"></div>
+                <div class="pb-node-input"><label>Magic Pts</label><input type="number" value="${ps.magicPts}" min="0" onchange="updateNodePts(${idx},'magicPts',this.value)"></div>
+                <div class="pb-node-input"><label>Rare Pts</label><input type="number" value="${ps.rarePts}" min="0" onchange="updateNodePts(${idx},'rarePts',this.value)"></div>
+            </div>`;
+        }
+        card.innerHTML=html;
+        container.appendChild(card);
+    });
+
+    updateParagonSummary();
+}
+
+function toggleBoard(idx){
+    const ps=state.paragon[state.selectedClass];
+    ps[idx].attached=!ps[idx].attached;
+    if(!ps[idx].attached){ps[idx].legendaryActive=false;ps[idx].glyphId='';ps[idx].glyphLevel=1;ps[idx].normalPts=0;ps[idx].magicPts=0;ps[idx].rarePts=0;}
+    renderParagonBoards();recalc();
+}
+function toggleLegendary(idx,checked){state.paragon[state.selectedClass][idx].legendaryActive=checked;renderParagonBoards();recalc();}
+function updateLegendaryVal(idx,v){state.paragon[state.selectedClass][idx].legendaryValue=parseFloat(v)||0;recalc();}
+function updateBoardGlyph(idx,v){state.paragon[state.selectedClass][idx].glyphId=v;renderParagonBoards();recalc();}
+function updateGlyphLevel(idx,v){state.paragon[state.selectedClass][idx].glyphLevel=Math.max(1,Math.min(21,parseInt(v)||1));recalc();}
+function updateNodePts(idx,field,v){state.paragon[state.selectedClass][idx][field]=parseInt(v)||0;updateParagonSummary();recalc();}
+
+function updateParagonSummary(){
+    const cls=state.selectedClass;
+    const pState=state.paragon[cls]||[];
+    const boards=PARAGON_BOARDS[cls]||[];
+    let totalPts=0, legendaries=0, glyphs=0;
+    const bucketContrib={};
+
+    pState.forEach((ps,idx)=>{
+        if(!ps.attached) return;
+        totalPts+=ps.normalPts+ps.magicPts+ps.rarePts;
+        if(ps.legendaryActive){
+            legendaries++;
+            const b=boards[idx].legendary.bucket;
+            bucketContrib[b]=(bucketContrib[b]||0)+ps.legendaryValue;
+        }
+        if(ps.glyphId){
+            glyphs++;
+            const glyph=GLYPHS.find(g=>g.id===ps.glyphId);
+            if(glyph&&glyph.bucket){
+                const val=glyph.base+glyph.perLvl*(ps.glyphLevel-1);
+                bucketContrib[glyph.bucket]=(bucketContrib[glyph.bucket]||0)+val;
+            }
+        }
+    });
+
+    document.getElementById('allocatedPts').textContent=totalPts;
+    const summary=document.getElementById('paragonSummary');
+    let html=`<div class="section-label">Paragon Totals</div>`;
+    html+=`<div class="glyph-summary-row"><span>Attached Boards</span><span style="color:var(--blue)">${pState.filter(p=>p.attached).length}</span></div>`;
+    html+=`<div class="glyph-summary-row"><span>Active Legendaries</span><span style="color:var(--orange-light)">${legendaries}</span></div>`;
+    html+=`<div class="glyph-summary-row"><span>Slotted Glyphs</span><span style="color:var(--purple)">${glyphs}</span></div>`;
+    html+=`<div class="glyph-summary-row"><span>Allocated Points</span><span style="color:var(--gold)">${totalPts}</span></div>`;
+    if(Object.keys(bucketContrib).length>0){
+        html+=`<div style="margin-top:6px;font-size:0.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Damage Contributions</div>`;
+        Object.entries(bucketContrib).forEach(([bucket,val])=>{
+            html+=`<div class="glyph-summary-row"><span>${bucket}</span><span style="color:var(--gold-light)">+${val.toFixed(1)}%</span></div>`;
+        });
+    }
+    // Main stat from normal nodes (5 per point as approximation)
+    const statFromNodes=pState.reduce((s,p)=>s+(p.attached?p.normalPts*5:0),0);
+    if(statFromNodes>0){
+        html+=`<div class="glyph-summary-row"><span>Main Stat from Nodes</span><span style="color:var(--blue)">+${statFromNodes}</span></div>`;
+    }
+    summary.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════
+// MULTIPLIER LIBRARY
+// ═══════════════════════════════════════════════════
+function addMultiplier(name='',source='paragon',bucket='global',value=0,enabled=true){
+    const id='mult_'+(multCounter++);
+    state.multipliers.push({id,name,source,bucket,value,enabled});
+    renderMultLibrary(); recalc();
+}
+function removeMultiplier(id){state.multipliers=state.multipliers.filter(m=>m.id!==id);renderMultLibrary();recalc();}
+function renderMultLibrary(){
+    const g=document.getElementById('multLibGrid'); g.innerHTML='';
+    state.multipliers.forEach(m=>{
+        const r=document.createElement('div');
+        r.className='mult-row'+(m.enabled?'':' disabled'); r.id='mrow-'+m.id;
+        r.innerHTML=`
+            <input type="checkbox" ${m.enabled?'checked':''} onchange="toggleMult('${m.id}',this.checked)">
+            <input type="text" value="${m.name}" placeholder="e.g. Grandfather, Exploit Glyph..." onchange="updateMultName('${m.id}',this.value)">
+            <select onchange="updateMultSource('${m.id}',this.value)">${MULT_SOURCES.map(s=>`<option value="${s}"${s===m.source?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}</select>
+            <input type="number" value="${m.value}" step="0.1" oninput="updateMultValue('${m.id}',this.value)">
+            <select onchange="updateMultBucket('${m.id}',this.value)">${MULT_BUCKETS.map(b=>`<option value="${b.id}"${b.id===m.bucket?' selected':''}>${b.label}</option>`).join('')}</select>
+            <button class="btn-remove" onclick="removeMultiplier('${m.id}')">✕</button>`;
+        g.appendChild(r);
+    });
+    updateMultBadge();
+}
+function toggleMult(id,checked){const m=state.multipliers.find(x=>x.id===id);if(m){m.enabled=checked;const row=document.getElementById('mrow-'+id);if(row)row.classList.toggle('disabled',!checked);updateMultBadge();recalc();}}
+function updateMultName(id,v){const m=state.multipliers.find(x=>x.id===id);if(m)m.name=v;}
+function updateMultSource(id,v){const m=state.multipliers.find(x=>x.id===id);if(m)m.source=v;}
+function updateMultValue(id,v){const m=state.multipliers.find(x=>x.id===id);if(m){m.value=parseFloat(v)||0;recalc();}}
+function updateMultBucket(id,v){const m=state.multipliers.find(x=>x.id===id);if(m){m.bucket=v;recalc();}}
+function toggleAllMults(on){state.multipliers.forEach(m=>m.enabled=on);renderMultLibrary();recalc();}
+function toggleMultsBySource(src){state.multipliers.filter(m=>m.source===src).forEach(m=>m.enabled=!m.enabled);renderMultLibrary();recalc();}
+function updateMultBadge(){
+    const count=state.multipliers.filter(m=>m.enabled&&m.value>0).length;
+    document.getElementById('multCountBadge').textContent=count;
+    document.getElementById('sidebarMultCount').textContent=count;
+}
+
+// ═══════════════════════════════════════════════════
+// TOGGLES
+// ═══════════════════════════════════════════════════
+function toggle(type){
+    const map={crit:'isCrit',vuln:'isVuln',dot:'isDot',op:'isOP'};
+    const cls={crit:'on-crit',vuln:'on-vuln',dot:'on-dot',op:'on-op'};
+    const btn={crit:'tCrit',vuln:'tVuln',dot:'tDot',op:'tOp'};
+    state[map[type]]=!state[map[type]];
+    document.getElementById(btn[type]).classList.toggle(cls[type],state[map[type]]);
+    recalc();
+}
+
+// ═══════════════════════════════════════════════════
+// AGGREGATE BUCKETS
+// ═══════════════════════════════════════════════════
+function aggregateBuckets(){
+    const b={weapon:0,stat:0,additive:0,overpower:0,critMult:0,vulnMult:0,allMult:0,dotMult:0,globals:[]};
+
+    // Gear affixes
+    Object.values(state.gearAffixes).forEach(affixes=>affixes.forEach(affix=>{
+        const def=AFFIX_TYPES.find(a=>a.id===affix.type);if(!def)return;
+        if(def.bucket==='global'){if(affix.value>0)b.globals.push({value:affix.value,name:'Gear affix'});}
+        else b[def.bucket]+=affix.value;
+    }));
+
+    // Gems
+    GEAR_SLOTS.filter(s=>s.socket!=='none').forEach(slot=>{
+        const gemId=state.gemSelections[slot.id];if(!gemId||gemId==='none')return;
+        const gem=GEM_TYPES[slot.socket].find(g=>g.id===gemId);
+        if(gem&&gem.bucket){if(gem.bucket==='global'){if(gem.value>0)b.globals.push({value:gem.value,name:'Gem'});}else b[gem.bucket]+=gem.value;}
+    });
+
+    // Multiplier Library
+    state.multipliers.filter(m=>m.enabled&&m.value>0).forEach(m=>{
+        if(m.bucket==='global') b.globals.push({value:m.value,name:m.name||'Unnamed'});
+        else if(b.hasOwnProperty(m.bucket)) b[m.bucket]+=m.value;
+    });
+
+    // Charms
+    state.charms.forEach(charm=>{
+        charm.affixes.forEach(affix=>{
+            const def=AFFIX_TYPES.find(a=>a.id===affix.type);if(!def)return;
+            if(def.bucket==='global'){if(affix.value>0)b.globals.push({value:affix.value,name:charm.name||'Charm'});}
+            else b[def.bucket]+=affix.value;
+        });
+    });
+
+    // Set bonuses from charms
+    getActiveSetBonuses().forEach(bonus=>{
+        if(bonus.bucket==='global') b.globals.push({value:bonus.value,name:'Set Bonus'});
+        else if(b.hasOwnProperty(bonus.bucket)) b[bonus.bucket]+=bonus.value;
+    });
+
+    // Paragon boards
+    const cls=state.selectedClass;
+    const pState=state.paragon[cls]||[];
+    const boards=PARAGON_BOARDS[cls]||[];
+    pState.forEach((ps,idx)=>{
+        if(!ps.attached) return;
+        // Legendary node
+        if(ps.legendaryActive && boards[idx]){
+            const leg=boards[idx].legendary;
+            const val=ps.legendaryValue;
+            if(leg.bucket==='global') b.globals.push({value:val,name:leg.name});
+            else if(b.hasOwnProperty(leg.bucket)) b[leg.bucket]+=val;
+        }
+        // Glyph
+        if(ps.glyphId){
+            const glyph=GLYPHS.find(g=>g.id===ps.glyphId);
+            if(glyph&&glyph.bucket){
+                const val=glyph.base+glyph.perLvl*(ps.glyphLevel-1);
+                if(glyph.bucket==='global') b.globals.push({value:val,name:glyph.name+' Glyph'});
+                else if(b.hasOwnProperty(glyph.bucket)) b[glyph.bucket]+=val;
+            }
+        }
+        // Normal nodes give main stat (approx 5 per point)
+        b.stat+=ps.normalPts*5;
+        // Magic nodes give small additive (approx 1.5% per point)
+        b.additive+=ps.magicPts*1.5;
+        // Rare nodes give small all damage (approx 2% per point)
+        b.allMult+=ps.rarePts*2;
+    });
+
+    // Manual overrides
+    const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
+    b.weapon+=gv('manualWeaponDmg');b.additive+=gv('manualAdditive');b.allMult+=gv('manualAllMult');
+    b.critMult+=gv('manualCritMult');b.vulnMult+=gv('manualVulnMult');b.dotMult+=gv('manualDotMult');
+    b.overpower+=gv('manualOverpower');b.stat+=gv('manualMainStat');
+
+    return b;
+}
+
+// ═══════════════════════════════════════════════════
+// DAMAGE ENGINE
+// ═══════════════════════════════════════════════════
+function calcDamage(weaponDmg,mainStat,skillCoeff,buckets,isCrit,isVuln,isDot,isOP){
+    const b_coeff=skillCoeff/100;
+    const totalAdd=buckets.additive+(isOP?buckets.overpower:0);
+    let gp=1; buckets.globals.forEach(g=>{gp*=(1+g.value/100);});
+    const b_crit=isCrit?1.5*(1+buckets.critMult/100):1;
+    const b_vuln=isVuln?1.2*(1+buckets.vulnMult/100):1;
+    const b_dot=isDot?(1+buckets.dotMult/100):1;
+    const enemyDR=parseFloat(document.getElementById('enemyDR').value)||80;
+    return weaponDmg*(1+mainStat/800)*b_coeff*(1+totalAdd/100)*(1+buckets.allMult/100)*gp*b_crit*b_vuln*b_dot*(1-enemyDR/100);
+}
+
+function recalc(){
+    const buckets=aggregateBuckets();
+    const mainStat=(parseFloat(document.getElementById('mainStat').value)||0)+buckets.stat;
+    const skillCoeff=parseFloat(document.getElementById('skillCoeff').value)||0;
+    const weaponDmg=buckets.weapon;
+    const enemyDR=parseFloat(document.getElementById('enemyDR').value)||80;
+
+    const totalAdd=buckets.additive+(state.isOP?buckets.overpower:0);
+    const b_skillDmg=1+(mainStat/800);
+    const b_coeff=skillCoeff/100;
+    const b_additive=1+(totalAdd/100);
+    const b_allDmg=1+(buckets.allMult/100);
+    let b_gp=1; buckets.globals.forEach(g=>{b_gp*=(1+g.value/100);});
+    const b_crit=state.isCrit?1.5*(1+buckets.critMult/100):1;
+    const b_vuln=state.isVuln?1.2*(1+buckets.vulnMult/100):1;
+    const b_dot=state.isDot?(1+buckets.dotMult/100):1;
+    const b_dr=1-(enemyDR/100);
+
+    const finalDmg=weaponDmg*b_skillDmg*b_coeff*b_additive*b_allDmg*b_gp*b_crit*b_vuln*b_dot*b_dr;
+    document.getElementById('finalDamage').textContent=Math.round(finalDmg).toLocaleString();
+
+    const types=[];
+    if(state.isCrit)types.push('Critical');if(state.isVuln)types.push('Vulnerable');if(state.isDot)types.push('DoT');if(state.isOP)types.push('Overpower');
+    document.getElementById('hitTypeLabel').textContent=types.length?types.join(' + ')+' Hit':'Normal Hit';
+
+    // Breakdown
+    const bd=document.getElementById('breakdown');bd.innerHTML='';
+    const rows=[
+        {label:'Weapon Dmg',value:weaponDmg.toLocaleString(),cls:'b-wpn'},
+        {label:`Skill (${mainStat}/800)`,value:`x${b_skillDmg.toFixed(3)}`,cls:'b-skill'},
+        {label:`Coeff (${skillCoeff}%)`,value:`x${b_coeff.toFixed(4)}`,cls:'b-coeff'},
+        {label:`Additive (${totalAdd.toFixed(1)}%)`,value:`x${b_additive.toFixed(3)}`,cls:'b-add'},
+        {label:`All/Elem (${buckets.allMult.toFixed(1)}%)`,value:`x${b_allDmg.toFixed(3)}`,cls:'b-all'},
+    ];
+    if(buckets.globals.length>0)rows.push({label:`Globals (${buckets.globals.length})`,value:`x${b_gp.toFixed(4)}`,cls:'b-global'});
+    if(state.isCrit)rows.push({label:`Crit (1.5x${(1+buckets.critMult/100).toFixed(3)})`,value:`x${b_crit.toFixed(4)}`,cls:'b-crit'});
+    if(state.isVuln)rows.push({label:`Vuln (1.2x${(1+buckets.vulnMult/100).toFixed(3)})`,value:`x${b_vuln.toFixed(4)}`,cls:'b-vuln'});
+    if(state.isDot)rows.push({label:`DoT (${buckets.dotMult.toFixed(1)}%)`,value:`x${b_dot.toFixed(4)}`,cls:'b-dot'});
+    rows.push({label:`Enemy DR (${enemyDR}%)`,value:`x${b_dr.toFixed(2)}`,cls:'b-dr'});
+    rows.forEach(r=>{const d=document.createElement('div');d.className='br-row '+r.cls;d.innerHTML=`<span class="br-label">${r.label}</span><span class="br-value">${r.value}</span>`;bd.appendChild(d);});
+    const fr=document.createElement('div');fr.className='br-row b-final';fr.innerHTML=`<span class="br-label">FINAL</span><span class="br-value">${Math.round(finalDmg).toLocaleString()}</span>`;bd.appendChild(fr);
+
+    // Quick Compare
+    const base=weaponDmg*b_skillDmg*b_coeff*b_additive*b_allDmg*b_gp*b_dr;
+    const dotF=state.isDot?b_dot:1;
+    document.getElementById('cmpNorm').textContent=Math.round(base*dotF).toLocaleString();
+    document.getElementById('cmpCrit').textContent=Math.round(base*(1.5*(1+buckets.critMult/100))*dotF).toLocaleString();
+    document.getElementById('cmpVuln').textContent=Math.round(base*(1.2*(1+buckets.vulnMult/100))*dotF).toLocaleString();
+    document.getElementById('cmpCV').textContent=Math.round(base*(1.5*(1+buckets.critMult/100))*(1.2*(1+buckets.vulnMult/100))*dotF).toLocaleString();
+
+    // Sidebar mult list
+    const activeM=state.multipliers.filter(m=>m.enabled&&m.value>0);
+    document.getElementById('sidebarMultList').innerHTML=activeM.length?activeM.map(m=>`<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>${m.name||'Unnamed'}</span><span style="color:var(--gold-light)">${m.bucket==='global'?'x':'+'} ${m.value}%</span></div>`).join(''):'<span style="font-size:0.72rem;color:var(--text-dim);">No active multipliers</span>';
+
+    // Bucket Summary
+    document.getElementById('bucketSummary').innerHTML=`
+        <div class="bs-row"><span>Weapon Damage</span><span style="color:var(--gold)">${buckets.weapon}</span></div>
+        <div class="bs-row"><span>+ Main Stat</span><span style="color:var(--blue)">${buckets.stat}</span></div>
+        <div class="bs-row"><span>+ Additive %</span><span>${buckets.additive.toFixed(1)}%</span></div>
+        <div class="bs-row"><span>+ Overpower %</span><span>${buckets.overpower.toFixed(1)}%</span></div>
+        <div class="bs-row"><span>x All/Elem %</span><span style="color:var(--all-dmg-color)">${buckets.allMult.toFixed(1)}%</span></div>
+        <div class="bs-row"><span>x Crit Mult %</span><span style="color:var(--crit-color)">${buckets.critMult.toFixed(1)}%</span></div>
+        <div class="bs-row"><span>x Vuln Mult %</span><span style="color:var(--vuln-color)">${buckets.vulnMult.toFixed(1)}%</span></div>
+        <div class="bs-row"><span>x DoT Mult %</span><span style="color:var(--dot-color)">${buckets.dotMult.toFixed(1)}%</span></div>
+        <div class="bs-row"><span>x Globals</span><span style="color:var(--gold-light)">${buckets.globals.length} sources</span></div>`;
+
+    updateMultBadge();
+    if(document.getElementById('tab-theorycraft').classList.contains('active')){renderSkillTable();renderStatWeights();}
+}
+
+// ═══════════════════════════════════════════════════
+// THEORYCRAFT TABLE
+// ═══════════════════════════════════════════════════
+function renderSkillTable(){
+    const buckets=aggregateBuckets();
+    const mainStat=(parseFloat(document.getElementById('mainStat').value)||0)+buckets.stat;
+    const weaponDmg=buckets.weapon;
+    const rank=parseInt(document.getElementById('theoryRank').value)||1;
+    const mode=document.getElementById('theoryMode').value;
+    const currentIdx=parseInt(document.getElementById('skillSelect').value)||0;
+    const skills=SKILLS[state.selectedClass]||[];
+
+    const data=skills.map((skill,idx)=>{
+        const coeff=Math.round(skill.coeff*(1+(rank-1)*0.1)*10)/10;
+        const base   =calcDamage(weaponDmg,mainStat,coeff,buckets,false,false,false,false);
+        const crit   =calcDamage(weaponDmg,mainStat,coeff,buckets,true,false,false,false);
+        const vuln   =calcDamage(weaponDmg,mainStat,coeff,buckets,false,true,false,false);
+        const critVuln=calcDamage(weaponDmg,mainStat,coeff,buckets,true,true,false,false);
+        const fullDmg =calcDamage(weaponDmg,mainStat,coeff,buckets,state.isCrit,state.isVuln,state.isDot,state.isOP);
+        const speed=skill.speed||1;
+        const mult=mode==='second'?speed:1;
+        return {idx,name:skill.name,coeff,tags:skill.tags,speed,
+            base:base*mult,crit:crit*mult,vuln:vuln*mult,critVuln:critVuln*mult,fullDmg:fullDmg*mult,
+            isActive:idx===currentIdx};
+    });
+
+    data.sort((a,b)=>sortDir*(a[sortCol]-b[sortCol]));
+    const maxVal=Math.max(...data.map(d=>d.fullDmg),1);
+
+    const s=mode==='second'?'/s':'';
+    const cols=[
+        {id:'name',label:'Skill',sortable:false},
+        {id:'coeff',label:'Coeff',sortable:true},
+        {id:'base',label:'Base'+s,sortable:true},
+        {id:'crit',label:'Crit'+s,sortable:true},
+        {id:'vuln',label:'Vuln'+s,sortable:true},
+        {id:'critVuln',label:'C+V'+s,sortable:true},
+        {id:'fullDmg',label:'Full Build'+s,sortable:true},
+    ];
+    if(mode==='second')cols.splice(2,0,{id:'speed',label:'Hits/s',sortable:true});
+
+    document.getElementById('skillTableHead').innerHTML=cols.map(c=>{
+        if(!c.sortable)return `<th>${c.label}</th>`;
+        const arrow=sortCol===c.id?(sortDir===1?'▲':'▼'):'';
+        return `<th class="sort-btn" onclick="sortTable('${c.id}')">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+    }).join('');
+
+    document.getElementById('skillTableBody').innerHTML=data.map((d,i)=>{
+        const barW=(d.fullDmg/maxVal*100).toFixed(1);
+        const best=i===0&&sortDir===-1;
+        let r=`<tr class="${d.isActive?'active-row':''}">`;
+        r+=`<td class="col-name">${d.name}${best?'<span class="best-badge">Best</span>':''}</td>`;
+        r+=`<td style="color:var(--orange)">${d.coeff}%</td>`;
+        if(mode==='second')r+=`<td>${d.speed.toFixed(1)}</td>`;
+        r+=`<td class="bar-cell"><div class="dmg-bar" style="width:${(d.base/maxVal*100).toFixed(1)}%;background:var(--text)"></div><span>${Math.round(d.base).toLocaleString()}</span></td>`;
+        r+=`<td class="bar-cell"><div class="dmg-bar" style="width:${(d.crit/maxVal*100).toFixed(1)}%;background:var(--crit-color)"></div><span style="color:var(--crit-color)">${Math.round(d.crit).toLocaleString()}</span></td>`;
+        r+=`<td class="bar-cell"><div class="dmg-bar" style="width:${(d.vuln/maxVal*100).toFixed(1)}%;background:var(--vuln-color)"></div><span style="color:var(--vuln-color)">${Math.round(d.vuln).toLocaleString()}</span></td>`;
+        r+=`<td class="bar-cell"><div class="dmg-bar" style="width:${(d.critVuln/maxVal*100).toFixed(1)}%;background:var(--purple)"></div><span style="color:var(--gold-light)">${Math.round(d.critVuln).toLocaleString()}</span></td>`;
+        r+=`<td class="bar-cell"><div class="dmg-bar" style="width:${barW}%;background:var(--gold)"></div><span style="color:var(--gold);font-weight:700">${Math.round(d.fullDmg).toLocaleString()}</span></td>`;
+        r+=`</tr>`;
+        return r;
+    }).join('');
+}
+function sortTable(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}renderSkillTable();}
+
+// ═══════════════════════════════════════════════════
+// STAT WEIGHTS
+// ═══════════════════════════════════════════════════
+function renderStatWeights(){
+    const buckets=aggregateBuckets();
+    const mainStat=(parseFloat(document.getElementById('mainStat').value)||0)+buckets.stat;
+    const weaponDmg=buckets.weapon;
+    const skillCoeff=parseFloat(document.getElementById('skillCoeff').value)||0;
+    const baseDmg=calcDamage(weaponDmg,mainStat,skillCoeff,buckets,true,true,state.isDot,state.isOP);
+    if(baseDmg===0){document.getElementById('statWeights').innerHTML='<p style="color:var(--text-dim);font-size:0.78rem;">Set weapon damage first.</p>';return;}
+    const tests=[{label:'+1% Additive',bucket:'additive',delta:1},{label:'+1% All Dmg Mult',bucket:'allMult',delta:1},{label:'+1% Crit Mult',bucket:'critMult',delta:1},{label:'+1% Vuln Mult',bucket:'vulnMult',delta:1},{label:'+1% DoT Mult',bucket:'dotMult',delta:1},{label:'+10 Main Stat',bucket:'_ms',delta:10},{label:'+100 Weapon Dmg',bucket:'_wd',delta:100}];
+    const results=tests.map(t=>{
+        let nb=JSON.parse(JSON.stringify(buckets));nb.globals=buckets.globals.map(g=>({...g}));
+        let nms=mainStat,nwd=weaponDmg;
+        if(t.bucket==='_ms')nms+=t.delta;else if(t.bucket==='_wd')nwd+=t.delta;else nb[t.bucket]+=t.delta;
+        const nd=calcDamage(nwd,nms,skillCoeff,nb,true,true,state.isDot,state.isOP);
+        return {label:t.label,gain:((nd-baseDmg)/baseDmg*100)};
+    });
+    results.sort((a,b)=>b.gain-a.gain);
+    const mx=Math.max(...results.map(r=>r.gain),0.01);
+    document.getElementById('statWeights').innerHTML=results.map(r=>{
+        const bw=(r.gain/mx*100).toFixed(1);
+        const col=r.gain>=mx*0.9?'var(--gold)':r.gain>=mx*0.5?'var(--orange-light)':'var(--text-dim)';
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="min-width:130px;font-size:0.75rem;color:var(--text-label)">${r.label}</span><div style="flex:1;height:18px;background:var(--bg-input);border-radius:3px;overflow:hidden;position:relative;"><div style="height:100%;width:${bw}%;background:${col};border-radius:3px;opacity:0.4;"></div><span style="position:absolute;right:6px;top:1px;font-size:0.7rem;font-family:'Courier New',monospace;color:${col}">+${r.gain.toFixed(3)}%</span></div></div>`;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// SAVE / LOAD
+// ═══════════════════════════════════════════════════
+const STORAGE_KEY='d4_builds_v3';
+function getBuilds(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{};}catch(e){return {};}}
+function setBuilds(b){localStorage.setItem(STORAGE_KEY,JSON.stringify(b));}
+function refreshBuildList(){const sel=document.getElementById('buildList');const builds=getBuilds();sel.innerHTML='<option value="">-- Select --</option>';Object.keys(builds).sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});}
+function getBuildData(){return{version:3,selectedClass:state.selectedClass,mainStat:document.getElementById('mainStat').value,enemyDR:document.getElementById('enemyDR').value,gearAffixes:state.gearAffixes,gemSelections:state.gemSelections,multipliers:state.multipliers,charms:state.charms,paragon:state.paragon,skillSelect:document.getElementById('skillSelect').value,skillRank:document.getElementById('skillRank').value,weaponType:document.getElementById('weaponType').value,isCrit:state.isCrit,isVuln:state.isVuln,isDot:state.isDot,isOP:state.isOP,manualWeaponDmg:document.getElementById('manualWeaponDmg').value,manualAdditive:document.getElementById('manualAdditive').value,manualAllMult:document.getElementById('manualAllMult').value,manualCritMult:document.getElementById('manualCritMult').value,manualVulnMult:document.getElementById('manualVulnMult').value,manualDotMult:document.getElementById('manualDotMult').value,manualOverpower:document.getElementById('manualOverpower').value,manualMainStat:document.getElementById('manualMainStat').value,totalParagonPts:document.getElementById('totalParagonPts').value};}
+function loadBuildData(data){
+    if(!data)return;
+    state.selectedClass=data.selectedClass||'rogue';state.gearAffixes=data.gearAffixes||{};state.gemSelections=data.gemSelections||{};
+    state.multipliers=data.multipliers||[];state.charms=data.charms||[];state.paragon=data.paragon||{};
+    state.isCrit=data.isCrit||false;state.isVuln=data.isVuln||false;state.isDot=data.isDot||false;state.isOP=data.isOP||false;
+    affixCounter=0;multCounter=0;charmCounter=0;
+    Object.values(state.gearAffixes).forEach(a=>a.forEach(x=>{const n=parseInt(x.id.split('_')[1])||0;if(n>=affixCounter)affixCounter=n+1;}));
+    state.multipliers.forEach(m=>{const n=parseInt(m.id.split('_')[1])||0;if(n>=multCounter)multCounter=n+1;});
+    state.charms.forEach(c=>{const n=parseInt(c.id.split('_')[1])||0;if(n>=charmCounter)charmCounter=n+1;});
+    document.getElementById('mainStat').value=data.mainStat||0;document.getElementById('enemyDR').value=data.enemyDR||80;
+    document.getElementById('mainStatLabel').textContent=CLASSES[state.selectedClass].stat;
+    if(data.totalParagonPts)document.getElementById('totalParagonPts').value=data.totalParagonPts;
+    ['manualWeaponDmg','manualAdditive','manualAllMult','manualCritMult','manualVulnMult','manualDotMult','manualOverpower','manualMainStat'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=data[id]||0;});
+    buildClassSelector();buildGearSlots();GEAR_SLOTS.forEach(s=>renderAffixes(s.id));buildGemSlots();buildSkillSelector();
+    initParagonState();renderMultLibrary();renderTalisman();renderParagonBoards();
+    if(data.skillSelect)document.getElementById('skillSelect').value=data.skillSelect;
+    if(data.skillRank)document.getElementById('skillRank').value=data.skillRank;
+    if(data.weaponType)document.getElementById('weaponType').value=data.weaponType;
+    onSkillChange();
+    document.getElementById('tCrit').classList.toggle('on-crit',state.isCrit);document.getElementById('tVuln').classList.toggle('on-vuln',state.isVuln);
+    document.getElementById('tDot').classList.toggle('on-dot',state.isDot);document.getElementById('tOp').classList.toggle('on-op',state.isOP);
+    recalc();
+}
+function saveBuild(){const name=document.getElementById('buildName').value.trim();if(!name){toast('Enter a build name');return;}const builds=getBuilds();builds[name]=getBuildData();setBuilds(builds);refreshBuildList();document.getElementById('buildList').value=name;toast(`"${name}" saved`);}
+function loadSelectedBuild(){const name=document.getElementById('buildList').value;if(!name){toast('Select a build');return;}const builds=getBuilds();if(builds[name]){loadBuildData(builds[name]);document.getElementById('buildName').value=name;toast(`Loaded "${name}"`);};}
+function deleteSelectedBuild(){const name=document.getElementById('buildList').value;if(!name)return;const builds=getBuilds();delete builds[name];setBuilds(builds);refreshBuildList();toast(`Deleted "${name}"`);}
+function onBuildSelect(){const name=document.getElementById('buildList').value;if(name)document.getElementById('buildName').value=name;}
+
+// ═══════════════════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════════════════
+function openExport(){document.getElementById('modalTitle').textContent='Export Build';document.getElementById('modalTextarea').value=JSON.stringify(getBuildData(),null,2);const btn=document.getElementById('modalAction');btn.textContent='Copy';btn.onclick=()=>{navigator.clipboard.writeText(document.getElementById('modalTextarea').value);toast('Copied');closeModal();};document.getElementById('modalOverlay').classList.add('show');}
+function openImport(){document.getElementById('modalTitle').textContent='Import Build';document.getElementById('modalTextarea').value='';document.getElementById('modalTextarea').placeholder='Paste build JSON...';const btn=document.getElementById('modalAction');btn.textContent='Import';btn.onclick=doImport;document.getElementById('modalOverlay').classList.add('show');}
+function doImport(){try{const data=JSON.parse(document.getElementById('modalTextarea').value);loadBuildData(data);toast('Imported');closeModal();}catch(e){toast('Invalid JSON');}}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+init();
+</script>
+</body>
+</html>
