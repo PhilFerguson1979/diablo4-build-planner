@@ -51,6 +51,24 @@
   const data = () => ALL[S.ver] || ALL.live;
   const cdata = () => data().classes[S.cls];
 
+  // ---------- flat amounts that grow with level ----------
+  // The game stores some flat amounts (Thorns above all) as a share, then multiplies by base Life at a level: 50 x that level's Life scalar.
+  // Checked against three databases: Aspect of Spiked Armor reads 1,361, 1,813 and 2,415 Thorns at levels 68, 73 and 78, each exactly 50 x the scalar,
+  // and Lapa's Scripture matches at 1.5 times those levels. The level is the one the game expects for the item's power: 900, the Ancestral cap, is level 75.
+  const CHAR_LEVEL = 70, GEAR_LEVEL = 75;
+  const flatScale = (D, lv) => { const L = (D.scaling || {}).levels || []; const at = n => (L.find(x => x.l === n) || L[L.length - 1] || { hp: 0 }).hp; const a = Math.floor(lv); return ((D.scaling || {}).healthBase || 50) * (at(a) + (at(a + 1) - at(a)) * (lv - a)); };
+  // id: [share at rank 1, share at the top rank, level multiplier], read from each power's affix file
+  const FLAT_POWERS = { legendary_necro_102_x2: [1, 1, 1], legendary_paladin_042: [0.06, 0.11, 1.5], S05_BSK_Generic_007: [1, 3, 1], legendary_spiritborn_008_x1: [0.08, 0.28, 1], legendary_barb_023: [0.7, 0.9, 1], S05_BSK_Malignant_Generic_001: [0, 0.2, 1] };
+  function patchFlat(D) {
+    if (!D || D._flat || !D.scaling) return; D._flat = 1;
+    const num = v => D4T.fmtNum(Math.round(v));
+    [...(D.aspects || []), ...(D.uniques || [])].forEach(a => { const f = FLAT_POWERS[a.id]; if (!f) return; const sc = flatScale(D, GEAR_LEVEL * f[2]);
+      a.desc = String(a.desc || '').replace(/<b class="num">[^<]*<\/b>(<\/span>\s*)(Thorns|Life)/, (m, sp, w) => `<b class="num">${f[0] === f[1] ? num(f[0] * sc) : '[' + num(f[0] * sc) + ' – ' + num(f[1] * sc) + ']'}</b>${sp}${w}`); });
+    // the Paladin seal's flat Thorns line has no level of its own in the files; it is read at character level like the gear affix it shares a formula with
+    ((D.gear || {}).sealAffixes || []).forEach(a => { if (a.id === 'Talisman_SealAffix_Set_Paladin_01_Thorns' && a.html) { const sc = flatScale(D, CHAR_LEVEL); a.t = '+§ Thorns'; a.v = Math.round(sc); a.lo = Math.round(0.8 * sc); delete a.html; } });
+  }
+  Object.keys(ALL).forEach(k => patchFlat(ALL[k]));
+
   // older saves carried a typed-in gear CDR row; the build now supplies that itself
   function migrate(st) { try { st.calc.cd.cdr = (st.calc.cd.cdr || []).filter(r => r.n !== 'Gear and paragon CDR'); } catch (e) { /* ignore */ } return st; }
   function load() {
@@ -127,7 +145,7 @@
     const lvl = Math.max(1, baseRank + gearRanks + (baseRank > 0 ? (+S.bonusRanks || 0) : 0));
     const memo = {}; let depth = 0;
     const id = name => {
-      if (name === 'sLevel' || name === 'Level') return lvl;
+      if (name === 'sLevel') return lvl; if (name === 'Level') return CHAR_LEVEL;
       if (name.startsWith('Mod.')) return mods.has(name.slice(4)) ? 1 : 0;
       const m = name.match(/^SF_(\d+)$/);
       if (m) {
@@ -440,7 +458,7 @@
     bar.hidden = !S.hotbar.length;
     bar.innerHTML = keys.slice(0, S.hotbar.length).map((k, i) => {
       const p = S.hotbar[i]; const P = p && C.powers[p];
-      return `<button class="hk${P ? ' filled' : ''}" data-h="${i}" title="${P ? esc(P.name) : 'Empty slot'}">${P ? `<img class="hk-img" style="${schoolCss(effSchool(P))}" src="${skillImg(S.cls, P.name)}" alt="">` : ''}<span class="key">${k}</span>${P ? `<span class="nm">${esc(P.name)}</span>` : ''}</button>`;
+      return `<button class="hk${P ? ' filled' : ''}" data-h="${i}" ${P ? `data-tt="skill|${p}"` : 'title="Empty slot"'}>${P ? `<img class="hk-img" style="${schoolCss(effSchool(P))}" src="${skillImg(S.cls, P.name)}" alt="">` : ''}<span class="key">${k}</span>${P ? `<span class="nm">${esc(P.name)}</span>` : ''}</button>`;
     }).join('');
     $$('.hk', bar).forEach(b => b.onclick = () => {
       const p = S.hotbar[+b.dataset.h];
@@ -449,6 +467,39 @@
   }
   // ---------- in-game style hover tooltip for skills and their upgrades ----------
   let TREE_MODICON = {}; let ttipNode = null;
+  // ---------- hover cards for anything marked data-tt="kind|arg|arg" ----------
+  const TT_KIND = {}; let ttEl = null; let ttX = 0, ttY = 0; const MINI = {};
+  function ttShow(el, x, y) {
+    const [kind, ...args] = String(el.dataset.tt || '').split('|'); let h = ''; try { h = TT_KIND[kind] ? TT_KIND[kind](args, el) : ''; } catch (e) { h = ''; }
+    const t = $('#ttip'); if (!t) return; if (!h) { ttHide(); return; }
+    ttEl = el; ttipNode = null; t.innerHTML = h; t.classList.toggle('noicon', !/class="tt-icon/.test(h)); t.hidden = false; placeTtip(x, y);
+  }
+  function ttHide() { if (!ttEl) return; ttEl = null; if (ttipNode == null) { const t = $('#ttip'); if (t) t.hidden = true; } }
+  document.addEventListener('mouseover', e => { const el = e.target && e.target.closest ? e.target.closest('[data-tt]') : null; if (el === ttEl) return; if (el) ttShow(el, e.clientX, e.clientY); else ttHide(); });
+  document.addEventListener('mousemove', e => { ttX = e.clientX; ttY = e.clientY; if (ttEl) placeTtip(ttX, ttY); });
+  document.addEventListener('focusin', e => { const el = e.target && e.target.closest ? e.target.closest('[data-tt]') : null; if (el && el !== ttEl && el.matches(':focus-visible')) { const r = el.getBoundingClientRect(); ttShow(el, r.right, r.top + r.height / 2); } });
+  document.addEventListener('focusout', () => ttHide());
+  document.addEventListener('scroll', () => ttHide(), true);
+  // a click usually redraws the page: show the card for whatever is now under the pointer
+  document.addEventListener('click', () => setTimeout(() => { if (!ttEl) return; const under = document.elementFromPoint(ttX, ttY); const el = under && under.closest ? under.closest('[data-tt]') : null; if (el) ttShow(el, ttX, ttY); else ttHide(); }, 0));
+  const ttCard = (title, sub, body, foot) => `<h4>${esc(title)}</h4>${sub ? `<div class="tt-rank">${esc(sub)}</div>` : ''}${body ? `<div class="tt-orn"></div><div class="tt-body">${body}</div>` : ''}${foot || ''}`;
+  TT_KIND.html = (a, el) => el.dataset.tth || '';
+  TT_KIND.skill = a => { const n = cdata().nodes.find(x => x.kind === 'unlock' && x.power === a[0]); return n ? ttipHtml(n.i) : ''; };
+  // a node on a mercenary or War Plan tree
+  TT_KIND.mini = a => { const R = MINI[a[0]]; if (!R) return ''; const T = R.T; const n = T.nodes[+a[1]]; const P = n && n.power && T.powers[n.power]; if (!P) return '';
+    const on = R.picked.includes(n.i); const mates = n.g >= 0 ? T.nodes.filter(x => x.g === n.g && x.i !== n.i && x.power && T.powers[x.power]).map(x => T.powers[x.power].name) : [];
+    const kind = a[0] === 'wn' ? 'War Plan node' : n.kind === 'unlock' ? (n.g === 1 ? 'Core skill' : 'Mercenary skill') : 'Mercenary passive';
+    return ttCard(P.name, kind.toUpperCase(), powerText(P, null, 1, T.powers),
+      `${mates.length ? `<p class="tt-excl">A choice: taking this drops ${esc(mates.join(' and '))}.</p>` : ''}<p class="tt-foot ${on ? 'ok' : 'no'}">${on ? 'Chosen. Click to remove.' : 'Not chosen. Click to choose.'}</p>`); };
+  // a mercenary's card: who they are, their signature and the skills they bring
+  TT_KIND.merc = a => { const m = (data().mercs || []).find(x => x.id === a[0]); if (!m) return ''; const sig = m.bonus && m.powers[m.bonus];
+    const acts = m.actives.map(k => m.powers[k]).filter(Boolean);
+    return ttCard(m.name, m.role.toUpperCase(), `${sig ? `<p><b>${esc(sig.name)}</b> (signature)</p>${powerText(sig, null, 1, m.powers)}` : ''}${acts.length ? `<div class="tt-mods"><div class="tt-modh">SKILLS</div>${acts.map(q => `<div class="tt-mod"><b>${esc(q.name)}</b><br>${powerText(q, null, 1, m.powers)}</div>`).join('')}</div>` : ''}`,
+      `<p class="tt-foot">${a[1] === 'sup' ? 'As a reinforcement they appear for one skill.' : 'Hired, they fight beside you and you pick their tree.'}</p>`); };
+  // everything one mercenary switch on the Theory Craft pages turns on or off
+  TT_KIND.mercsum = a => { const l = sheetData().powers.filter(q => q.kind === 'Mercenary' && q.role === a[0]); if (!l.length) return '';
+    return ttCard(l[0].merc, a[0] === 'mercMain' ? 'HIRED MERCENARY' : 'REINFORCEMENT', l.map(q => `<div class="tt-mod"><b>${esc(q.name)}</b><br>${q.desc}</div>`).join(''), '<p class="tt-foot">One switch for all of it, shared by Damage and Defense Theory Craft.</p>'); };
+  const ttAttr = html => ` data-tt="html" data-tth="${esc(html)}"`;
   const TT_CHIPS = ['Defensive', 'Mobility', 'Shout', 'Summoning', 'Channeled', 'Trap', 'Grenade', 'Shapeshifting', 'Marksman', 'Cutthroat', 'Companion', 'Aura'];
   function ttipHtml(i) {
     const C = cdata(); const n = C.nodes[i]; if (!n || !n.power || !C.powers[n.power]) return '';
@@ -490,7 +541,7 @@
   }
   function showTtip(i, x, y) {
     const t = $('#ttip'); if (!t) return; const h = ttipHtml(i); if (!h) { hideTtip(); return; }
-    ttipNode = i; t.innerHTML = h; t.hidden = false; placeTtip(x, y);
+    ttEl = null; t.classList.remove('noicon'); ttipNode = i; t.innerHTML = h; t.hidden = false; placeTtip(x, y);
   }
   function placeTtip(x, y) {
     const t = $('#ttip'); if (!t || t.hidden) return; const r = t.getBoundingClientRect(); const W = window.innerWidth, H = window.innerHeight;
@@ -837,7 +888,7 @@
     if (gemSel >= n) gemSel = -1;
     const where = { w: 'weapon', a: 'armor', j: 'jewelry' }[tgt];
     const sock = i => { const x = g.gems[i]; const q = spDef(x); const d = !q && x && gemDef(x.type, x.grade);
-      return `<button class="gsock${gemSel === i ? ' sel' : ''}${x ? ' full' : ''}${q ? ' splinter t' + x.tier : ''}" data-gs="${i}" aria-pressed="${gemSel === i}" aria-label="Socket ${i + 1}: ${q ? esc(q.t.name) : d ? esc(d.name) : 'empty'}" title="${q ? esc(q.t.name) : ''}">${q ? '<span class="sp-glyph">&#10022;</span>' : x ? `<img src="${gemImg(x.type)}" alt="">` : '<span>+</span>'}</button>`; };
+      return `<button class="gsock${gemSel === i ? ' sel' : ''}${x ? ' full' : ''}${q ? ' splinter t' + x.tier : ''}" data-gs="${i}" aria-pressed="${gemSel === i}" aria-label="Socket ${i + 1}: ${q ? esc(q.t.name) : d ? esc(d.name) : 'empty'}"${q ? ttAttr(ttCard(q.t.name, 'SOUL SPLINTER', esc(q.text))) : d ? ttAttr(ttCard(d.name, 'GEM', (d[tgt] || []).map(l => esc(gemTpl(l.t).replace('§', D4T.fmtNum(l.v)))).join('<br>'), `<p class="tt-foot">In ${where === 'jewelry' ? 'jewelry' : where === 'weapon' ? 'a weapon' : 'armor'}</p>`)) : ''}>${q ? '<span class="sp-glyph">&#10022;</span>' : x ? `<img src="${gemImg(x.type)}" alt="">` : '<span>+</span>'}</button>`; };
     const cur = gemSel >= 0 ? g.gems[gemSel] : null;
     const grade = cur ? cur.grade : 9;
     const picker = gemSel < 0 ? '' : `<div class="gempick">
@@ -1604,11 +1655,21 @@
   }
   // [x] powers on equipped aspects, uniques and charms: "[20 – 60]%[x]" gives a low and high roll
   function gearMultipliers() {
-    const out = [];
+    const out = []; const SK = Object.values(cdata().powers).map(q => q.name).filter(Boolean);
     const scan = (name, html, role) => {
       const t = strip(String(html || '')).replace(/\s+/g, ' ');
       const re = /\[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?%\s*\[x\]([^.]{0,90})/g; let m; let i = 0;
-      while ((m = re.exec(t))) { const lo = +m[1], hi = +(m[2] || m[1]); const what = m[3].trim().replace(/^(increased |bonus )/, ''); const id = name + '#' + (i++); if (!/damage/i.test(what)) continue; out.push({ id, n: name, lo, hi, what, role }); }
+      while ((m = re.exec(t))) { const lo = +m[1]; let hi = +(m[2] || m[1]); let what = m[3].trim().replace(/^(increased |bonus )/, ''); const id = name + '#' + (i++);
+        // the start of the sentence says what the number belongs to
+        const pre = t.slice(0, m.index).split(/\.(?=\s|[A-Z])/).pop().trim();
+        // "increase the damage they take from you by 80%[x] until they die": the word damage sits before the number. Only read this way for Judgement text.
+        const viaBy = /Judg/.test(pre) && /damage[^.]*\bby$/i.test(pre) && !/reduc|less/i.test(pre);
+        if (!/damage/i.test(what) && !viaBy) continue;
+        const jud = /Judgement(?:'s explosion)? deals|Judgement's explosion|your Judgement damage|Judgement only hits one enemy/.test(pre);
+        const skill = SK.find(nm => pre.startsWith(nm + ' deals') || pre.startsWith(nm + "'s ") || pre.startsWith(nm + ' gains') || pre.startsWith(nm + ' has'));
+        if (viaBy) { const times = what.match(/up to (\d+) times/); if (times) hi *= +times[1]; what = pre.slice(-70) + (what ? ' ... ' + what : ''); }
+        else if (/only hits one enemy/.test(pre)) what = 'when Judgement hits only one enemy';
+        out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '' }); }
     };
     SLOTS.forEach(sl => { const g = S.gear[sl.id] || {}; const it = findItem(g.item); if (it) scan(it.name, it.desc); const a2 = g.aspect2 && data().aspects.find(a => a.id === g.aspect2); if (a2) scan(a2.name, a2.desc); });
     sockets().forEach(x => { const it = socketItem(x); if (it && it.desc) scan(it.name, it.desc); });
@@ -1674,17 +1735,38 @@
         if (r) { const num = x => +x.replace(/,/g, ''); dawn = { lo: num(r[1]) / 2000, hi: num(r[2]) / 2000, per: per ? +per[1] : 0, max: mx ? +mx[1] : 0 }; dawn.stacks = Math.max(0, Math.min(dawn.max, T.dawn !== '' && T.dawn != null ? +T.dawn || 0 : dawn.max)); pays.unshift({ k: 'DAWNFIRE', v: (dawn.lo + dawn.hi) / 2 * 1.2 * 100, dawn: 1 }); } } }
     // Thorns lines: damage that is a share of your Thorns stat. Weapon damage and skill % are not used for these.
     // Thorns: what the sheet has, plus what your skills grant (Defiance Aura, Clash and the like). A number typed in the box wins.
-    let thFlat = M.thorns ? M.thorns.v : 0, thPct = 0; const thSrc = [];
-    try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); const texts = [powerText(q, null, c2.lvl, C.powers)].concat((q.mods || []).filter(md => c2.mods.has(md.key)).map(md => powerText(q, md.desc, c2.lvl, C.powers)));
-      texts.forEach(h => { const t = strip(h).replace(/\s+/g, ' '); let m; const fl = /(?:^|[^%\d.,])([\d,]+(?:\.\d+)?)\s*(?:\[\+\])?\s*Thorns(?! damage)/g; while ((m = fl.exec(t))) { const v = parseFloat(m[1].replace(/,/g, '')); if (v > 0) { thFlat += v; thSrc.push(q.name + ' +' + D4T.fmtNum(v)); } }
-        const pc = /([\d.]+)%\s*(?:\[\+\])?\s*Thorns(?! damage)|Thorns by ([\d.]+)%/g; while ((m = pc.exec(t))) { const v = +(m[1] || m[2]); if (v > 0) { thPct += v; thSrc.push(q.name + ' +' + v + '%'); } } }); }); } catch (e) { /* keep the sheet value */ }
+    const thParts = []; const thAdd = (id, n, v, pct, what) => { if (v > 0) thParts.push({ id: 'th:' + id, n, v, pct: !!pct, what: what || '', on: !T.off['th:' + id] }); };
+    if (M.thorns && M.thorns.v) thAdd('sheet', 'Gear, seal and Paragon', M.thorns.v, 0, 'flat Thorns on the character sheet');
+    D.stats.forEach(e => { if (e.mult || !/^§% Thorns( while Fortified)?$/.test(e.key)) return; const v = e.parts.filter(pt => !/^Passive: /.test(pt.src)).reduce((a, pt) => a + pt.v, 0); thAdd('stat:' + e.key, e.key.replace('§% ', ''), v, 1, /Fortified/.test(e.key) ? 'only while Fortified' : ''); });
+    // a flat amount ("1,603 Thorns", "[427 – 783] Thorns") or a share ("75%[+] Thorns") written into a power's text
+    const thText = (id, name, h) => { const t = decode(strip(String(h || '').replace(/<br\s*\/?>/g, '. '))).replace(/\s+/g, ' '); let m; let k = 0;
+      const tail = at => { const rest = t.slice(at, at + 140); const st = rest.match(/[Ss]tacks up to (\d+) times/); const cond = (t.slice(Math.max(0, at - 140), at + 60).match(/\b(while [A-Za-z' ]{3,28}|during [A-Za-z' ]{3,28}|for \d+ seconds)/) || [])[1]; return { n: st ? +st[1] : 1, what: [st ? 'at ' + st[1] + ' stacks' : '', cond || ''].filter(Boolean).join(', ') }; };
+      const fl = /(?:^|[^%\d.,\[])\[?([\d,]+(?:\.\d+)?)(?:\s*[–-]\s*([\d,]+(?:\.\d+)?))?\]?\s*(?:\[\+\])?\s*Thorns(?! damage| per)/g;
+      while ((m = fl.exec(t))) { const lo = parseFloat(m[1].replace(/,/g, '')), hi = m[2] ? parseFloat(m[2].replace(/,/g, '')) : lo; const x = tail(m.index + m[0].length); thAdd(id + '#' + (k++), name, (lo + hi) / 2 * x.n, 0, x.what + (m[2] ? (x.what ? ', ' : '') + 'mid roll' : '')); }
+      const pc = /([\d.]+)%\s*(?:\[\+\])?\s*Thorns(?! damage)|Thorns by ([\d.]+)%/g;
+      while ((m = pc.exec(t))) { const x = tail(m.index + m[0].length); thAdd(id + '#' + (k++), name, +(m[1] || m[2]), 1, x.what); } };
+    try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); thText('sk:' + id, q.name, powerText(q, null, c2.lvl, C.powers));
+      (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => thText('sk:' + id + ':' + md.key, q.name + ': ' + md.name, powerText(q, md.desc, c2.lvl, C.powers))); }); } catch (e) { /* keep the sheet value */ }
+    D.powers.filter(q => /^(Aspect|Legendary aspect|Prism aspect|Unique|Mythic unique|Runeword|Charm|Unique charm|Set bonus)$/.test(q.kind)).forEach(q => thText('pw:' + q.name + ':' + q.src, q.name, q.desc));
+    const thFlat = thParts.filter(x => x.on && !x.pct).reduce((a, x) => a + x.v, 0), thPct = thParts.filter(x => x.on && x.pct).reduce((a, x) => a + x.v, 0);
+    const thSrc = thParts.filter(x => x.on).map(x => x.n + ' +' + D4T.fmtNum(Math.round(x.v)) + (x.pct ? '%' : ''));
     const thornsAuto = thFlat * (1 + thPct / 100); const thornsStat = T.thorns !== '' && T.thorns != null ? +T.thorns || 0 : thornsAuto;
     { const texts = [P.desc].concat((P.mods || []).filter(md => sk.mods.has(md.key)).map(md => md.desc)); const seenT = new Set();
       texts.forEach(t => { const re = /\[\{?(SF_\d+)\}?\s*\*\s*100[^\]]*\]\s*(?:\{\/c\})?\s*of your Thorns/g; let m; while ((m = re.exec(t || ''))) { const v = (+sk.ev(m[1]) || 0) * 100; if (v > 0 && !seenT.has(m[1])) { seenT.add(m[1]); pays.push({ k: 'THORNS:' + m[1], v, thorns: 1, per: /per second/.test((t || '').slice(m.index, m.index + 160)) }); } } });
       if (thornsStat > 0) pays.push({ k: 'THORNS:HIT', v: 100, thorns: 1, hit: 1 }); }
-    const pay0 = pays.find(x => x.k === T.pay && x.thorns) || pay; const payD = dawn && (T.pay === 'DAWNFIRE' || !pays.some(x => x.k === T.pay)) ? pays[0] : pay0; const isDawn = !!(payD && payD.dawn); const isThorns = !!(payD && payD.thorns);
-    const Pd = isDawn ? Object.assign({}, P, { dmg: 'Fire' }) : P;
-    const skillPct = payD ? payD.v : 0; const dot = payD && !isDawn && !isThorns ? dotInfo(sk, payD.k) : null;
+    // Judgement: a mark that explodes for 80% weapon damage as Holy 3 seconds after a skill Judges an enemy (Paladin_Sub_Judgement in the game files).
+    // With the Judicator Oath, Basic Skills apply it and Core Judicator Skills set it off at once, and the blast counts as a Judicator Skill.
+    let judge = null;
+    if (S.cls === 'Paladin') { const oath = mechLines().some(x => /Judicator/.test(x.name)); const src = [];
+      if (oath) src.push('Judicator Oath');
+      try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); if (/Judg/.test(q.desc || '') || (q.mods || []).some(md => c2.mods.has(md.key) && /Judg/.test(md.name + ' ' + md.desc))) src.push(q.name); }); } catch (e) { /* skip */ }
+      D.powers.forEach(q => { if (q.kind !== 'Passive' && q.kind !== 'Class mechanic' && /Judg/.test(strip(q.desc || ''))) src.push(q.name); });
+      if (src.length) { const tw = oath ? D.powers.map(q => strip(q.desc || '').match(/([\d.]+)% chance to explode twice/)).find(Boolean) : null;
+        judge = { pct: 80, timer: 3, oath, src: [...new Set(src)], twice: tw ? +tw[1] / 100 : 0 }; pays.push({ k: 'JUDGEMENT', v: judge.pct, judge: 1 }); } }
+    const pay0 = pays.find(x => x.k === T.pay && (x.thorns || x.judge)) || pay || pays.find(x => x.thorns && !x.hit) || pays[0]; const payD = dawn && (T.pay === 'DAWNFIRE' || !pays.some(x => x.k === T.pay)) ? pays[0] : pay0; const isDawn = !!(payD && payD.dawn); const isThorns = !!(payD && payD.thorns); const isJudge = !!(payD && payD.judge);
+    const Pd = isJudge ? { id: '__judgement', name: 'Judgement', dmg: 'Holy', tag: '', tags: judge.oath ? ['Judicator'] : [], mods: [], desc: '' } : isDawn ? Object.assign({}, P, { dmg: 'Fire' }) : P;
+    const Pf = isJudge ? Pd : P; const SBj = isJudge ? Object.assign({}, SB, { csc: 0, csd: 0, as: 0, cs: 0 }) : SB;
+    const skillPct = payD ? payD.v : 0; const dot = payD && !isDawn && !isThorns && !isJudge ? dotInfo(sk, payD.k) : null;
     const [msName, msScal] = MAINSTAT[S.cls]; const msKey = { Strength: 'str', Intelligence: 'int', Willpower: 'wil', Dexterity: 'dex' }[msName];
     const msTotal = (M[msKey] ? M[msKey].v : 0) + (+T.base || 0); const msMult = 1 + msTotal * msScal;
     // additive pool
@@ -1694,7 +1776,7 @@
       const c = TC_COND.find(([, , re]) => re.test(e.key)); if (c) { (cond[c[0]] = cond[c[0]] || []).push(...e.parts.map(pt => ({ v: pt.v, src: pt.src, what: c[1] }))); continue; }
       if (/^§% Damage to Elites$/.test(e.key)) { elite.push(...e.parts.map(pt => ({ v: pt.v, src: pt.src, what: 'Damage vs Elites' }))); continue; }
       const m = e.key.match(/^§% (.*?)\s*Damage$/); if (!m) continue; const pre = m[1].trim();
-      let ok = pre === '' || pre === 'All' || (Pd.dmg && (pre === Pd.dmg || (pre === 'Fire and Holy' && /Fire|Holy/.test(Pd.dmg)))) || pre === P.name || skillIs(P, pre.replace(/ Skills?$/, ''));
+      let ok = pre === '' || pre === 'All' || (Pd.dmg && (pre === Pd.dmg || (pre === 'Fire and Holy' && /Fire|Holy/.test(Pd.dmg)))) || pre === Pf.name || skillIs(Pf, pre.replace(/ Skills?$/, ''));
       if (/Critical|Vulnerable|Overpower|Thorns|Per |Bleed|Burn|Poison(ing)? Damage over/.test(pre)) ok = false;
       if (ok) always.push(...e.parts.map(pt => ({ v: pt.v, src: pt.src, what: (pre || 'All') + ' damage' })));
     }
@@ -1707,18 +1789,20 @@
     for (const e of D.stats) { if (!e.mult) continue; const m = e.key.match(/^§%\s*\[x\]\s*(.*?)\s*Damage$|^x?§% (.*?)\s*Damage(?: Multiplier)?$/); if (!m) continue; const pre = (m[1] || m[2] || '').trim();
       if (/Critical|Vulnerable/.test(pre)) continue;
       const el = pre === '' || pre === 'All' || (Pd.dmg && (pre === Pd.dmg || (pre === 'Fire and Holy' && /Fire|Holy/.test(Pd.dmg))));
-      const ok = el || skillIs(P, pre.replace(/ Skills?$/, '')); if (!ok) continue; const summed = /Multiplier$/.test(e.key);
+      const ok = el || pre === Pf.name || skillIs(Pf, pre.replace(/ Skills?$/, '')); if (!ok) continue; const summed = /Multiplier$/.test(e.key);
       e.parts.forEach(pt => { xStat.push({ v: pt.v, src: pt.src, what: (pre || 'All') + ' damage [x]' + (summed ? ', summed' : '') }); if (summed && el) xSumEl += pt.v; else if (summed) xSumBy[pre] = (xSumBy[pre] || 0) + pt.v; else xOwn *= 1 + pt.v / 100; }); }
     // damage over time: its own [+] stat joins the pool, its "Multiplier" affixes add together, and it cannot crit or roll high or low
     let dotAdd = 0, dotSum = 0, dotOwn = 1; if (dot) for (const e of D.stats) { if (!/Damage [Oo]ver Time( Multiplier)?$/.test(e.key) && !new RegExp('^\\+?§%( \\[x\\])? ' + dot.kind + ' Damage$').test(e.key)) continue; const v = e.parts.reduce((a, x) => a + x.v, 0); if (!e.mult) dotAdd += v; else if (/Multiplier$/.test(e.key)) dotSum += v; else dotOwn *= 1 + e.v / 100; }
     const dotX = (1 + dotSum / 100) * dotOwn * (dot ? mDot : 1);
-    const xGear = gearMultipliers().map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
+    // powers that only raise Judgement stay off every other line, and powers that name another skill stay off the Judgement line
+    const xGear = gearMultipliers().filter(x => isJudge ? !x.skill : !x.jud).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
+    if (isJudge) { try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => { const mm = strip(powerText(q, md.desc, c2.lvl, C.powers)).match(/Judgement damage by ([\d.]+)%\s*\[x\]/); if (mm) { const xid = 'jud:' + id + ':' + md.key; xGear.push({ id: xid, n: q.name + ': ' + md.name, lo: +mm[1], hi: +mm[1], what: 'Judgement damage for a few seconds after a detonation', on: !T.off[xid] }); } }); }); } catch (e) { /* skip */ } }
     const prod = (l, f) => l.reduce((a, x) => a * (1 + f(x) / 100), 1);
     const xS = (1 + xSumEl / 100) * Object.values(xSumBy).reduce((a, v) => a * (1 + v / 100), 1) * xOwn;
     const xLo = xS * prod(xGear.filter(x => x.on), x => x.lo), xHi = xS * prod(xGear.filter(x => x.on), x => x.hi), xMid = xS * prod(xGear.filter(x => x.on), x => (x.lo + x.hi) / 2);
     // crit and vulnerable
     // [+] Critical Strike and Vulnerable Damage join the additive pool on hits that qualify; the built-in x1.5 and x1.2 are their own multipliers
-    const cc = spOn && spFx.noCrit ? 0 : Math.min(100, (M.csc ? M.csc.v : 0) + SB.csc + mCc + (spOn ? spFx.cc : 0)); const csdAdd = (M.csd ? M.csd.v : 0) + SB.csd; const csdX = M.csd ? M.csd.x : 0;
+    const cc = spOn && spFx.noCrit ? 0 : Math.min(100, (M.csc ? M.csc.v : 0) + SBj.csc + mCc + (spOn ? spFx.cc : 0)); const csdAdd = (M.csd ? M.csd.v : 0) + SBj.csd; const csdX = M.csd ? M.csd.x : 0;
     const critMult = 1.5 * (1 + csdX / 100) * mCsd;
     const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100);
     const monDR = 1 - ((data().scaling && (data().scaling.levels.find(l => l.l === MON_LEVEL) || {}).dr) || 0);
@@ -1726,15 +1810,17 @@
     const wd = +T.wd || 0;
     // attack speed: two separate caps of 100%. "Attack Speed" sources fill the first, "Cast Speed" sources fill the second.
     const spd = speedSources(sk).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) })); const spdSum = k => spd.filter(x => x.kind === k && x.on).reduce((a, x) => a + (x.lo + x.hi) / 2, 0);
-    const as1 = Math.max(0, Math.min(100, (SB.as || 0) + spdSum('as') + (spOn ? spFx.as : 0))); const as2 = Math.max(0, Math.min(100, (SB.cs || 0) + spdSum('cs'))); const asTotal = as1 + as2;
+    const as1 = Math.max(0, Math.min(100, (SBj.as || 0) + spdSum('as') + (spOn ? spFx.as : 0))); const as2 = Math.max(0, Math.min(100, (SBj.cs || 0) + spdSum('cs'))); const asTotal = as1 + as2;
     const aps = (+T.ws || 0) * (1 + asTotal / 100);
     // skills only speed up at set animation lengths (frames at 60 a second); between two steps extra attack speed does nothing
-    const bp = AS_FRAMES[P.name]; let frames = 0, nextAps = 0; if (bp && aps > 0) { for (let i = 0; i < bp.length; i += 2) { if (bp[i + 1] <= aps + 1e-9) frames = bp[i]; else { nextAps = bp[i + 1]; break; } } if (!frames) frames = bp[0]; }
+    const bp = isJudge ? null : AS_FRAMES[P.name]; let frames = 0, nextAps = 0; if (bp && aps > 0) { for (let i = 0; i < bp.length; i += 2) { if (bp[i + 1] <= aps + 1e-9) frames = bp[i]; else { nextAps = bp[i + 1]; break; } } if (!frames) frames = bp[0]; }
     // passive pulses such as Holy Light Aura tick on a fixed timer and gain damage from attack speed instead of hitting faster
-    const pulse = /Attack Speed further increases this damage/.test(P.desc || '') && !(payD && /ACTIVE|EXPLOSION/i.test(payD.k || '')); let pulseEvery = 0;
+    const pulse = !isJudge && /Attack Speed further increases this damage/.test(P.desc || '') && !(payD && /ACTIVE|EXPLOSION/i.test(payD.k || '')); let pulseEvery = 0;
     if (pulse) { const m = (P.desc || '').match(/every \{c_number\}\{SF_(\d+)\}\{\/c\} seconds/); pulseEvery = isDawn ? 1 : m && +P.sf[+m[1]] > 0 ? +P.sf[+m[1]] : 1; }
     const asDmg = pulse && !isThorns ? 1 + asTotal / 100 : 1;
-    const hps = isThorns ? 1 : pulse ? 1 / pulseEvery : frames ? 60 / frames : aps;
+    // Judgement goes off once per mark: every 3 seconds on its own timer unless a rate is typed in; a second blast from Seal of the Second Trumpet counts by its chance
+    const judRate = isJudge ? (+T.jud > 0 ? +T.jud : 1 / judge.timer) * (1 + judge.twice) : 0;
+    const hps = isJudge ? judRate : isThorns ? 1 : pulse ? 1 / pulseEvery : frames ? 60 / frames : aps;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
@@ -1754,7 +1840,7 @@
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
-    return { thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -1769,7 +1855,7 @@
         <h3>Status on the hit</h3>
         <div class="chips">${TC_STATES.map(([k, l]) => { const extra = k === 'crit' ? `x${f(R.critMult, 2)}` : k === 'vuln' ? `x${f(R.vulnMult, 2)}` : k === 'op' ? `+${f(R.opPer, 1)}% a stack` : k === 'berserk' ? '+25%' : R.cond[k] ? `+${f(R.cond[k].reduce((a, x) => a + x.v, 0), 1)}%` : '';
           const none = !extra && k !== 'op';
-          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Every damage, crit and speed buff ${esc(m.name)} gives you, on or off together"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}" title="${esc(q.text)}"><input type="checkbox" data-st="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}</div>${R.spFx.notes.length ? `<p class="note">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
+          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" data-tt="mercsum|${m.role}"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}"${ttAttr(ttCard(q.tname, 'SOUL SPLINTER', esc(q.text)))}><input type="checkbox" data-st="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}</div>${R.spFx.notes.length ? `<p class="note">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}
         <p class="note">Tick what is true for the hit. The Selected column below shows that hit with mid rolls, next to the same hit with nothing ticked. Ticked conditions also feed Expected. Overpower works the Lord of Hatred way: each stack adds 15% additive damage for 4 seconds, up to 4 stacks unless a power such as the Tidal aspect raises the limit. Your Overpower Damage bonus raises the per-stack amount, and its [x] lines multiply on top.</p>
       </section>
@@ -1777,22 +1863,24 @@
         <section class="tc-box"><h3>Setup</h3>
           <div class="kv">
             <label for="tcSkill">Skill</label><select id="tcSkill">${R.skills.map(id => `<option value="${id}" ${id === T.skill ? 'selected' : ''}>${esc(C.powers[id].name)}</option>`).join('')}</select>
-            <label for="tcPay">Damage line</label><select id="tcPay">${R.pays.map(x => `<option value="${x.k}" ${R.payD && x.k === R.payD.k ? 'selected' : ''}>${x.dawn ? 'Dawnfire fire pulse, ' + f(x.v) + '% of weapon damage' : x.thorns ? (x.hit ? 'Thorns, each time you are hit (Retribution)' : f(x.v) + '% of your Thorns' + (x.per ? ' a second' : '')) : f(x.v) + '% skill damage'}</option>`).join('')}</select>
+            <label for="tcPay">Damage line</label><select id="tcPay">${R.pays.map(x => `<option value="${x.k}" ${R.payD && x.k === R.payD.k ? 'selected' : ''}>${x.judge ? 'Judgement explosion, ' + f(x.v) + '% of weapon damage' : x.dawn ? 'Dawnfire fire pulse, ' + f(x.v) + '% of weapon damage' : x.thorns ? (x.hit ? 'Thorns, each time you are hit (Retribution)' : f(x.v) + '% of your Thorns' + (x.per ? ' a second' : '')) : f(x.v) + '% skill damage'}</option>`).join('')}</select>
             <label for="tcWd">Weapon damage (from your weapon tooltip)</label><input id="tcWd" type="number" value="${esc(T.wd)}" placeholder="${R.isThorns ? 'Not used for Thorns' : 'Type it in'}" ${R.isThorns ? 'disabled' : ''}>
             <label for="tcWs">Weapon speed (attacks per second)</label><input id="tcWs" type="number" step="0.01" value="${esc(T.ws)}">
             <label for="tcBase">${R.msName} not on gear (level and base)</label><input id="tcBase" type="number" value="${esc(T.base)}">
             ${R.dawn ? `<label for="tcDawn">Dawnfire stacks from kills (0 to ${R.dawn.max})</label><input id="tcDawn" type="number" min="0" max="${R.dawn.max}" value="${R.dawn.stacks}">` : ''}
             <label for="tcThorns">Thorns (type the number from your character sheet to override)</label><input id="tcThorns" type="number" value="${esc(T.thorns != null && T.thorns !== '' ? T.thorns : '')}" placeholder="${R.thornsAuto ? f(R.thornsAuto) + ' from the build' : 'None on the build'}">
+            ${R.isJudge ? `<label for="tcJud">Judgement explosions per second on one enemy</label><input id="tcJud" type="number" step="0.01" min="0" value="${esc(T.jud != null && T.jud !== '' ? T.jud : '')}" placeholder="${f(1 / R.judge.timer, 2)}, one every ${R.judge.timer} seconds">` : ''}
             <label for="tcVuln">Vulnerable uptime for expected (%)</label><input id="tcVuln" type="number" value="${esc(T.vuln)}">
           </div>
         </section>
-        <section class="tc-box tc-out"><h3>${esc(R.P.name)}: damage per hit and per second</h3>
+        <section class="tc-box tc-out"><h3>${esc(R.lineName)}: damage per hit and per second</h3>
+          ${R.isJudge ? `<p class="note"><b>Judgement.</b> A mark that explodes for ${f(R.judge.pct)}% of weapon damage as Holy, ${R.judge.timer} seconds after it lands. It scales like any weapon hit: ${esc(MAINSTAT[S.cls][0])}, the additive pool, crit, Vulnerable and every [x] multiplier that fits. ${R.judge.oath ? 'With the Judicator Oath your Core Judicator Skills set it off early and the blast counts as a Judicator Skill, so Judicator Skill bonuses are included.' : 'Without the Judicator Oath it only goes off on its timer and Judicator Skill bonuses are left out.'} Powers that only raise Judgement are listed under [x] below and count on this line alone. On this build it comes from: ${esc(R.judge.src.slice(0, 6).join(', '))}.</p>` : ''}
           ${R.isThorns ? `<p class="note"><b>Thorns.</b> This line scales from your Thorns stat (${f(R.thornsStat)}), not your weapon${R.thSrc.length ? ' (' + esc(R.thSrc.slice(0, 5).join(', ')) + ')' : ''}. ${esc(MAINSTAT[S.cls][0])}, the additive pool and every [x] multiplier still apply. It can crit like any other hit and has no high or low roll. DPS assumes one hit a second.</p>` : ''}
           ${R.wd || R.isThorns ? '' : '<p class="warn">Type your weapon damage to see real numbers. Everything else is already filled in from your build.</p>'}
           <table class="tc-table"><thead><tr><th>Monster</th><th>${R.dot ? 'Lowest total' : 'Min hit'}</th><th>${R.dot ? 'Expected total' : 'Expected hit'}</th><th>${R.dot ? 'Highest total' : 'Max hit'}</th><th>Selected</th><th>Expected DPS</th></tr></thead>
           <tbody>${R.segs.map(([l, x, sh, ph]) => `<tr><th>${l}</th><td>${f(x.min)}</td><td><b>${f(x.exp)}</b></td><td>${f(x.max)}</td><td class="selhit"><b>${f(sh)}</b><small>${ph ? `x${f(sh / ph, 2)} vs none` : ''}</small></td><td><b>${f(x.exp * R.hps)}</b></td></tr>`).join('')}</tbody></table>
           ${R.dot ? `<p class="note"><b>${esc(R.dot.kind)}.</b> Each number is the whole amount one cast puts on the monster${R.dot.dur ? `, paid out over ${f(R.dot.dur, 1)} seconds in ${f(R.dot.dur * 2)} ticks of ${f(R.segs[0][1].exp / (R.dot.dur * 2))} (every half second)` : ', paid out in ticks every half second'}. It cannot crit and has no high or low roll. Recasting adds to what is left: once stacked, at ${f(R.hps, 2)} casts a second each half-second tick settles at ${f(R.segs[0][1].exp * R.hps / 2)}, which is ${f(R.segs[0][1].exp * R.hps)} a second.</p>` : ''}${R.isDawn ? `<p class="note"><b>Dawnfire.</b> A flat ${f(R.dawn.lo * 100)} to ${f(R.dawn.hi * 100)}% of your weapon's top damage as Fire every second, x${R.dawnX.toFixed(2)} at ${R.dawn.stacks} kill stacks (${f(R.dawn.per)}%[x] each, up to ${R.dawn.max}).</p>` : ''}
-          <p class="note">${R.pulse ? `This is a pulse on a fixed timer: one hit every ${f(R.pulseEvery, 2)} s. Attack speed does not make it tick faster; it raises each pulse by x${R.asDmg.toFixed(2)} instead (${f(R.as1, 1)}% Attack Speed plus ${f(R.as2, 1)}% Cast Speed).` : `Hits per second: ${f(R.hps, 2)}. Weapon speed ${f(+T.ws || 0, 2)} with ${f(R.as1, 1)}% Attack Speed (first cap, 100%) and ${f(R.as2, 1)}% Cast Speed (second cap, 100%) gives ${f(R.aps, 3)} attacks per second.${R.frames ? ` ${esc(R.P.name)} then takes ${f(R.frames, 1)} frames a cast${R.nextAps ? `; it gets faster at ${f(R.nextAps, 3)} attacks per second, which needs ${f((R.nextAps / (+T.ws || 1) - 1) * 100, 1)}% total speed` : ', its fastest measured step'}.` : ' No frame table for this skill yet, so this assumes every bit of speed counts.'}`} Bosses use the elite bonus; boss-only powers can be added as gear or ticked below. Every number already includes the ${f((1 - R.monDR) * 100)}% damage reduction all monsters have at your level, so it should match the numbers you see in game.</p>
+          <p class="note">${R.isJudge ? `Explosions per second on one enemy: ${f(R.hps, 2)}${R.judge.twice ? `, which includes a ${f(R.judge.twice * 100)}% chance to explode twice` : ''}. Type your own rate in Setup if your Core Judicator Skills set it off faster than the ${R.judge.timer} second timer.` : R.pulse ? `This is a pulse on a fixed timer: one hit every ${f(R.pulseEvery, 2)} s. Attack speed does not make it tick faster; it raises each pulse by x${R.asDmg.toFixed(2)} instead (${f(R.as1, 1)}% Attack Speed plus ${f(R.as2, 1)}% Cast Speed).` : `Hits per second: ${f(R.hps, 2)}. Weapon speed ${f(+T.ws || 0, 2)} with ${f(R.as1, 1)}% Attack Speed (first cap, 100%) and ${f(R.as2, 1)}% Cast Speed (second cap, 100%) gives ${f(R.aps, 3)} attacks per second.${R.frames ? ` ${esc(R.P.name)} then takes ${f(R.frames, 1)} frames a cast${R.nextAps ? `; it gets faster at ${f(R.nextAps, 3)} attacks per second, which needs ${f((R.nextAps / (+T.ws || 1) - 1) * 100, 1)}% total speed` : ', its fastest measured step'}.` : ' No frame table for this skill yet, so this assumes every bit of speed counts.'}`} Bosses use the elite bonus; boss-only powers can be added as gear or ticked below. Every number already includes the ${f((1 - R.monDR) * 100)}% damage reduction all monsters have at your level, so it should match the numbers you see in game.</p>
           ${(() => { let Dd = null; try { Dd = defense(); } catch (e) { return ''; } const cs = (Dd.cards || []).filter(c => c && c.cat !== 'boss' && c.cat !== 'world'); if (!cs.length || !R.wd) return '';
             const t = v => v < 1 ? 'under 1 second' : v < 90 ? f(v, 1) + ' seconds' : v < 5400 ? f(v / 60, 1) + ' minutes' : f(v / 3600, 1) + ' hours';
             return `<table class="tc-table ttk"><thead><tr><th>Time to kill, ${esc(Dd.tier && Dd.tier.name ? Dd.tier.name : 'at your Defense page difficulty')}</th><th>Life (estimate)</th><th>Time</th></tr></thead><tbody>${cs.map(c => { const seg = R.segs[c.cat === 'normal' && c.rarity === 'normal' ? 0 : c.cat === 'boss' || c.cat === 'world' ? 2 : 1][1]; const dps = seg.exp * R.hps; return `<tr><th>${esc(c.m.name)}</th><td>${f(c.life)}</td><td><b>${dps > 0 ? t(c.life / dps) : 'No damage yet'}</b></td></tr>`; }).join('')}</tbody></table><p class="note">One target, the monsters and difficulty picked on Defense Theory Craft. Monster Life comes from the game files and has not been checked in game. Bosses are left out because their Life is not in the files.</p>`; })()}
@@ -1811,6 +1899,9 @@
           <details class="bucket-d" open><summary><b>[x] from aspects and uniques</b><span>x${f(R.xMid / (R.xS || 1), 3)} expected</span></summary>
             ${R.xGear.length ? R.xGear.map(x => `<label class="check xg"><input type="checkbox" data-xoff="${esc(x.id)}" ${x.on ? 'checked' : ''}> <span><b>${esc(x.n)}</b> ${x.lo === x.hi ? f(x.lo, 1) : f(x.lo, 1) + ' to ' + f(x.hi, 1)}%[x] <em>${esc(x.what)}</em></span></label>`).join('') : '<p class="note">No [x] powers on your equipped aspects or uniques yet.</p>'}
             <p class="note">Untick a power when its condition won't be met in your fight.</p></details>
+          ${R.thParts.length ? `<details class="bucket-d" ${R.isThorns ? 'open' : ''}><summary><b>Thorns sources</b><span>${f(R.thornsAuto)} from the build</span></summary>
+            ${R.thParts.map(x => `<label class="check xg"><input type="checkbox" data-xoff="${esc(x.id)}" ${x.on ? 'checked' : ''}> <span><b>${esc(x.n)}</b> +${f(x.v, x.pct ? 1 : 0)}${x.pct ? '%' : ''} Thorns <em>${esc(x.what)}</em></span></label>`).join('')}
+            <p class="note">Flat amounts add up first, then the percentages raise the total. Untick a source you will not have up. A number typed in the Thorns box replaces all of this.</p></details>` : ''}
           <details class="bucket-d" open><summary><b>Attack and cast speed</b><span>${f(R.as1, 1)}% + ${f(R.as2, 1)}%</span></summary>
             ${R.spd.length ? R.spd.map(x => `<label class="check xg"><input type="checkbox" data-xoff="${esc(x.id)}" ${x.on ? 'checked' : ''}> <span><b>${esc(x.n)}</b> ${x.lo === x.hi ? f(x.lo, 1) : f(x.lo, 1) + ' to ' + f(x.hi, 1)}% ${x.kind === 'cs' ? 'Cast Speed' : 'Attack Speed'} <em>${esc(x.what)}</em></span></label>`).join('') : '<p class="note">No buffs on this build add speed beyond what is on the character sheet.</p>'}
             <p class="note">Attack Speed counts up to 100% and Cast Speed up to another 100%. Untick a buff you will not have up.</p></details>
@@ -1827,7 +1918,7 @@
     const set = (k, v) => { T[k] = v; commit(); renderTheory(); };
     $('#tcSkill').onchange = e => { T.pay = ''; set('skill', e.target.value); };
     $('#tcPay').onchange = e => set('pay', e.target.value);
-    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
+    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns'], ['tcJud', 'jud']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
     const ops = $('#opStacks'); if (ops) ops.onchange = () => { T.st.opStacks = Math.max(1, Math.min(12, Math.round(+ops.value || 4))); commit(); renderTheory(); };
     $$('#panel-theory [data-st]').forEach(c => c.onchange = () => { const k = c.dataset.st; T.st[k] = c.checked; if (TC_COND.some(([x]) => x === k)) T.cond[k] = c.checked; commit(); renderTheory(); });
     $$('#panel-theory [data-xoff]').forEach(c => c.onchange = () => { T.off[c.dataset.xoff] = !c.checked; commit(); renderTheory(); });
@@ -1841,7 +1932,7 @@
     const D = data(); let depth = 0;
     const table = (i, l) => { const t = D.tables[i]; if (!t) return 0; return t[Math.max(0, Math.min(t.length - 1, Math.round(l)))]; };
     const mk = Q => { const memo = {}; const c = { table, id: name => {
-      if (name === 'sLevel' || name === 'Level') return lvl || 1;
+      if (name === 'sLevel') return lvl || 1; if (name === 'Level') return CHAR_LEVEL;
       const r = name.match(/^PowerTag\.([A-Za-z0-9_]+)\."Script Formula (\d+)"$/);
       if (r) { const O = pool && pool[r[1]]; if (!O || depth > 30) return 0; depth++; const v = D4F.evaluate(O.sf[+r[2]] || '0', mk(O)); depth--; return v; }
       const m = name.match(/^SF_(\d+)$/); if (!m) return 0;
@@ -1870,7 +1961,7 @@
   // ---------- small node tree, shared by mercenaries and war plans ----------
   // nodes in the same exclusive group (g >= 0) are a choice: picking one drops its partner
   function miniTreeHtml(T, picked, key) {
-    const ns = T.nodes; if (!ns.length) return '';
+    const ns = T.nodes; if (!ns.length) return ''; MINI[key] = { T, picked };
     const xs = ns.map(n => n.x), ys = ns.map(n => n.y);
     const pad = 420; const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad, w = Math.max(...xs) - Math.min(...xs) + pad * 2, h = Math.max(...ys) - Math.min(...ys) + pad * 2 + 160;
     const on = i => picked.includes(i);
@@ -1884,8 +1975,8 @@
       const sq = n.kind === 'unlock'; const m = D4ART.modMotif(P && P.name, P && P.desc);
       const tile = sq ? `<rect x="-190" y="-190" width="380" height="380" rx="18" class="mframe"/><rect x="-160" y="-160" width="320" height="320" rx="8" class="mface"/>`
         : `<rect x="-150" y="-150" width="300" height="300" rx="14" transform="rotate(45)" class="mframe"/><rect x="-118" y="-118" width="236" height="236" rx="8" transform="rotate(45)" class="mface"/>`;
-      html += `<g class="mnode ${sq ? 'skill' : 'pass'}${o ? ' on' : ''}" data-${key}="${n.i}" role="button" tabindex="0" aria-pressed="${o}" aria-label="${esc(P ? P.name : 'Node')}">
-        <title>${esc(P ? P.name : '')}</title><g transform="translate(${n.x} ${n.y})">${o ? '<circle r="330" class="mglow"/>' : ''}${tile}<g class="memb">${inkMotif(m, sq ? 2.2 : 1.7)}</g></g>
+      html += `<g class="mnode ${sq ? 'skill' : 'pass'}${o ? ' on' : ''}" data-${key}="${n.i}" role="button" tabindex="0" aria-pressed="${o}" aria-label="${esc(P ? P.name : 'Node')}" data-tt="mini|${key}|${n.i}">
+        <g transform="translate(${n.x} ${n.y})">${o ? '<circle r="330" class="mglow"/>' : ''}${tile}<g class="memb">${inkMotif(m, sq ? 2.2 : 1.7)}</g></g>
         <text class="mlabel${o ? ' on' : ''}" x="${n.x}" y="${n.y + (sq ? 330 : 300)}">${esc(P ? P.name : '')}</text></g>`;
     }
     return `<svg class="minitree" viewBox="${x0} ${y0} ${w} ${h}" role="group" aria-label="Skill tree">${TREE_DEFS}${html}</svg>`;
@@ -1907,7 +1998,7 @@
     const box = $('#panel-mercs'); const list = data().mercs || [];
     if (!list.length) { box.innerHTML = '<div class="tc"><div class="tc-empty"><h2>Mercenaries</h2><p>No mercenary data in this game version.</p></div></div>'; return; }
     const M = mercState(); const main = list.find(m => m.id === M.main); const sup = list.find(m => m.id === M.sup);
-    const card = (m, role) => `<button class="merc-card${(role === 'main' ? M.main : M.sup) === m.id ? ' on' : ''}" data-${role}="${m.id}" ${role === 'sup' && M.main === m.id ? 'disabled title="Your hired mercenary cannot also be your reinforcement"' : ''} aria-pressed="${(role === 'main' ? M.main : M.sup) === m.id}">
+    const card = (m, role) => `<button class="merc-card${(role === 'main' ? M.main : M.sup) === m.id ? ' on' : ''}" data-${role}="${m.id}" data-tt="merc|${m.id}|${role}" ${role === 'sup' && M.main === m.id ? 'disabled' : ''} aria-pressed="${(role === 'main' ? M.main : M.sup) === m.id}">
       <span class="merc-sig" aria-hidden="true">${inkSvg(m.id)}</span><b>${esc(m.name)}</b><small>${esc(m.role)}</small></button>`;
     const picked = main ? (M.nodes[main.id] || []) : [];
     const groupsLeft = main ? [...new Set(main.nodes.filter(n => n.g >= 0).map(n => n.g))].filter(g => !picked.some(i => main.nodes[i].g === g)).length : 0;
@@ -2670,7 +2761,7 @@
     for (const p of act) if (S.hotbar.length < 6 && !S.hotbar.includes(p)) S.hotbar.push(p);
     const slot = i => { const p = S.hotbar[i]; const P = p && C.powers[p]; const sk = P && skillCtx(p);
       return `<div class="sbar-slot${P ? ' filled' : ''}">
-        <div class="sbar-icon">${P ? `<img src="${skillImg(S.cls, P.name)}" alt="">` : ''}<span class="key">${esc(BAR_KEYS[i])}</span></div>
+        <div class="sbar-icon"${P ? ` data-tt="skill|${p}"` : ''}>${P ? `<img src="${skillImg(S.cls, P.name)}" alt="">` : ''}<span class="key">${esc(BAR_KEYS[i])}</span></div>
         <select data-bar="${i}" aria-label="Skill on ${esc(BAR_KEYS[i])}"><option value="">Empty</option>${act.map(q => `<option value="${q}" ${q === p ? 'selected' : ''}>${esc(C.powers[q].name)}</option>`).join('')}</select>
         ${P ? `<small>Rank ${sk.lvl}${sk.cd() ? `, ${D4T.fmtNum(Math.round(sk.cdEff() * 100) / 100)} s` : ''}${sk.cost() ? `, ${D4T.fmtNum(Math.round(sk.costEff() * 10) / 10)} ${esc(CLASS_RES[S.cls] || '')}` : ''}</small>` : ''}</div>`; };
     const sh = S.cls === 'Warlock' && S.shard && (data().shards || []).find(x => x.id === S.shard.id);
@@ -2835,8 +2926,8 @@
           <label class="chip${T.weak ? ' on' : ''}"><input type="checkbox" data-df="weak" ${T.weak ? 'checked' : ''}><span>Enemy weakened</span><small>20, 15, 10%</small></label>
           <label class="chip${T.block ? ' on' : ''}"><input type="checkbox" data-df="block" ${T.block ? 'checked' : ''}><span>Count block</span><small>${pct(R.block)} x ${pct(R.blockR)}</small></label>
           <label class="chip${T.dodge ? ' on' : ''}"><input type="checkbox" data-df="dodge" ${T.dodge ? 'checked' : ''}><span>Count dodge</span><small>${pct(R.dodge)}</small></label>
-          ${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Everything ${esc(m.name)} gives you, on or off together. The same switch as on Damage Theory Craft."><input type="checkbox" data-dfmerc="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}
-          ${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}" title="${esc(q.text)}"><input type="checkbox" data-dfmerc="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}${R.spFx.notes.length ? `<p class="note" style="flex-basis:100%">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
+          ${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" data-tt="mercsum|${m.role}"><input type="checkbox" data-dfmerc="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}
+          ${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}"${ttAttr(ttCard(q.tname, 'SOUL SPLINTER', esc(q.text)))}><input type="checkbox" data-dfmerc="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}${R.spFx.notes.length ? `<p class="note" style="flex-basis:100%">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
           ${R.mercDR.filter(x => R.mercInfo.some(m => m.role === x.role && m.on)).map(x => `<label class="chip merc${x.on ? ' on' : ''}" title="${esc(x.merc)}, ${x.role === 'mercMain' ? 'hired mercenary' : 'reinforcement'}. Counted at its full value."><input type="checkbox" data-dfm="${esc(x.id)}" ${x.on ? 'checked' : ''}><span>${esc(x.merc)}: ${esc(x.name)}</span><small>${f(x.v, 0)}% less</small></label>`).join('')}
         </div>
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}

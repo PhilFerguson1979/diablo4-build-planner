@@ -1010,6 +1010,14 @@ body {
 .ttip { position: fixed; z-index: 60; width: 380px; max-width: calc(100vw - 20px); pointer-events: none; padding: 34px 22px 16px; text-align: left;
   background: linear-gradient(180deg, #1b1917, #121110); border: 2px solid #3d3a37; box-shadow: 0 0 0 1px #000, 0 0 0 4px #2a2826, 0 0 0 5px #000, 0 18px 40px rgba(0,0,0,0.75); color: #d9d2c6; font-size: 15px; line-height: 1.45; }
 .ttip[hidden] { display: none; }
+.ttip.noicon { padding-top: 16px; }
+.ttip.noicon .tt-foot { text-align: left; color: #bfb8ad; font-size: 14px; }
+.ttip.noicon .tt-foot.ok { color: #7fc77f; }
+.ttip.noicon .tt-foot.no { color: #bfb8ad; }
+.ttip .tt-body p { margin: 0 0 6px; }
+.ttip .tt-mod b { color: #efe9df; }
+[data-tt] { cursor: help; }
+button[data-tt], .mnode[data-tt], label[data-tt] { cursor: pointer; }
 .ttip .tt-icon { position: absolute; left: 50%; top: -30px; transform: translateX(-50%); width: 54px; height: 54px; background: #0a0908; border: 2px solid #8a8580; box-shadow: 0 0 0 2px #000, 0 4px 10px rgba(0,0,0,0.7); overflow: hidden; }
 .ttip .tt-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ttip .tt-icon.dia { transform: translateX(-50%) rotate(45deg); width: 46px; height: 46px; top: -24px; }
