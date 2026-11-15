@@ -47,7 +47,8 @@
       if (!m) { if (/^[+x]?\d/.test(e)) out.missed.push(e); else if (e.length > 30) textBlocks.push(e); continue; }
       // the text reader often turns the closing bracket into a 1: "[20.0 - 24.01%". Drop it when what is left still covers the roll.
       if (r && !/[\]})]/.test(e)) { const k = r[6] != null ? 6 : 5; const cut = String(r[k]).replace(/[1lI]$/, '').replace(/[.,]$/, ''); const c = cut ? num(cut) : NaN; if (cut !== String(r[k]) && c >= num(r[2]) && c >= num(r[5] === r[k] ? cut : r[5])) r[k] = cut; }
-      const name = m[4].trim(); if (IGNORE.test(norm(name))) continue;
+      const name = m[4].trim(); const armorAffix = !!r && m[1] === '+' && norm(name) === 'armor';   // "+1,100 Armor [981 - 1,225]" is a rolled affix; a bare "900 Armor" is the item's base
+      if (IGNORE.test(norm(name)) && !armorAffix) continue;
       out.entries.push({ raw: e, mult: m[1] === 'x', v: num(m[2]), pct: m[3] === '%', name, lo: r ? num(r[5]) : null, hi: r ? num(r[6] != null ? r[6] : r[5]) : null });
     }
     out.text = textBlocks.join(' ').replace(/\s+/g, ' ').trim();
