@@ -652,8 +652,18 @@
   // every splinter socketed anywhere on the build, one of each (the highest tier wins), with what its power does to the maths
   function splinterFx() {
     const best = {}; SLOTS.forEach(sl => { const g = S.gear[sl.id]; if (!g) return; const it = findItem(g.item); (g.gems || []).slice(0, socketMax(sl.id, it, g)).forEach(x => { const q = spDef(x); if (q && (!best[q.d.name] || best[q.d.name].tier < x.tier)) best[q.d.name] = { name: q.d.name, tname: q.t.name, tier: x.tier, v: q.t.v, text: q.text }; }); });
-    const list = Object.values(best); const fx = { list, as: 0, cc: 0, life: 0, x: 1, dr: 0, taken: 0, noCrit: false };
-    list.forEach(q => { if (/Anguish/.test(q.name)) { fx.as += q.v; fx.cc += q.v; } else if (/of Sin/.test(q.name)) fx.life += q.v; else if (/Black Soulstone/.test(q.name)) { fx.x *= 1 + q.v * 200 / 100; fx.taken += 100; } else if (/of Pain/.test(q.name)) fx.dr += q.v; else if (/Hellfire/.test(q.name)) { fx.x *= 1 + q.v / 100; fx.noCrit = true; } });
+    const list = Object.values(best); const fx = { list, as: 0, cc: 0, life: 0, x: 1, dr: 0, taken: 0, noCrit: false, vulnAlways: false, notes: [] };
+    const st = (S.tc && S.tc.st) || {}; list.forEach(q => { q.on = st['sp:' + q.name] !== false; });
+    list.filter(q => q.on).forEach(q => {
+      if (/Anguish/.test(q.name)) { fx.as += q.v; fx.cc += q.v; fx.notes.push('Anguish: Primary Resource costs are 30% higher'); }
+      else if (/of Sin/.test(q.name)) { fx.life += q.v; fx.notes.push('Sin: Maximum Primary Resource is 30% lower'); }
+      else if (/of Lies/.test(q.name)) { fx.x *= 0.8; fx.taken += 20; fx.notes.push('Lies: you are always Weakened (20% less damage dealt) and Vulnerable (20% more damage taken)'); }
+      else if (/Black Soulstone/.test(q.name)) { fx.x *= 1 + q.v * 200 / 100; fx.taken += 100; fx.notes.push('Black Soulstone: counted at the full 200 souls'); }
+      else if (/of Pain/.test(q.name)) { fx.dr += q.v; fx.notes.push('Pain: 30% less Movement Speed'); }
+      else if (/Mother/.test(q.name)) { fx.vulnAlways = true; fx.notes.push('Mother: enemies you touch are Vulnerable, so Vulnerable is counted as always up'); }
+      else if (/Hellfire/.test(q.name)) { fx.x *= 1 + q.v / 100; fx.noCrit = true; }
+      else if (/Damnation/.test(q.name)) fx.notes.push('Damnation: each Elite Pack killed adds 1 Monster Power for a while, so plan Defense one difficulty higher');
+    });
     return fx;
   }
   const splinterOn = () => (tcState().st || {}).splinter !== false;
@@ -1397,7 +1407,7 @@
     }
     if (P) (P.legend || []).forEach(l => { proseStats(l.desc).forEach(x => add(x, 'Legendary node: ' + l.name)); powers.push({ name: l.name, kind: 'Legendary node', src: 'Paragon', desc: l.desc }); });
     try { const CP = cdata().powers; Object.keys(CP).forEach(id => { const q = CP[id]; if (!q.passive) return; const r = skillRank(id); if (!(r > 0)) return; const html = powerText(q, null, r, CP); proseStats(html).forEach(x => add(x, 'Passive: ' + q.name)); powers.push({ name: q.name, kind: 'Passive', src: 'Skill tree', desc: html }); }); } catch (e) { /* a passive that fails to render adds nothing */ }
-    try { const fx = splinterFx(); fx.list.forEach(q => powers.push({ name: q.tname, kind: 'Soul Splinter', src: 'Sockets', desc: esc(q.text) })); if (fx.life && splinterOn()) add(fx.life + '% Maximum Life', 'Soul Splinter'); } catch (e) { /* skip */ }
+    try { const fx = splinterFx(); fx.list.forEach(q => powers.push({ name: q.tname, kind: 'Soul Splinter', src: 'Sockets', desc: esc(q.text) })); if (fx.life) add(fx.life + '% Maximum Life', 'Soul Splinter'); } catch (e) { /* skip */ }
     // mercenaries: the hired one's chosen nodes and signature, and the reinforcement's skill
     try { const ML = data().mercs || []; const MS = mercState(); const main = ML.find(m => m.id === MS.main); const sup = ML.find(m => m.id === MS.sup);
       const stM = tcState().st || {};
@@ -1654,7 +1664,7 @@
     const sk = skillCtx(T.skill); const P = sk.P; const SB = sk.SB; const M = statModel(); const D = sheetData();
     // mercenary buffs can be switched off as a group from the status row: hired mercenary and reinforcement
     const stM = T.st || {}; const mercOn = role => !role || stM[role] !== false; const mercP = D.powers.filter(q => q.kind === 'Mercenary');
-    const spFx = splinterFx(); const spOn = spFx.list.length > 0 && stM.splinter !== false;
+    const spFx = splinterFx(); const spOn = spFx.list.some(q => q.on);
     const mercInfo = ['mercMain', 'mercSup'].map(role => { const l = mercP.filter(q => q.role === role); return l.length ? { role, name: l[0].merc, n: l.length, on: mercOn(role) } : null; }).filter(Boolean);
     let mCsd = 1, mCc = 0, mDot = 1; mercP.filter(q => mercOn(q.role)).forEach(q => { const t = strip(q.desc); let x = t.match(/([\d.]+)%\s*\[x\] increased Critical Strike Damage/); if (x) mCsd *= 1 + x[1] / 100; x = t.match(/([\d.]+)%\s*\[\+\] Critical Strike Chance/); if (x) mCc += +x[1]; x = t.match(/([\d.]+)%\s*\[x\] increased Damage Over Time/); if (x) mDot *= 1 + x[1] / 100; });
     const pays = payloadList(T.skill); const pay = pays.find(x => x.k === T.pay) || (/Attack Speed further increases this damage/.test(sk.P.desc || '') && pays.find(x => /PULS/i.test(x.k))) || pays.slice().sort((a, b) => b.v - a.v)[0];
@@ -1702,7 +1712,7 @@
     const critMult = 1.5 * (1 + csdX / 100) * mCsd;
     const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100);
     const monDR = 1 - ((data().scaling && (data().scaling.levels.find(l => l.l === MON_LEVEL) || {}).dr) || 0);
-    const vu = Math.max(0, Math.min(100, +T.vuln || 0)) / 100;
+    const vu = spFx.vulnAlways ? 1 : Math.max(0, Math.min(100, +T.vuln || 0)) / 100;
     const wd = +T.wd || 0;
     // attack speed: two separate caps of 100%. "Attack Speed" sources fill the first, "Cast Speed" sources fill the second.
     const spd = speedSources(sk).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) })); const spdSum = k => spd.filter(x => x.kind === k && x.on).reduce((a, x) => a + (x.lo + x.hi) / 2, 0);
@@ -1749,7 +1759,7 @@
         <h3>Status on the hit</h3>
         <div class="chips">${TC_STATES.map(([k, l]) => { const extra = k === 'crit' ? `x${f(R.critMult, 2)}` : k === 'vuln' ? `x${f(R.vulnMult, 2)}` : k === 'op' ? `+${f(R.opPer, 1)}% a stack` : k === 'berserk' ? '+25%' : R.cond[k] ? `+${f(R.cond[k].reduce((a, x) => a + x.v, 0), 1)}%` : '';
           const none = !extra && k !== 'op';
-          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Every damage, crit and speed buff ${esc(m.name)} gives you, on or off together"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}${R.spFx.list.length ? `<label class="chip merc${R.spOn ? ' on' : ''}" title="${esc(R.spFx.list.map(q => q.tname + ': ' + q.text).join(' | '))}"><input type="checkbox" data-st="splinter" ${R.spOn ? 'checked' : ''}><span>Soul Splinters</span><small>${R.spFx.list.length} socketed${R.spFx.x > 1 ? ', x' + R.spFx.x.toFixed(2) + ' damage' : ''}</small></label>` : ''}</div>
+          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Every damage, crit and speed buff ${esc(m.name)} gives you, on or off together"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}" title="${esc(q.text)}"><input type="checkbox" data-st="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}</div>${R.spFx.notes.length ? `<p class="note">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}
         <p class="note">Tick what is true for the hit. The Selected column below shows that hit with mid rolls, next to the same hit with nothing ticked. Ticked conditions also feed Expected. Overpower works the Lord of Hatred way: each stack adds 15% additive damage for 4 seconds, up to 4 stacks unless a power such as the Tidal aspect raises the limit. Your Overpower Damage bonus raises the per-stack amount, and its [x] lines multiply on top.</p>
       </section>
@@ -2714,8 +2724,8 @@
     const mercSt = tcState().st || {}; const mercDR = []; sheetData().powers.filter(q => q.kind === 'Mercenary').forEach(q => { const t = strip(q.desc); const m = t.match(/Damage Reduction[^.]*?up to ([\d.]+)%/) || t.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*Damage Reduction/) || t.match(/deal ([\d.]+)%\s*(?:\[[x+]\])?\s*reduced damage/) || t.match(/reducing their damage dealt by ([\d.]+)%/);
       if (m && +m[1] > 0) { const id = q.role + ':' + q.name; mercDR.push({ id, v: +m[1], name: q.name, merc: q.merc, role: q.role, on: (T.mdr || {})[id] !== false && mercSt[q.role] !== false }); } });
     const mercInfo = ['mercMain', 'mercSup'].map(role => { const l = sheetData().powers.filter(q => q.kind === 'Mercenary' && q.role === role); return l.length ? { role, name: l[0].merc, n: l.length, on: mercSt[role] !== false } : null; }).filter(Boolean);
-    const spFx = splinterFx(); const spOn = spFx.list.length > 0 && mercSt.splinter !== false;
-    const drParts = (M.dr ? M.dr.parts : []).concat(spOn && spFx.dr ? [{ v: spFx.dr, src: 'Splinter of Pain' }] : []).concat(spOn && spFx.taken ? [{ v: -spFx.taken, src: 'Splinter of the Black Soulstone, damage taken' }] : []).concat(mercDR.filter(x => x.on).map(x => ({ v: x.v, src: x.name + ' (' + x.merc + ')' }))); const drMul = drParts.reduce((k, p) => k * (1 - Math.min(100, p.v) / 100), 1);
+    const spFx = splinterFx(); const spOn = spFx.list.some(q => q.on);
+    const drParts = (M.dr ? M.dr.parts : []).concat(spOn && spFx.dr ? [{ v: spFx.dr, src: 'Splinter of Pain' }] : []).concat(spOn && spFx.taken ? [{ v: -spFx.taken, src: 'Soul Splinters, more damage taken' }] : []).concat(mercDR.filter(x => x.on).map(x => ({ v: x.v, src: x.name + ' (' + x.merc + ')' }))); const drMul = drParts.reduce((k, p) => k * (1 - Math.min(100, p.v) / 100), 1);
     const block = Math.min(100, M.block ? M.block.v : 0) / 100, blockR = Math.min(80, (M.blockr ? M.blockr.v : 0)) / 100;
     const dodge = Math.min(100, M.dodge ? M.dodge.v : 0) / 100;
     // HIT_CAL: measured in game on 14 Nov 2026. Two Fallen basic hits on Torment I each took 783 Life from a level 70 Paladin whose own Toughness figure gives 70.18% reduction: exactly twice what the file values alone predict.
@@ -2811,7 +2821,7 @@
           <label class="chip${T.block ? ' on' : ''}"><input type="checkbox" data-df="block" ${T.block ? 'checked' : ''}><span>Count block</span><small>${pct(R.block)} x ${pct(R.blockR)}</small></label>
           <label class="chip${T.dodge ? ' on' : ''}"><input type="checkbox" data-df="dodge" ${T.dodge ? 'checked' : ''}><span>Count dodge</span><small>${pct(R.dodge)}</small></label>
           ${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Everything ${esc(m.name)} gives you, on or off together. The same switch as on Damage Theory Craft."><input type="checkbox" data-dfmerc="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}
-          ${R.spFx.list.length ? `<label class="chip merc${R.spOn ? ' on' : ''}" title="${esc(R.spFx.list.map(q => q.tname + ': ' + q.text).join(' | '))}"><input type="checkbox" data-dfmerc="splinter" ${R.spOn ? 'checked' : ''}><span>Soul Splinters</span><small>${R.spFx.list.length} socketed</small></label>` : ''}
+          ${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}" title="${esc(q.text)}"><input type="checkbox" data-dfmerc="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}${R.spFx.notes.length ? `<p class="note" style="flex-basis:100%">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
           ${R.mercDR.filter(x => R.mercInfo.some(m => m.role === x.role && m.on)).map(x => `<label class="chip merc${x.on ? ' on' : ''}" title="${esc(x.merc)}, ${x.role === 'mercMain' ? 'hired mercenary' : 'reinforcement'}. Counted at its full value."><input type="checkbox" data-dfm="${esc(x.id)}" ${x.on ? 'checked' : ''}><span>${esc(x.merc)}: ${esc(x.name)}</span><small>${f(x.v, 0)}% less</small></label>`).join('')}
         </div>
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}
