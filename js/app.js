@@ -1672,9 +1672,19 @@
     let dawn = null; { const dw = SLOTS.map(sl => findItem((S.gear[sl.id] || {}).item)).find(it => it && it.name === 'Dawnfire');
       if (dw && P.id === 'Paladin_HolyShock_Aura') { const tx = strip(dw.desc); const r = tx.match(/\[([\d,]+)\s*[–-]\s*([\d,]+)\]/); const per = tx.match(/by ([\d.]+)%\s*\[x\]/); const mx = tx.match(/up to (\d+) times/);
         if (r) { const num = x => +x.replace(/,/g, ''); dawn = { lo: num(r[1]) / 2000, hi: num(r[2]) / 2000, per: per ? +per[1] : 0, max: mx ? +mx[1] : 0 }; dawn.stacks = Math.max(0, Math.min(dawn.max, T.dawn !== '' && T.dawn != null ? +T.dawn || 0 : dawn.max)); pays.unshift({ k: 'DAWNFIRE', v: (dawn.lo + dawn.hi) / 2 * 1.2 * 100, dawn: 1 }); } } }
-    const pay0 = pay; const payD = dawn && (T.pay === 'DAWNFIRE' || !pays.some(x => x.k === T.pay)) ? pays[0] : pay0; const isDawn = !!(payD && payD.dawn);
+    // Thorns lines: damage that is a share of your Thorns stat. Weapon damage and skill % are not used for these.
+    // Thorns: what the sheet has, plus what your skills grant (Defiance Aura, Clash and the like). A number typed in the box wins.
+    let thFlat = M.thorns ? M.thorns.v : 0, thPct = 0; const thSrc = [];
+    try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); const texts = [powerText(q, null, c2.lvl, C.powers)].concat((q.mods || []).filter(md => c2.mods.has(md.key)).map(md => powerText(q, md.desc, c2.lvl, C.powers)));
+      texts.forEach(h => { const t = strip(h).replace(/\s+/g, ' '); let m; const fl = /(?:^|[^%\d.,])([\d,]+(?:\.\d+)?)\s*(?:\[\+\])?\s*Thorns(?! damage)/g; while ((m = fl.exec(t))) { const v = parseFloat(m[1].replace(/,/g, '')); if (v > 0) { thFlat += v; thSrc.push(q.name + ' +' + D4T.fmtNum(v)); } }
+        const pc = /([\d.]+)%\s*(?:\[\+\])?\s*Thorns(?! damage)|Thorns by ([\d.]+)%/g; while ((m = pc.exec(t))) { const v = +(m[1] || m[2]); if (v > 0) { thPct += v; thSrc.push(q.name + ' +' + v + '%'); } } }); }); } catch (e) { /* keep the sheet value */ }
+    const thornsAuto = thFlat * (1 + thPct / 100); const thornsStat = T.thorns !== '' && T.thorns != null ? +T.thorns || 0 : thornsAuto;
+    { const texts = [P.desc].concat((P.mods || []).filter(md => sk.mods.has(md.key)).map(md => md.desc)); const seenT = new Set();
+      texts.forEach(t => { const re = /\[\{?(SF_\d+)\}?\s*\*\s*100[^\]]*\]\s*(?:\{\/c\})?\s*of your Thorns/g; let m; while ((m = re.exec(t || ''))) { const v = (+sk.ev(m[1]) || 0) * 100; if (v > 0 && !seenT.has(m[1])) { seenT.add(m[1]); pays.push({ k: 'THORNS:' + m[1], v, thorns: 1, per: /per second/.test((t || '').slice(m.index, m.index + 160)) }); } } });
+      if (thornsStat > 0) pays.push({ k: 'THORNS:HIT', v: 100, thorns: 1, hit: 1 }); }
+    const pay0 = pays.find(x => x.k === T.pay && x.thorns) || pay; const payD = dawn && (T.pay === 'DAWNFIRE' || !pays.some(x => x.k === T.pay)) ? pays[0] : pay0; const isDawn = !!(payD && payD.dawn); const isThorns = !!(payD && payD.thorns);
     const Pd = isDawn ? Object.assign({}, P, { dmg: 'Fire' }) : P;
-    const skillPct = payD ? payD.v : 0; const dot = payD && !isDawn ? dotInfo(sk, payD.k) : null;
+    const skillPct = payD ? payD.v : 0; const dot = payD && !isDawn && !isThorns ? dotInfo(sk, payD.k) : null;
     const [msName, msScal] = MAINSTAT[S.cls]; const msKey = { Strength: 'str', Intelligence: 'int', Willpower: 'wil', Dexterity: 'dex' }[msName];
     const msTotal = (M[msKey] ? M[msKey].v : 0) + (+T.base || 0); const msMult = 1 + msTotal * msScal;
     // additive pool
@@ -1723,28 +1733,28 @@
     // passive pulses such as Holy Light Aura tick on a fixed timer and gain damage from attack speed instead of hitting faster
     const pulse = /Attack Speed further increases this damage/.test(P.desc || '') && !(payD && /ACTIVE|EXPLOSION/i.test(payD.k || '')); let pulseEvery = 0;
     if (pulse) { const m = (P.desc || '').match(/every \{c_number\}\{SF_(\d+)\}\{\/c\} seconds/); pulseEvery = isDawn ? 1 : m && +P.sf[+m[1]] > 0 ? +P.sf[+m[1]] : 1; }
-    const asDmg = pulse ? 1 + asTotal / 100 : 1;
-    const hps = pulse ? 1 / pulseEvery : frames ? 60 / frames : aps;
+    const asDmg = pulse && !isThorns ? 1 + asTotal / 100 : 1;
+    const hps = isThorns ? 1 : pulse ? 1 / pulseEvery : frames ? 60 / frames : aps;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
-    const base = wd * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
+    const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
-      const A0 = addAlways + (eliteOn ? addElite : 0) + (dot ? dotAdd : 0); const p = dot ? 0 : cc / 100; const cm = dot ? 1 : critMult; const roll = dot || isDawn ? 0 : 0.1;
+      const A0 = addAlways + (eliteOn ? addElite : 0) + (dot ? dotAdd : 0); const p = dot || isThorns ? 0 : cc / 100; const cm = dot || isThorns ? 1 : critMult; const roll = dot || isDawn || isThorns ? 0 : 0.1;
       const min = base * (1 - roll) * (isDawn ? dawn.lo / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + A0 / 100) * xLo;
       const hit = (c, v) => (1 + (A0 + addCondOn + (c ? csdAdd : 0) + (v ? vulnAdd : 0)) / 100) * (c ? cm : 1) * (v ? vulnMult : 1);
       const exp = base * xMid * ((1 - p) * (1 - vu) * hit(0, 0) + p * (1 - vu) * hit(1, 0) + (1 - p) * vu * hit(0, 1) + p * vu * hit(1, 1));
-      const max = base * (1 + roll) * (isDawn ? dawn.hi / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + (A0 + addCondAll + (dot ? 0 : csdAdd) + vulnAdd) / 100) * xHi * cm * vulnMult;
+      const max = base * (1 + roll) * (isDawn ? dawn.hi / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + (A0 + addCondAll + (dot || isThorns ? 0 : csdAdd) + vulnAdd) / 100) * xHi * cm * vulnMult;
       return { min, exp, max };
     };
     // one exact hit with the states ticked across the top, against the same hit with none of them
     const st = T.st || {}; const opAdd = M.od ? M.od.v : 0; const opX = M.od ? M.od.x : 0;
     // Lord of Hatred Overpower: stacks of 15% additive damage, 4 as standard and more from powers such as the Tidal aspect. Overpower Damage raises the per-stack amount.
     const opStacks = st.op ? Math.max(1, Math.min(12, +st.opStacks || 4)) : 0; const opPer = 15 * (1 + opAdd / 100);
-    const condSt = Object.keys(cond).filter(k => st[k]).reduce((a, k) => a + sum(cond[k]), 0) + (st.berserk ? 25 : 0) + opStacks * opPer + (st.crit && !dot ? csdAdd : 0) + (st.vuln ? vulnAdd : 0) + (dot ? dotAdd : 0);
-    const stateHit = eliteOn => base * (1 + (addAlways + condSt + (eliteOn ? addElite : 0)) / 100) * xMid * (st.crit && !dot ? critMult : 1) * (st.vuln ? vulnMult : 1) * (opStacks ? 1 + opX / 100 : 1);
+    const condSt = Object.keys(cond).filter(k => st[k]).reduce((a, k) => a + sum(cond[k]), 0) + (st.berserk ? 25 : 0) + opStacks * opPer + (st.crit && !dot && !isThorns ? csdAdd : 0) + (st.vuln ? vulnAdd : 0) + (dot ? dotAdd : 0);
+    const stateHit = eliteOn => base * (1 + (addAlways + condSt + (eliteOn ? addElite : 0)) / 100) * xMid * (st.crit && !dot && !isThorns ? critMult : 1) * (st.vuln ? vulnMult : 1) * (opStacks ? 1 + opX / 100 : 1);
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
-    return { spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -1767,19 +1777,21 @@
         <section class="tc-box"><h3>Setup</h3>
           <div class="kv">
             <label for="tcSkill">Skill</label><select id="tcSkill">${R.skills.map(id => `<option value="${id}" ${id === T.skill ? 'selected' : ''}>${esc(C.powers[id].name)}</option>`).join('')}</select>
-            <label for="tcPay">Damage line</label><select id="tcPay">${R.pays.map(x => `<option value="${x.k}" ${R.payD && x.k === R.payD.k ? 'selected' : ''}>${x.dawn ? 'Dawnfire fire pulse, ' + f(x.v) + '% of weapon damage' : f(x.v) + '% skill damage'}</option>`).join('')}</select>
-            <label for="tcWd">Weapon damage (from your weapon tooltip)</label><input id="tcWd" type="number" value="${esc(T.wd)}" placeholder="Type it in">
+            <label for="tcPay">Damage line</label><select id="tcPay">${R.pays.map(x => `<option value="${x.k}" ${R.payD && x.k === R.payD.k ? 'selected' : ''}>${x.dawn ? 'Dawnfire fire pulse, ' + f(x.v) + '% of weapon damage' : x.thorns ? (x.hit ? 'Thorns, each time you are hit (Retribution)' : f(x.v) + '% of your Thorns' + (x.per ? ' a second' : '')) : f(x.v) + '% skill damage'}</option>`).join('')}</select>
+            <label for="tcWd">Weapon damage (from your weapon tooltip)</label><input id="tcWd" type="number" value="${esc(T.wd)}" placeholder="${R.isThorns ? 'Not used for Thorns' : 'Type it in'}" ${R.isThorns ? 'disabled' : ''}>
             <label for="tcWs">Weapon speed (attacks per second)</label><input id="tcWs" type="number" step="0.01" value="${esc(T.ws)}">
             <label for="tcBase">${R.msName} not on gear (level and base)</label><input id="tcBase" type="number" value="${esc(T.base)}">
             ${R.dawn ? `<label for="tcDawn">Dawnfire stacks from kills (0 to ${R.dawn.max})</label><input id="tcDawn" type="number" min="0" max="${R.dawn.max}" value="${R.dawn.stacks}">` : ''}
+            <label for="tcThorns">Thorns (type the number from your character sheet to override)</label><input id="tcThorns" type="number" value="${esc(T.thorns != null && T.thorns !== '' ? T.thorns : '')}" placeholder="${R.thornsAuto ? f(R.thornsAuto) + ' from the build' : 'None on the build'}">
             <label for="tcVuln">Vulnerable uptime for expected (%)</label><input id="tcVuln" type="number" value="${esc(T.vuln)}">
           </div>
         </section>
         <section class="tc-box tc-out"><h3>${esc(R.P.name)}: damage per hit and per second</h3>
-          ${R.wd ? '' : '<p class="warn">Type your weapon damage to see real numbers. Everything else is already filled in from your build.</p>'}
+          ${R.isThorns ? `<p class="note"><b>Thorns.</b> This line scales from your Thorns stat (${f(R.thornsStat)}), not your weapon${R.thSrc.length ? ' (' + esc(R.thSrc.slice(0, 5).join(', ')) + ')' : ''}. ${esc(MAINSTAT[S.cls][0])}, the additive pool and every [x] multiplier still apply. It cannot crit and has no high or low roll. DPS assumes one hit a second.</p>` : ''}
+          ${R.wd || R.isThorns ? '' : '<p class="warn">Type your weapon damage to see real numbers. Everything else is already filled in from your build.</p>'}
           <table class="tc-table"><thead><tr><th>Monster</th><th>${R.dot ? 'Lowest total' : 'Min hit'}</th><th>${R.dot ? 'Expected total' : 'Expected hit'}</th><th>${R.dot ? 'Highest total' : 'Max hit'}</th><th>Selected</th><th>Expected DPS</th></tr></thead>
           <tbody>${R.segs.map(([l, x, sh, ph]) => `<tr><th>${l}</th><td>${f(x.min)}</td><td><b>${f(x.exp)}</b></td><td>${f(x.max)}</td><td class="selhit"><b>${f(sh)}</b><small>${ph ? `x${f(sh / ph, 2)} vs none` : ''}</small></td><td><b>${f(x.exp * R.hps)}</b></td></tr>`).join('')}</tbody></table>
-          ${R.dot ? `<p class="note"><b>${esc(R.dot.kind)}.</b> Each number is the whole amount one cast puts on the monster${R.dot.dur ? `, paid out over ${f(R.dot.dur, 1)} seconds in ${f(R.dot.dur * 2)} ticks of ${f(R.segs[0][1].exp / (R.dot.dur * 2))} (every half second)` : ', paid out in ticks every half second'}. It cannot crit and has no high or low roll. Recasting adds to what is left, so over a long fight the damage per second is the total times casts per second.</p>` : ''}${R.isDawn ? `<p class="note"><b>Dawnfire.</b> A flat ${f(R.dawn.lo * 100)} to ${f(R.dawn.hi * 100)}% of your weapon's top damage as Fire every second, x${R.dawnX.toFixed(2)} at ${R.dawn.stacks} kill stacks (${f(R.dawn.per)}%[x] each, up to ${R.dawn.max}).</p>` : ''}
+          ${R.dot ? `<p class="note"><b>${esc(R.dot.kind)}.</b> Each number is the whole amount one cast puts on the monster${R.dot.dur ? `, paid out over ${f(R.dot.dur, 1)} seconds in ${f(R.dot.dur * 2)} ticks of ${f(R.segs[0][1].exp / (R.dot.dur * 2))} (every half second)` : ', paid out in ticks every half second'}. It cannot crit and has no high or low roll. Recasting adds to what is left: once stacked, at ${f(R.hps, 2)} casts a second each half-second tick settles at ${f(R.segs[0][1].exp * R.hps / 2)}, which is ${f(R.segs[0][1].exp * R.hps)} a second.</p>` : ''}${R.isDawn ? `<p class="note"><b>Dawnfire.</b> A flat ${f(R.dawn.lo * 100)} to ${f(R.dawn.hi * 100)}% of your weapon's top damage as Fire every second, x${R.dawnX.toFixed(2)} at ${R.dawn.stacks} kill stacks (${f(R.dawn.per)}%[x] each, up to ${R.dawn.max}).</p>` : ''}
           <p class="note">${R.pulse ? `This is a pulse on a fixed timer: one hit every ${f(R.pulseEvery, 2)} s. Attack speed does not make it tick faster; it raises each pulse by x${R.asDmg.toFixed(2)} instead (${f(R.as1, 1)}% Attack Speed plus ${f(R.as2, 1)}% Cast Speed).` : `Hits per second: ${f(R.hps, 2)}. Weapon speed ${f(+T.ws || 0, 2)} with ${f(R.as1, 1)}% Attack Speed (first cap, 100%) and ${f(R.as2, 1)}% Cast Speed (second cap, 100%) gives ${f(R.aps, 3)} attacks per second.${R.frames ? ` ${esc(R.P.name)} then takes ${f(R.frames, 1)} frames a cast${R.nextAps ? `; it gets faster at ${f(R.nextAps, 3)} attacks per second, which needs ${f((R.nextAps / (+T.ws || 1) - 1) * 100, 1)}% total speed` : ', its fastest measured step'}.` : ' No frame table for this skill yet, so this assumes every bit of speed counts.'}`} Bosses use the elite bonus; boss-only powers can be added as gear or ticked below. Every number already includes the ${f((1 - R.monDR) * 100)}% damage reduction all monsters have at your level, so it should match the numbers you see in game.</p>
           ${(() => { let Dd = null; try { Dd = defense(); } catch (e) { return ''; } const cs = (Dd.cards || []).filter(c => c && c.cat !== 'boss' && c.cat !== 'world'); if (!cs.length || !R.wd) return '';
             const t = v => v < 1 ? 'under 1 second' : v < 90 ? f(v, 1) + ' seconds' : v < 5400 ? f(v / 60, 1) + ' minutes' : f(v / 3600, 1) + ' hours';
@@ -1792,7 +1804,7 @@
           </div>
         </section>
         <section class="tc-box"><h3>Damage buckets</h3>
-          <div class="bucket"><b>Weapon x skill</b><span>${f(R.wd)} x ${f(R.skillPct, 1)}%</span></div>
+          <div class="bucket"><b>${R.isThorns ? 'Thorns x share' : 'Weapon x skill'}</b><span>${f(R.isThorns ? R.thornsStat : R.wd)} x ${f(R.skillPct, 1)}%</span></div>
           <div class="bucket"><b>${R.msName}</b><span>${f(R.msTotal)} points, x${f(R.msMult, 3)}</span></div>
           <details class="bucket-d"><summary><b>Additive damage</b><span>+${f(R.addAlways, 1)}% always${R.addElite ? `, +${f(R.addElite, 1)}% vs elites` : ''}</span></summary>${list([...R.always, ...R.elite])}</details>
           <details class="bucket-d"><summary><b>[x] from stats</b><span>x${f(R.xLo, 3)}</span></summary>${list(R.xStat)}</details>
@@ -1815,7 +1827,7 @@
     const set = (k, v) => { T[k] = v; commit(); renderTheory(); };
     $('#tcSkill').onchange = e => { T.pay = ''; set('skill', e.target.value); };
     $('#tcPay').onchange = e => set('pay', e.target.value);
-    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
+    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
     const ops = $('#opStacks'); if (ops) ops.onchange = () => { T.st.opStacks = Math.max(1, Math.min(12, Math.round(+ops.value || 4))); commit(); renderTheory(); };
     $$('#panel-theory [data-st]').forEach(c => c.onchange = () => { const k = c.dataset.st; T.st[k] = c.checked; if (TC_COND.some(([x]) => x === k)) T.cond[k] = c.checked; commit(); renderTheory(); });
     $$('#panel-theory [data-xoff]').forEach(c => c.onchange = () => { T.off[c.dataset.xoff] = !c.checked; commit(); renderTheory(); });
