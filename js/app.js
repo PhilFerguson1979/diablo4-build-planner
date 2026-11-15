@@ -1738,19 +1738,19 @@
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
-      const A0 = addAlways + (eliteOn ? addElite : 0) + (dot ? dotAdd : 0); const p = dot || isThorns ? 0 : cc / 100; const cm = dot || isThorns ? 1 : critMult; const roll = dot || isDawn || isThorns ? 0 : 0.1;
+      const A0 = addAlways + (eliteOn ? addElite : 0) + (dot ? dotAdd : 0); const p = dot ? 0 : cc / 100; const cm = dot ? 1 : critMult; const roll = dot || isDawn || isThorns ? 0 : 0.1;
       const min = base * (1 - roll) * (isDawn ? dawn.lo / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + A0 / 100) * xLo;
       const hit = (c, v) => (1 + (A0 + addCondOn + (c ? csdAdd : 0) + (v ? vulnAdd : 0)) / 100) * (c ? cm : 1) * (v ? vulnMult : 1);
       const exp = base * xMid * ((1 - p) * (1 - vu) * hit(0, 0) + p * (1 - vu) * hit(1, 0) + (1 - p) * vu * hit(0, 1) + p * vu * hit(1, 1));
-      const max = base * (1 + roll) * (isDawn ? dawn.hi / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + (A0 + addCondAll + (dot || isThorns ? 0 : csdAdd) + vulnAdd) / 100) * xHi * cm * vulnMult;
+      const max = base * (1 + roll) * (isDawn ? dawn.hi / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + (A0 + addCondAll + (dot ? 0 : csdAdd) + vulnAdd) / 100) * xHi * cm * vulnMult;
       return { min, exp, max };
     };
     // one exact hit with the states ticked across the top, against the same hit with none of them
     const st = T.st || {}; const opAdd = M.od ? M.od.v : 0; const opX = M.od ? M.od.x : 0;
     // Lord of Hatred Overpower: stacks of 15% additive damage, 4 as standard and more from powers such as the Tidal aspect. Overpower Damage raises the per-stack amount.
     const opStacks = st.op ? Math.max(1, Math.min(12, +st.opStacks || 4)) : 0; const opPer = 15 * (1 + opAdd / 100);
-    const condSt = Object.keys(cond).filter(k => st[k]).reduce((a, k) => a + sum(cond[k]), 0) + (st.berserk ? 25 : 0) + opStacks * opPer + (st.crit && !dot && !isThorns ? csdAdd : 0) + (st.vuln ? vulnAdd : 0) + (dot ? dotAdd : 0);
-    const stateHit = eliteOn => base * (1 + (addAlways + condSt + (eliteOn ? addElite : 0)) / 100) * xMid * (st.crit && !dot && !isThorns ? critMult : 1) * (st.vuln ? vulnMult : 1) * (opStacks ? 1 + opX / 100 : 1);
+    const condSt = Object.keys(cond).filter(k => st[k]).reduce((a, k) => a + sum(cond[k]), 0) + (st.berserk ? 25 : 0) + opStacks * opPer + (st.crit && !dot ? csdAdd : 0) + (st.vuln ? vulnAdd : 0) + (dot ? dotAdd : 0);
+    const stateHit = eliteOn => base * (1 + (addAlways + condSt + (eliteOn ? addElite : 0)) / 100) * xMid * (st.crit && !dot ? critMult : 1) * (st.vuln ? vulnMult : 1) * (opStacks ? 1 + opX / 100 : 1);
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
@@ -1787,7 +1787,7 @@
           </div>
         </section>
         <section class="tc-box tc-out"><h3>${esc(R.P.name)}: damage per hit and per second</h3>
-          ${R.isThorns ? `<p class="note"><b>Thorns.</b> This line scales from your Thorns stat (${f(R.thornsStat)}), not your weapon${R.thSrc.length ? ' (' + esc(R.thSrc.slice(0, 5).join(', ')) + ')' : ''}. ${esc(MAINSTAT[S.cls][0])}, the additive pool and every [x] multiplier still apply. It cannot crit and has no high or low roll. DPS assumes one hit a second.</p>` : ''}
+          ${R.isThorns ? `<p class="note"><b>Thorns.</b> This line scales from your Thorns stat (${f(R.thornsStat)}), not your weapon${R.thSrc.length ? ' (' + esc(R.thSrc.slice(0, 5).join(', ')) + ')' : ''}. ${esc(MAINSTAT[S.cls][0])}, the additive pool and every [x] multiplier still apply. It can crit like any other hit and has no high or low roll. DPS assumes one hit a second.</p>` : ''}
           ${R.wd || R.isThorns ? '' : '<p class="warn">Type your weapon damage to see real numbers. Everything else is already filled in from your build.</p>'}
           <table class="tc-table"><thead><tr><th>Monster</th><th>${R.dot ? 'Lowest total' : 'Min hit'}</th><th>${R.dot ? 'Expected total' : 'Expected hit'}</th><th>${R.dot ? 'Highest total' : 'Max hit'}</th><th>Selected</th><th>Expected DPS</th></tr></thead>
           <tbody>${R.segs.map(([l, x, sh, ph]) => `<tr><th>${l}</th><td>${f(x.min)}</td><td><b>${f(x.exp)}</b></td><td>${f(x.max)}</td><td class="selhit"><b>${f(sh)}</b><small>${ph ? `x${f(sh / ph, 2)} vs none` : ''}</small></td><td><b>${f(x.exp * R.hps)}</b></td></tr>`).join('')}</tbody></table>
