@@ -645,8 +645,20 @@
   const GEM_TYPES = ['Ruby', 'Sapphire', 'Topaz', 'Emerald', 'Amethyst', 'Diamond', 'Skull'];
   const SOCKET_MAX = { helm: 2, chest: 2, pants: 2, gloves: 0, boots: 0, amulet: 1, ring1: 1, ring2: 1, weapon: 2, offhand: 1 };
   let gemSel = -1;
+  // ---------- Soul Splinters (Season 15): socketed like gems, four tiers, each with a socket stat and a power ----------
+  const SP_TIER = ['Lesser (magic)', 'Normal (rare)', 'Greater (legendary)', 'Abyssal (unique)'];
+  const splinters = () => (data().cube && data().cube.splinters) || [];
+  const spDef = x => { const d = x && x.sp != null ? splinters()[x.sp] : null; return d && d.tiers[x.tier] ? { d, t: d.tiers[x.tier], text: d.effect.replace(/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)/, (m, a, b, c, e) => [a, b, c, e][x.tier]) } : null; };
+  // every splinter socketed anywhere on the build, one of each (the highest tier wins), with what its power does to the maths
+  function splinterFx() {
+    const best = {}; SLOTS.forEach(sl => { const g = S.gear[sl.id]; if (!g) return; const it = findItem(g.item); (g.gems || []).slice(0, socketMax(sl.id, it, g)).forEach(x => { const q = spDef(x); if (q && (!best[q.d.name] || best[q.d.name].tier < x.tier)) best[q.d.name] = { name: q.d.name, tname: q.t.name, tier: x.tier, v: q.t.v, text: q.text }; }); });
+    const list = Object.values(best); const fx = { list, as: 0, cc: 0, life: 0, x: 1, dr: 0, taken: 0, noCrit: false };
+    list.forEach(q => { if (/Anguish/.test(q.name)) { fx.as += q.v; fx.cc += q.v; } else if (/of Sin/.test(q.name)) fx.life += q.v; else if (/Black Soulstone/.test(q.name)) { fx.x *= 1 + q.v * 200 / 100; fx.taken += 100; } else if (/of Pain/.test(q.name)) fx.dr += q.v; else if (/Hellfire/.test(q.name)) { fx.x *= 1 + q.v / 100; fx.noCrit = true; } });
+    return fx;
+  }
+  const splinterOn = () => (tcState().st || {}).splinter !== false;
   const gemTarget = id => id === 'weapon' ? 'w' : /^(amulet|ring)/.test(id) ? 'j' : 'a';
-  const gemImg = type => `img/gems/${type.toLowerCase()}.png`;
+  const gemImg = type => `img/gems/${String(type || 'ruby').toLowerCase()}.png`;
   const gemsOf = type => (GD().gems || []).filter(x => x.type === type).sort((a, b) => a.grade - b.grade);
   const gemDef = (type, grade) => { const l = gemsOf(type); return l.find(x => x.grade === +grade) || l[l.length - 1]; };
   const gemTpl = t => t.replace(/^x\s*§%\s*(.*?)\s*Multiplier$/, '§%[x] $1').replace(/^x\s*§%/, '§%[x]').replace(/^§ /, '+§ ');
@@ -666,7 +678,7 @@
   }
   function gemLines(slotId, g, it) {
     const out = []; const tgt = gemTarget(slotId);
-    (g.gems || []).slice(0, socketMax(slotId, it, g)).forEach(x => { const d = x && gemDef(x.type, x.grade); if (!d) return; (d[tgt] || []).forEach(l => { const t = gemTpl(l.t); out.push({ kind: 'gem', gem: d, html: fillTpl(t, l.v, 1), label: t.replace('§', l.v) }); }); });
+    (g.gems || []).slice(0, socketMax(slotId, it, g)).forEach(x => { const q = spDef(x); if (q) { out.push({ kind: 'gem', gem: { sp: 1, type: '', name: q.t.name }, html: esc(q.t.sock).replace(/([\d,]+)/, '<b class="num">$1</b>'), label: q.t.sock }); return; } const d = x && gemDef(x.type, x.grade); if (!d) return; (d[tgt] || []).forEach(l => { const t = gemTpl(l.t); out.push({ kind: 'gem', gem: d, html: fillTpl(t, l.v, 1), label: t.replace('§', l.v) }); }); });
     return out;
   }
   const N_AFF = 4, N_TEMP = 1, Q_MAX = 25;
@@ -722,7 +734,7 @@
         ${temp.length ? `<div class="affix-lines tempers">${temp.map(li).join('')}</div>` : ''}
         ${sanct.length ? `<div class="affix-lines sanct">${sanct.map(li).join('')}</div>` : ''}
         ${hor.length ? `<div class="affix-lines hor">${hor.map(li).join('')}</div>` : ''}
-        ${gemL.length ? `<div class="affix-lines gems">${gemL.map(l => `<p class="ln gemln"><img src="${gemImg(l.gem.type)}" alt=""><span>${l.html} <em>${esc(l.gem.name)}</em></span></p>`).join('')}</div>` : ''}
+        ${gemL.length ? `<div class="affix-lines gems">${gemL.map(l => `<p class="ln gemln">${l.gem.sp ? '<span class="sp-glyph">&#10022;</span>' : `<img src="${gemImg(l.gem.type)}" alt="">`}<span>${l.html} <em>${esc(l.gem.name)}</em></span></p>`).join('')}</div>` : ''}
         <div class="power">${it.desc}</div>
         ${a2 ? `<div class="power prism"><p class="prism-h">${esc(a2.name)} <span>Kullean Prism</span></p>${a2.desc}</div>` : ''}
         ${g.note ? `<p class="temper">${esc(g.note)}</p>` : ''}
@@ -749,7 +761,7 @@
     if (blockedWhy) return `<button class="tile empty blocked${gearSel === sl.id ? ' sel' : ''} ${extraCls || ''}" data-slot="${sl.id}" aria-label="${esc(sl.name)}: ${esc(blockedWhy)}" title="${esc(blockedWhy)}">
       <i class="rv tl"></i><i class="rv tr"></i><i class="rv bl"></i><i class="rv br"></i>${glyph}<span class="tile-lock" aria-hidden="true"></span><span class="tile-name">${OFFHAND_CLASSES.includes(S.cls) ? 'Two-handed' : 'No off-hand'}</span></button>`;
     const mw = +g.q ? `<span class="tile-mw">${g.q}</span>` : '';
-    const nS = it ? socketMax(sl.id, it, g) : 0; const pips = nS ? `<span class="tile-gems">${Array.from({ length: nS }, (_, i) => { const x = (g.gems || [])[i]; return x ? `<img src="${gemImg(x.type)}" alt="">` : '<i></i>'; }).join('')}</span>` : '';
+    const nS = it ? socketMax(sl.id, it, g) : 0; const pips = nS ? `<span class="tile-gems">${Array.from({ length: nS }, (_, i) => { const x = (g.gems || [])[i]; return x && x.sp != null ? '<i class="sp-pip"></i>' : x ? `<img src="${gemImg(x.type)}" alt="">` : '<i></i>'; }).join('')}</span>` : '';
     return `<button class="tile ${r}${gearSel === sl.id ? ' sel' : ''} ${extraCls || ''}" data-slot="${sl.id}" aria-label="${esc(sl.name)}: ${esc(it ? it.name : 'empty')}">
       <i class="rv tl"></i><i class="rv tr"></i><i class="rv bl"></i><i class="rv br"></i>${mw}${pips}
       ${glyph}<span class="tile-name">${it ? esc(it.name) : esc(sl.name)}</span></button>`;
@@ -814,14 +826,16 @@
     if (!Array.isArray(g.gems)) g.gems = [];
     if (gemSel >= n) gemSel = -1;
     const where = { w: 'weapon', a: 'armor', j: 'jewelry' }[tgt];
-    const sock = i => { const x = g.gems[i]; const d = x && gemDef(x.type, x.grade);
-      return `<button class="gsock${gemSel === i ? ' sel' : ''}${x ? ' full' : ''}" data-gs="${i}" aria-pressed="${gemSel === i}" aria-label="Socket ${i + 1}: ${d ? esc(d.name) : 'empty'}">${x ? `<img src="${gemImg(x.type)}" alt="">` : '<span>+</span>'}</button>`; };
+    const sock = i => { const x = g.gems[i]; const q = spDef(x); const d = !q && x && gemDef(x.type, x.grade);
+      return `<button class="gsock${gemSel === i ? ' sel' : ''}${x ? ' full' : ''}${q ? ' splinter t' + x.tier : ''}" data-gs="${i}" aria-pressed="${gemSel === i}" aria-label="Socket ${i + 1}: ${q ? esc(q.t.name) : d ? esc(d.name) : 'empty'}" title="${q ? esc(q.t.name) : ''}">${q ? '<span class="sp-glyph">&#10022;</span>' : x ? `<img src="${gemImg(x.type)}" alt="">` : '<span>+</span>'}</button>`; };
     const cur = gemSel >= 0 ? g.gems[gemSel] : null;
     const grade = cur ? cur.grade : 9;
     const picker = gemSel < 0 ? '' : `<div class="gempick">
       <div class="gem-grid">${GEM_TYPES.map(t => { const d = gemDef(t, t === 'Mythic' ? 1 : grade); if (!d) return ''; const l = (d[tgt] || [])[0];
         return `<button class="gem-btn${cur && cur.type === t ? ' on' : ''}" data-gt="${t}" aria-pressed="${!!(cur && cur.type === t)}"><img src="${gemImg(t)}" alt=""><b>${esc(t === 'Mythic' ? d.name : t)}</b><small>${l ? esc(gemTpl(l.t).replace('§', D4T.fmtNum(l.v))) : ''}</small></button>`; }).join('')}</div>
-      ${cur && cur.type !== 'Mythic' ? `<div class="frow"><label class="flabel" for="gemGrade">Grade</label><select id="gemGrade">${gemsOf(cur.type).map(d => `<option value="${d.grade}" ${d.grade === cur.grade ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
+      ${cur && cur.type && cur.type !== 'Mythic' ? `<div class="frow"><label class="flabel" for="gemGrade">Grade</label><select id="gemGrade">${gemsOf(cur.type).map(d => `<option value="${d.grade}" ${d.grade === cur.grade ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
+      ${splinters().length ? `<h4 class="sub">Soul Splinters</h4><div class="gem-grid sp-grid">${splinters().map((d, i) => `<button class="gem-btn sp-btn${cur && cur.sp === i ? ' on' : ''}" data-sp="${i}" aria-pressed="${!!(cur && cur.sp === i)}"><span class="sp-glyph">&#10022;</span><b>${esc(d.name.replace(/^Splinter of (the )?/, ''))}</b><small>${esc(d.tiers[cur && cur.sp != null ? cur.tier : 3].sock)}</small></button>`).join('')}</div>
+      ${cur && cur.sp != null && spDef(cur) ? `<div class="frow"><label class="flabel" for="spTier">Tier</label><select id="spTier">${SP_TIER.map((l, i) => `<option value="${i}" ${i === cur.tier ? 'selected' : ''}>${l}</option>`).join('')}</select></div><p class="note"><b>${esc(spDef(cur).t.name)}.</b> ${esc(spDef(cur).text)}</p>` : ''}` : ''}
       ${cur ? '<button class="btn ghost danger" id="gemClear">Empty this socket</button>' : ''}
     </div>`;
     return `<h3>Sockets</h3>
@@ -918,6 +932,8 @@
       if (t === 'Mythic' && SLOTS.some(sl => sl.id !== sel.id && ((S.gear[sl.id] || {}).gems || []).some(x => x && x.type === 'Mythic'))) toast('The Empyrean Eye is already socketed on another item');
       gg.gems[gemSel] = { type: t, grade: t === 'Mythic' ? 1 : (prev && prev.type !== 'Mythic' ? prev.grade : 9) };
       const n = socketMax(sel.id, findItem(gg.item)); const nxt = gg.gems.findIndex((x, k) => k < n && !x); gemSel = nxt >= 0 && !prev ? nxt : gemSel; redo(); });
+    $$('#panel-gear [data-sp]').forEach(b => b.onclick = () => { const gg = G(); if (!Array.isArray(gg.gems)) gg.gems = []; const prev = gg.gems[gemSel]; gg.gems[gemSel] = { sp: +b.dataset.sp, tier: prev && prev.sp != null ? prev.tier : 3 }; redo(); });
+    { const st = $('#spTier'); if (st) st.onchange = () => { const x = G().gems[gemSel]; if (x && x.sp != null) { x.tier = +st.value; redo(); } }; }
     const gr = $('#gemGrade'); if (gr) gr.onchange = () => { const x = G().gems[gemSel]; if (x) { x.grade = +gr.value; redo(); } };
     const gc = $('#gemClear'); if (gc) gc.onclick = () => { G().gems[gemSel] = null; redo(); };
   }
@@ -1381,6 +1397,7 @@
     }
     if (P) (P.legend || []).forEach(l => { proseStats(l.desc).forEach(x => add(x, 'Legendary node: ' + l.name)); powers.push({ name: l.name, kind: 'Legendary node', src: 'Paragon', desc: l.desc }); });
     try { const CP = cdata().powers; Object.keys(CP).forEach(id => { const q = CP[id]; if (!q.passive) return; const r = skillRank(id); if (!(r > 0)) return; const html = powerText(q, null, r, CP); proseStats(html).forEach(x => add(x, 'Passive: ' + q.name)); powers.push({ name: q.name, kind: 'Passive', src: 'Skill tree', desc: html }); }); } catch (e) { /* a passive that fails to render adds nothing */ }
+    try { const fx = splinterFx(); fx.list.forEach(q => powers.push({ name: q.tname, kind: 'Soul Splinter', src: 'Sockets', desc: esc(q.text) })); if (fx.life && splinterOn()) add(fx.life + '% Maximum Life', 'Soul Splinter'); } catch (e) { /* skip */ }
     // mercenaries: the hired one's chosen nodes and signature, and the reinforcement's skill
     try { const ML = data().mercs || []; const MS = mercState(); const main = ML.find(m => m.id === MS.main); const sup = ML.find(m => m.id === MS.sup);
       const stM = tcState().st || {};
@@ -1608,7 +1625,7 @@
         if (!(hi > 0)) return; out.push({ id: 'spd:' + name + '#' + si, n: name, kind: kind === 'Cast' ? 'cs' : 'as', lo, hi, role, what: t.length > 110 ? t.slice(0, 107) + '...' : t });
       });
     };
-    sheetData().powers.forEach(q => scan(q.merc ? q.name + ' (' + q.merc + ')' : q.name, q.desc, /^(Passive|Legendary node|Class mechanic)$/.test(q.kind), q.role));
+    sheetData().powers.filter(q => q.kind !== 'Soul Splinter').forEach(q => scan(q.merc ? q.name + ' (' + q.merc + ')' : q.name, q.desc, /^(Passive|Legendary node|Class mechanic)$/.test(q.kind), q.role));
     (P.mods || []).filter(md => sk.mods.has(md.key)).forEach(md => { try { scan(P.name + ': ' + md.name, powerText(P, md.desc, sk.lvl, C.powers)); } catch (e) { /* skip */ } });
     try { const fa = 'Paladin_Offensive_Aura'; if (S.cls === 'Paladin' && C.powers[fa] && skillRank(fa) > 0) { const fc = skillCtx(fa); const v = (fc.ev(C.powers[fa].sf[6]) || 0) * (fc.ev(C.powers[fa].sf[8]) || 0) * 100; if (v > 0) out.push({ id: 'spd:fanaticism', n: 'Fanaticism Aura', kind: 'as', lo: v, hi: v, what: 'Passive, at full stacks from spending Faith' }); } } catch (e) { /* skip */ }
     return out;
@@ -1637,6 +1654,7 @@
     const sk = skillCtx(T.skill); const P = sk.P; const SB = sk.SB; const M = statModel(); const D = sheetData();
     // mercenary buffs can be switched off as a group from the status row: hired mercenary and reinforcement
     const stM = T.st || {}; const mercOn = role => !role || stM[role] !== false; const mercP = D.powers.filter(q => q.kind === 'Mercenary');
+    const spFx = splinterFx(); const spOn = spFx.list.length > 0 && stM.splinter !== false;
     const mercInfo = ['mercMain', 'mercSup'].map(role => { const l = mercP.filter(q => q.role === role); return l.length ? { role, name: l[0].merc, n: l.length, on: mercOn(role) } : null; }).filter(Boolean);
     let mCsd = 1, mCc = 0, mDot = 1; mercP.filter(q => mercOn(q.role)).forEach(q => { const t = strip(q.desc); let x = t.match(/([\d.]+)%\s*\[x\] increased Critical Strike Damage/); if (x) mCsd *= 1 + x[1] / 100; x = t.match(/([\d.]+)%\s*\[\+\] Critical Strike Chance/); if (x) mCc += +x[1]; x = t.match(/([\d.]+)%\s*\[x\] increased Damage Over Time/); if (x) mDot *= 1 + x[1] / 100; });
     const pays = payloadList(T.skill); const pay = pays.find(x => x.k === T.pay) || (/Attack Speed further increases this damage/.test(sk.P.desc || '') && pays.find(x => /PULS/i.test(x.k))) || pays.slice().sort((a, b) => b.v - a.v)[0];
@@ -1680,7 +1698,7 @@
     const xLo = xS * prod(xGear.filter(x => x.on), x => x.lo), xHi = xS * prod(xGear.filter(x => x.on), x => x.hi), xMid = xS * prod(xGear.filter(x => x.on), x => (x.lo + x.hi) / 2);
     // crit and vulnerable
     // [+] Critical Strike and Vulnerable Damage join the additive pool on hits that qualify; the built-in x1.5 and x1.2 are their own multipliers
-    const cc = Math.min(100, (M.csc ? M.csc.v : 0) + SB.csc + mCc); const csdAdd = (M.csd ? M.csd.v : 0) + SB.csd; const csdX = M.csd ? M.csd.x : 0;
+    const cc = spOn && spFx.noCrit ? 0 : Math.min(100, (M.csc ? M.csc.v : 0) + SB.csc + mCc + (spOn ? spFx.cc : 0)); const csdAdd = (M.csd ? M.csd.v : 0) + SB.csd; const csdX = M.csd ? M.csd.x : 0;
     const critMult = 1.5 * (1 + csdX / 100) * mCsd;
     const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100);
     const monDR = 1 - ((data().scaling && (data().scaling.levels.find(l => l.l === MON_LEVEL) || {}).dr) || 0);
@@ -1688,7 +1706,7 @@
     const wd = +T.wd || 0;
     // attack speed: two separate caps of 100%. "Attack Speed" sources fill the first, "Cast Speed" sources fill the second.
     const spd = speedSources(sk).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) })); const spdSum = k => spd.filter(x => x.kind === k && x.on).reduce((a, x) => a + (x.lo + x.hi) / 2, 0);
-    const as1 = Math.max(0, Math.min(100, (SB.as || 0) + spdSum('as'))); const as2 = Math.max(0, Math.min(100, (SB.cs || 0) + spdSum('cs'))); const asTotal = as1 + as2;
+    const as1 = Math.max(0, Math.min(100, (SB.as || 0) + spdSum('as') + (spOn ? spFx.as : 0))); const as2 = Math.max(0, Math.min(100, (SB.cs || 0) + spdSum('cs'))); const asTotal = as1 + as2;
     const aps = (+T.ws || 0) * (1 + asTotal / 100);
     // skills only speed up at set animation lengths (frames at 60 a second); between two steps extra attack speed does nothing
     const bp = AS_FRAMES[P.name]; let frames = 0, nextAps = 0; if (bp && aps > 0) { for (let i = 0; i < bp.length; i += 2) { if (bp[i + 1] <= aps + 1e-9) frames = bp[i]; else { nextAps = bp[i + 1]; break; } } if (!frames) frames = bp[0]; }
@@ -1697,7 +1715,7 @@
     if (pulse) { const m = (P.desc || '').match(/every \{c_number\}\{SF_(\d+)\}\{\/c\} seconds/); pulseEvery = isDawn ? 1 : m && +P.sf[+m[1]] > 0 ? +P.sf[+m[1]] : 1; }
     const asDmg = pulse ? 1 + asTotal / 100 : 1;
     const hps = pulse ? 1 / pulseEvery : frames ? 60 / frames : aps;
-    const dawnX = isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1;
+    const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = wd * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
       const A0 = addAlways + (eliteOn ? addElite : 0) + (dot ? dotAdd : 0); const p = dot ? 0 : cc / 100; const cm = dot ? 1 : critMult; const roll = dot || isDawn ? 0 : 0.1;
@@ -1716,7 +1734,7 @@
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
-    return { mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -1731,7 +1749,7 @@
         <h3>Status on the hit</h3>
         <div class="chips">${TC_STATES.map(([k, l]) => { const extra = k === 'crit' ? `x${f(R.critMult, 2)}` : k === 'vuln' ? `x${f(R.vulnMult, 2)}` : k === 'op' ? `+${f(R.opPer, 1)}% a stack` : k === 'berserk' ? '+25%' : R.cond[k] ? `+${f(R.cond[k].reduce((a, x) => a + x.v, 0), 1)}%` : '';
           const none = !extra && k !== 'op';
-          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Every damage, crit and speed buff ${esc(m.name)} gives you, on or off together"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}</div>
+          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Every damage, crit and speed buff ${esc(m.name)} gives you, on or off together"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}${R.spFx.list.length ? `<label class="chip merc${R.spOn ? ' on' : ''}" title="${esc(R.spFx.list.map(q => q.tname + ': ' + q.text).join(' | '))}"><input type="checkbox" data-st="splinter" ${R.spOn ? 'checked' : ''}><span>Soul Splinters</span><small>${R.spFx.list.length} socketed${R.spFx.x > 1 ? ', x' + R.spFx.x.toFixed(2) + ' damage' : ''}</small></label>` : ''}</div>
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}
         <p class="note">Tick what is true for the hit. The Selected column below shows that hit with mid rolls, next to the same hit with nothing ticked. Ticked conditions also feed Expected. Overpower works the Lord of Hatred way: each stack adds 15% additive damage for 4 seconds, up to 4 stacks unless a power such as the Tidal aspect raises the limit. Your Overpower Damage bonus raises the per-stack amount, and its [x] lines multiply on top.</p>
       </section>
@@ -2696,7 +2714,8 @@
     const mercSt = tcState().st || {}; const mercDR = []; sheetData().powers.filter(q => q.kind === 'Mercenary').forEach(q => { const t = strip(q.desc); const m = t.match(/Damage Reduction[^.]*?up to ([\d.]+)%/) || t.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*Damage Reduction/) || t.match(/deal ([\d.]+)%\s*(?:\[[x+]\])?\s*reduced damage/) || t.match(/reducing their damage dealt by ([\d.]+)%/);
       if (m && +m[1] > 0) { const id = q.role + ':' + q.name; mercDR.push({ id, v: +m[1], name: q.name, merc: q.merc, role: q.role, on: (T.mdr || {})[id] !== false && mercSt[q.role] !== false }); } });
     const mercInfo = ['mercMain', 'mercSup'].map(role => { const l = sheetData().powers.filter(q => q.kind === 'Mercenary' && q.role === role); return l.length ? { role, name: l[0].merc, n: l.length, on: mercSt[role] !== false } : null; }).filter(Boolean);
-    const drParts = (M.dr ? M.dr.parts : []).concat(mercDR.filter(x => x.on).map(x => ({ v: x.v, src: x.name + ' (' + x.merc + ')' }))); const drMul = drParts.reduce((k, p) => k * (1 - Math.min(100, p.v) / 100), 1);
+    const spFx = splinterFx(); const spOn = spFx.list.length > 0 && mercSt.splinter !== false;
+    const drParts = (M.dr ? M.dr.parts : []).concat(spOn && spFx.dr ? [{ v: spFx.dr, src: 'Splinter of Pain' }] : []).concat(spOn && spFx.taken ? [{ v: -spFx.taken, src: 'Splinter of the Black Soulstone, damage taken' }] : []).concat(mercDR.filter(x => x.on).map(x => ({ v: x.v, src: x.name + ' (' + x.merc + ')' }))); const drMul = drParts.reduce((k, p) => k * (1 - Math.min(100, p.v) / 100), 1);
     const block = Math.min(100, M.block ? M.block.v : 0) / 100, blockR = Math.min(80, (M.blockr ? M.blockr.v : 0)) / 100;
     const dodge = Math.min(100, M.dodge ? M.dodge.v : 0) / 100;
     // HIT_CAL: measured in game on 14 Nov 2026. Two Fallen basic hits on Torment I each took 783 Life from a level 70 Paladin whose own Toughness figure gives 70.18% reduction: exactly twice what the file values alone predict.
@@ -2737,7 +2756,7 @@
       else if (n === 'All Resistance') e = mixEhp(life, armor, v, 0);
       else e = mixEhp(life, armor, 0, v / 100);
       return { n, d, gain: now ? e / now - 1 : 0 }; }).sort((a, b) => b.gain - a.gain);
-    return { mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    return { spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
   }
   function renderDefense() {
     invalidate();
@@ -2792,6 +2811,7 @@
           <label class="chip${T.block ? ' on' : ''}"><input type="checkbox" data-df="block" ${T.block ? 'checked' : ''}><span>Count block</span><small>${pct(R.block)} x ${pct(R.blockR)}</small></label>
           <label class="chip${T.dodge ? ' on' : ''}"><input type="checkbox" data-df="dodge" ${T.dodge ? 'checked' : ''}><span>Count dodge</span><small>${pct(R.dodge)}</small></label>
           ${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" title="Everything ${esc(m.name)} gives you, on or off together. The same switch as on Damage Theory Craft."><input type="checkbox" data-dfmerc="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}
+          ${R.spFx.list.length ? `<label class="chip merc${R.spOn ? ' on' : ''}" title="${esc(R.spFx.list.map(q => q.tname + ': ' + q.text).join(' | '))}"><input type="checkbox" data-dfmerc="splinter" ${R.spOn ? 'checked' : ''}><span>Soul Splinters</span><small>${R.spFx.list.length} socketed</small></label>` : ''}
           ${R.mercDR.filter(x => R.mercInfo.some(m => m.role === x.role && m.on)).map(x => `<label class="chip merc${x.on ? ' on' : ''}" title="${esc(x.merc)}, ${x.role === 'mercMain' ? 'hired mercenary' : 'reinforcement'}. Counted at its full value."><input type="checkbox" data-dfm="${esc(x.id)}" ${x.on ? 'checked' : ''}><span>${esc(x.merc)}: ${esc(x.name)}</span><small>${f(x.v, 0)}% less</small></label>`).join('')}
         </div>
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}

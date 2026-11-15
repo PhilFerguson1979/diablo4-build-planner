@@ -1434,3 +1434,16 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .pastebox b { font: 600 16px var(--display); color: #f0d9a0; } .pastebox span { font-size: 13.5px; color: var(--mute); }
 .pastebox:hover, .pastebox:focus, .pastebox.armed { border-style: solid; border-color: #f0d9a0; background: rgba(214, 162, 58, .12); }
 .pastebox.armed b::after { content: '  ready, press Ctrl+V'; font: 500 13px var(--body); color: #8fd07a; }
+/* soul splinters in sockets */
+.sp-glyph { font-size: 22px; line-height: 1; color: #c9b3f0; } .gsock.splinter { border-color: #8f7cb0; background: radial-gradient(circle, #2c2140, #0f0b16); }
+.gsock.splinter.t0 .sp-glyph { color: #6c8bd0; } .gsock.splinter.t1 .sp-glyph { color: #f2d23c; } .gsock.splinter.t2 .sp-glyph { color: #ff8a3c; } .gsock.splinter.t3 .sp-glyph { color: #f0c060; }
+.sp-btn .sp-glyph { display: block; font-size: 26px; margin-bottom: 2px; } .gempick h4.sub { margin: 14px 0 8px; }
+/* soul splinters in sockets */
+.sp-glyph { font-size: 22px; line-height: 1; color: #c9b3f0; } .gsock.splinter { border-color: #8f7cb0; background: radial-gradient(circle, #2c2140, #0f0b16); }
+.gsock.splinter.t0 .sp-glyph { color: #6c8bd0; } .gsock.splinter.t1 .sp-glyph { color: #f2d23c; } .gsock.splinter.t2 .sp-glyph { color: #ff8a3c; } .gsock.splinter.t3 .sp-glyph { color: #f0c060; }
+.sp-btn .sp-glyph { display: block; font-size: 26px; margin-bottom: 2px; } .gempick h4.sub { margin: 14px 0 8px; }
+.tile-gems i.sp-pip { background: #b08ae6; border-color: #e2d2ff; box-shadow: 0 0 6px #b08ae6; }
+/* build name: use the whole width beside the buttons and shrink the type before cutting the name off */
+.topbar { flex-wrap: wrap; } .title-block { flex: 1 1 420px; min-width: 0; }
+.build-name { width: 100%; max-width: 100%; field-sizing: content; min-width: 12ch; text-overflow: ellipsis; font-size: clamp(22px, 2.3vw, 36px); }
+.top-actions { flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; }
