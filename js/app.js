@@ -68,7 +68,22 @@
     // Confirmed in game: the line never rolls above 50 Thorns.
     ((D.gear || {}).sealAffixes || []).forEach(a => { if (a.id === 'Talisman_SealAffix_Set_Paladin_01_Thorns' && a.html) { const sc = flatScale(D, 1); a.t = '+§ Thorns'; a.v = Math.round(sc); a.lo = Math.round(0.8 * sc); delete a.html; } });
   }
-  Object.keys(ALL).forEach(k => patchFlat(ALL[k]));
+  // ---------- numbers the game text hides behind a typo ----------
+  // Fourteen strings in the game files have a broken token ([Affix."Static Value 1] with no closing quote), which the data build read as 0.
+  // The real numbers sit in each power's static values. Checked in game on Cathan's Righteous Will: the 5 piece bonus lasts 15 seconds.
+  const ZERO_BY_NAME = { 'Condemnation': ['5', '1.5'], "El'Druin, Sword of Justice": ['250 times your weapon damage as', '100'], 'Aspect of Excellence': ['8'], 'Aspect of Entrapment': ['4'] };
+  const ZERO_BY_ID = { Talisman_SealAffix_Legendary_Wisdom_02: ['15'], Talisman_SealAffix_Normal_Renew_01: ['5'] };
+  const ZERO_SETS = { 'Talisman_Pala_01:5': ['15'], 'Talisman_Pala_04:3': ['30%'] };
+  const zeroFix = (h, vals) => { let i = 0; return String(h || '').replace(/<b class="num">0%?<\/b>/g, m => i < vals.length ? `<b class="num">${vals[i++]}</b>` : m); };
+  function patchZeros(D) {
+    if (!D || D._zeros) return; D._zeros = 1;
+    [...(D.aspects || []), ...(D.uniques || [])].forEach(a => { const v = ZERO_BY_NAME[a.name]; if (v && a.desc) a.desc = zeroFix(a.desc, v); });
+    (D.sets || []).forEach(st => (st.tiers || []).forEach(t => { const v = ZERO_SETS[st.id + ':' + t.n]; if (v) t.desc = zeroFix(t.desc, v); }));
+    ((D.gear || {}).sealAffixes || []).forEach(a => { if (!a.html) return; const v = ZERO_BY_ID[a.id]; if (v) a.html = zeroFix(a.html, v);
+      // set and category damage lines on seals take their roll from a shared formula the data build skipped: 7 to 10%[x] at seal item power, 7 to 14%[x] for Basic Skill Damage
+      a.html = a.html.replace(/<b class="num">0%\[x\]<\/b>/, `<b class="num">[7 – ${/_BasicSkillDamage$/.test(a.id) && /Generic/.test(a.id) ? 14 : 10}]%[x]</b>`); });
+  }
+  Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); });
 
   // older saves carried a typed-in gear CDR row; the build now supplies that itself
   function migrate(st) { try { st.calc.cd.cdr = (st.calc.cd.cdr || []).filter(r => r.n !== 'Gear and paragon CDR'); } catch (e) { /* ignore */ } return st; }
