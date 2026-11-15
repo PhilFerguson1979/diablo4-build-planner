@@ -1455,3 +1455,13 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .topbar { flex-wrap: wrap; } .title-block { flex: 1 1 420px; min-width: 0; }
 .build-name { width: 100%; max-width: 100%; field-sizing: content; min-width: 12ch; text-overflow: ellipsis; font-size: clamp(22px, 2.3vw, 36px); }
 .top-actions { flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; }
+
+/* compare: the power question and the aspects tried on a drop */
+.cmp-power { margin: 6px 0 0; color: #e8d7ae; }
+.cmp-asp { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; align-items: stretch; }
+.cmp-asp > span { flex-basis: 100%; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: #a89a82; }
+.cmp-aspb { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 8px 12px; background: rgba(0,0,0,.35); border: 1px solid rgba(138,106,54,.5); color: #e6dccb; border-radius: 4px; font: inherit; min-width: 180px; }
+.cmp-aspb:hover { border-color: #d6a23a; }
+.cmp-aspb.on { border-color: #d6a23a; box-shadow: inset 0 0 0 1px rgba(214,162,58,.5); }
+.cmp-aspb small { color: #a89a82; font-size: 13px; }
+.cmp-asp .note { flex-basis: 100%; }

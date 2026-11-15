@@ -1670,6 +1670,36 @@
     return order.map((k, i) => ({ k, v: (sk.ev(P.payloads[k]) || 0) * 100, inTip: i < order.length })).filter(x => x.v > 0);
   }
   // [x] powers on equipped aspects, uniques and charms: "[20 – 60]%[x]" gives a low and high roll
+  // ---------- what a power is tied to ----------
+  // A power's sentence often names what it needs: one skill, a kind of skill, an Oath, a two-handed weapon, an element. If the build does not have that, the power does nothing for it.
+  const ELEMS = ['Physical', 'Fire', 'Lightning', 'Cold', 'Holy', 'Poison', 'Shadow'];
+  const reEsc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let SCOPE_CACHE = { k: '', names: [], cats: null };
+  function scopeCtx() { const k = S.cls + S.ver; if (SCOPE_CACHE.k === k) return SCOPE_CACHE; const pw = Object.values(cdata().powers); const cats = new Set(Object.keys(CAT_ALIAS));
+    pw.forEach(q => [q.tag, ...(q.tags || [])].forEach(t => { if (t) cats.add(t); })); ['Basic', 'Core', 'Ultimate'].forEach(t => cats.add(t));
+    return (SCOPE_CACHE = { k, names: pw.map(q => q.name).filter(nm => nm && nm.length > 3), cats }); }
+  function powerScope(pre, what) {
+    const X = scopeCtx(); const sent = pre + ' ' + what;
+    const named = X.names.filter(nm => new RegExp('\\b' + reEsc(nm) + '\\b(?! Oath)').test(sent)); if (/\bArbiter\b/.test(sent) && !named.includes('Arbiter of Justice') && X.names.includes('Arbiter of Justice')) named.push('Arbiter of Justice');
+    const own = named.find(nm => pre.startsWith(nm + ' deals') || pre.startsWith('Your ' + nm + ' deals') || pre.startsWith(nm + "'s damage") || pre.startsWith(nm + ' gains')) || '';
+    let cat = ''; const cm = sent.match(/\b((?:[A-Z][a-z]+ )?[A-Z][a-z]+) Skills?\b/); if (cm) { const w = cm[1].split(' ').filter(x => !/^(Your|All|Other|Non|Casting|Cast|Using|When|While|After|Each|Every|The|Those|These|Their)$/.test(x)); cat = w.join(' '); if (!X.cats.has(cat)) cat = X.cats.has(w[w.length - 1] || '') ? w[w.length - 1] : ''; }
+    const strict = !!cat && (new RegExp('^(?:Your )?' + reEsc(cat) + ' Skills? (?:deal|gain|have)\\b').test(pre) || new RegExp(reEsc(cat) + ' Skills? damage', 'i').test(sent));
+    const elems = /damage (?:is|are) increased by$/i.test(pre) && !/\ball damage\b/i.test(pre) ? ELEMS.filter(e => new RegExp('\\b' + e + '\\b').test(pre)) : [];
+    return { own, named, cat, strict, oath: (sent.match(/\b(Zealot|Judicator|Juggernaut|Disciple) Oath\b/) || [])[1] || '', twoH: /Two-Handed/.test(sent), chan: /\bchannel/i.test(sent), judge: /\bJudg(?:e|ing|ed|ement)\b/.test(sent), elems };
+  }
+  // '' when the build meets what the power needs, otherwise the reason it is left out. Pm is the skill being measured, when there is one.
+  function scopeMiss(sc, Pm, elem) {
+    if (!sc) return ''; const C = cdata(); let unl = []; try { unl = unlockedSkills().map(id => C.powers[id]).filter(Boolean); } catch (e) { return ''; }
+    if (sc.own && Pm && sc.own !== Pm.name) return 'only raises ' + sc.own;
+    if (sc.named.length && !sc.named.some(nm => unl.some(q => q.name === nm) || (Pm && Pm.name === nm))) return 'needs ' + sc.named[0];
+    if (sc.cat) { const has = unl.some(q => skillIs(q, sc.cat)) || (Pm && skillIs(Pm, sc.cat)); if (sc.strict && Pm ? !skillIs(Pm, sc.cat) : !has) return sc.strict && Pm ? 'only raises ' + sc.cat + ' Skills' : 'needs a ' + sc.cat + ' Skill'; }
+    if (sc.oath && !mechLines().some(l => l.name.includes(sc.oath))) return 'needs the ' + sc.oath + ' Oath';
+    if (sc.twoH && !twoHanded()) return 'needs a two-handed weapon';
+    if (sc.judge && !mechLines().some(l => /Judicator/.test(l.name)) && !unl.some(q => /Judg/.test(q.desc || '')) && !(Pm && Pm.name === 'Judgement')) return 'needs Judgement';
+    if (sc.chan && !unl.some(q => skillIs(q, 'Channeled')) && !(Pm && skillIs(Pm, 'Channeled'))) return 'needs a Channeled Skill';
+    if (sc.elems.length && elem && !sc.elems.includes(elem)) return 'only raises ' + sc.elems.join(' and ') + ' damage';
+    return '';
+  }
   function gearMultipliers() {
     const out = []; const SK = Object.values(cdata().powers).map(q => q.name).filter(Boolean);
     const scan = (name, html, role) => {
@@ -1679,13 +1709,13 @@
         // the start of the sentence says what the number belongs to
         const pre = t.slice(0, m.index).split(/\.(?=\s|[A-Z])/).pop().trim();
         // "increase the damage they take from you by 80%[x] until they die": the word damage sits before the number. Only read this way for Judgement text.
-        const viaBy = /Judg/.test(pre) && /damage[^.]*\bby$/i.test(pre) && !/reduc|less/i.test(pre);
+        const viaBy = (/Judg/.test(pre) && /damage[^.]*\bby$/i.test(pre) && !/reduc|less/i.test(pre)) || /damage (?:is|are) increased by$/i.test(pre);
         if (!/damage/i.test(what) && !viaBy) continue;
         const jud = /Judgement(?:'s explosion)? deals|Judgement's explosion|your Judgement damage|Judgement only hits one enemy/.test(pre);
-        const skill = SK.find(nm => pre.startsWith(nm + ' deals') || pre.startsWith(nm + "'s ") || pre.startsWith(nm + ' gains') || pre.startsWith(nm + ' has'));
+        const scope = role ? null : powerScope(pre, m[3]); const skill = scope ? scope.own : '';
         if (viaBy) { const times = what.match(/up to (\d+) times/); if (times) hi *= +times[1]; what = pre.slice(-70) + (what ? ' ... ' + what : ''); }
         else if (/only hits one enemy/.test(pre)) what = 'when Judgement hits only one enemy';
-        out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '' }); }
+        out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '', scope }); }
     };
     SLOTS.forEach(sl => { const g = S.gear[sl.id] || {}; const it = findItem(g.item); if (it) scan(it.name, it.desc); const a2 = g.aspect2 && data().aspects.find(a => a.id === g.aspect2); if (a2) scan(a2.name, a2.desc); });
     sockets().forEach(x => { const it = socketItem(x); if (it && it.desc) scan(it.name, it.desc); });
@@ -1810,8 +1840,11 @@
     // damage over time: its own [+] stat joins the pool, its "Multiplier" affixes add together, and it cannot crit or roll high or low
     let dotAdd = 0, dotSum = 0, dotOwn = 1; if (dot) for (const e of D.stats) { if (!/Damage [Oo]ver Time( Multiplier)?$/.test(e.key) && !new RegExp('^\\+?§%( \\[x\\])? ' + dot.kind + ' Damage$').test(e.key)) continue; const v = e.parts.reduce((a, x) => a + x.v, 0); if (!e.mult) dotAdd += v; else if (/Multiplier$/.test(e.key)) dotSum += v; else dotOwn *= 1 + e.v / 100; }
     const dotX = (1 + dotSum / 100) * dotOwn * (dot ? mDot : 1);
-    // powers that only raise Judgement stay off every other line, and powers that name another skill stay off the Judgement line
-    const xGear = gearMultipliers().filter(x => isJudge ? !x.skill : !x.jud).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
+    // powers that only raise Judgement stay off every other line, and a power that names one skill ("Blessed Hammer deals...") counts on that skill alone
+    // Retribution, the Thorns pulse, is a Juggernaut Skill, so Juggernaut bonuses reach that line
+    const Pm = isJudge ? Pd : isThorns && payD.hit ? { id: '__retribution', name: 'Retribution', dmg: 'Physical', tag: '', tags: ['Juggernaut'], mods: [], desc: '' } : P;
+    const xLeft = [];
+    const xGear = gearMultipliers().filter(x => { if (isJudge ? x.skill : x.jud) return false; const why = isJudge && x.jud ? '' : scopeMiss(x.scope, Pm, Pd.dmg); if (why) xLeft.push({ n: x.n, why }); return !why; }).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
     if (isJudge) { try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => { const mm = strip(powerText(q, md.desc, c2.lvl, C.powers)).match(/Judgement damage by ([\d.]+)%\s*\[x\]/); if (mm) { const xid = 'jud:' + id + ':' + md.key; xGear.push({ id: xid, n: q.name + ': ' + md.name, lo: +mm[1], hi: +mm[1], what: 'Judgement damage for a few seconds after a detonation', on: !T.off[xid] }); } }); }); } catch (e) { /* skip */ } }
     const prod = (l, f) => l.reduce((a, x) => a * (1 + f(x) / 100), 1);
     const xS = (1 + xSumEl / 100) * Object.values(xSumBy).reduce((a, v) => a * (1 + v / 100), 1) * xOwn;
@@ -1856,7 +1889,7 @@
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
-    return { thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -1914,7 +1947,8 @@
           <details class="bucket-d"><summary><b>[x] from stats</b><span>x${f(R.xLo, 3)}</span></summary>${list(R.xStat)}</details>
           <details class="bucket-d" open><summary><b>[x] from aspects and uniques</b><span>x${f(R.xMid / (R.xS || 1), 3)} expected</span></summary>
             ${R.xGear.length ? R.xGear.map(x => `<label class="check xg"><input type="checkbox" data-xoff="${esc(x.id)}" ${x.on ? 'checked' : ''}> <span><b>${esc(x.n)}</b> ${x.lo === x.hi ? f(x.lo, 1) : f(x.lo, 1) + ' to ' + f(x.hi, 1)}%[x] <em>${esc(x.what)}</em></span></label>`).join('') : '<p class="note">No [x] powers on your equipped aspects or uniques yet.</p>'}
-            <p class="note">Untick a power when its condition won't be met in your fight.</p></details>
+            <p class="note">Untick a power when its condition won't be met in your fight.</p>
+           ${R.xLeft.length ? `<p class="note"><b>Left out of this line:</b> ${R.xLeft.map(x => esc(x.n) + ' (' + esc(x.why) + ')').join('; ')}.</p>` : ''}</details>
           ${R.thParts.length ? `<details class="bucket-d" ${R.isThorns ? 'open' : ''}><summary><b>Thorns sources</b><span>${f(R.thornsAuto)} from the build</span></summary>
             ${R.thParts.map(x => `<label class="check xg"><input type="checkbox" data-xoff="${esc(x.id)}" ${x.on ? 'checked' : ''}> <span><b>${esc(x.n)}</b> +${f(x.v, x.pct ? 1 : 0)}${x.pct ? '%' : ''} Thorns <em>${esc(x.what)}</em></span></label>`).join('')}
             <p class="note">Flat amounts add up first, then the percentages raise the total. Untick a source you will not have up. A number typed in the Thorns box replaces all of this.</p></details>` : ''}
@@ -2205,10 +2239,49 @@
     const newShots = B.shots.filter(s => !A.shots.includes(s)), savedShots = A.shots.filter(s => !B.shots.includes(s));
     if (newShots.length) warn.push(`${newShots.slice(0, 2).join(' and ')} would now kill you in one hit.`);
     const good = savedShots.length ? [`You now survive ${savedShots.slice(0, 2).join(' and ')}.`] : [];
-    return { dD, dE, tag, cls, call, warn, good };
+    const act = cls === 'up' ? 'Keep it' : cls === 'down' ? 'Salvage it' : 'Your call';
+    return { dD, dE, tag, cls, call, warn, good, act };
   }
   // ---------- compare a drop against what is in the slot ----------
   const clone = o => JSON.parse(JSON.stringify(o || {}));
+  // ---------- which power belongs on a drop: your aspect, another aspect, or a unique's own ----------
+  // where each kind of aspect can be imprinted
+  const ASPECT_SLOTS = { Offensive: ['weapon', 'gloves', 'ring', 'amulet'], Defensive: ['helm', 'chest', 'pants', 'offhand', 'amulet'], Utility: ['helm', 'chest', 'gloves', 'boots', 'offhand', 'amulet'], Resource: ['ring', 'amulet'], Movement: ['boots', 'amulet'] };
+  const aspectFits = (a, slotId) => (ASPECT_SLOTS[a.cat] || []).includes(slotKind(slotId));
+  // only powers the maths can see are worth trying: a multiplier, or something for Life, Armor, Thorns, speed or crit
+  const ASPECT_SEEN = /\[x\]|Damage Reduction|less damage|Armor|Maximum Life|Thorns|Attack Speed|Critical Strike|Vulnerable Damage|Overpower Damage/;
+  let ASP_CACHE = { k: '', v: {} };
+  // every aspect that fits the slot, tried on this item and ranked for the build as it stands. ref is the build with the item it would replace.
+  function bestAspects(slotId, g, ref) {
+    const k0 = JSON.stringify(Object.assign({}, S, { gear: Object.assign({}, S.gear, { [slotId]: null }), cmp: null })); if (ASP_CACHE.k !== k0) ASP_CACHE = { k: k0, v: {} };
+    const ck = slotId + '|' + JSON.stringify([g.affixes, g.tempers, g.q, g.gems, g.cap, g.mythic, g.wtype]) + '|' + (ref ? Math.round(ref.dmg || 0) + ':' + Math.round(ref.ehp || 0) : ''); if (ASP_CACHE.v[ck]) return ASP_CACHE.v[ck];
+    const worn = new Set(SLOTS.filter(sl => sl.id !== slotId).map(sl => { const it = findItem((S.gear[sl.id] || {}).item); return it && !it.kind ? it.name : ''; }).filter(Boolean));
+    const seen = new Set(); const out = [];
+    data().aspects.forEach(a => { if (!(a.classes || []).includes(S.cls) || !aspectFits(a, slotId) || worn.has(a.name) || seen.has(a.name) || !ASPECT_SEEN.test(strip(a.desc))) return; seen.add(a.name);
+      const E = withGear(slotId, Object.assign(clone(g), { item: { t: 'aspect', id: a.id } }), evalBuild); const dD = ref ? pctCh(ref.dmg, E.dmg) : null, dE = ref ? pctCh(ref.ehp, E.ehp) : null;
+      out.push({ a, E, dD, dE, s: ref ? scoreOf(dD, dE) : (E.dmg || 0) }); });
+    out.sort((x, y) => y.s - x.s); return (ASP_CACHE.v[ck] = out);
+  }
+  // what the drop looks like once you have made it yours, so both sides are judged like for like. Call it while the old item is still in the slot.
+  function dropPlan(slotId, g, old) {
+    const oldIt = old && findItem(old.item), it = findItem(g.item); const leg = !it || !it.kind;
+    // legendary for legendary: your aspect, temper, quality and gems go on the drop, and only its affixes are judged
+    if (leg && oldIt && !oldIt.kind) { const ng = clone(old); ng.affixes = g.affixes; ng.hor = null; delete ng.cap; if (g.cap != null) ng.cap = g.cap; return { g: ng, how: 'mirror', aspect: oldIt.name }; }
+    // legendary for a unique: there is no aspect to carry over, so the drop gets the best aspect for the build and that is set against the unique's power
+    if (leg && oldIt && oldIt.kind) { const ng = clone(g); if (!(ng.tempers || []).length && (old.tempers || []).length) ng.tempers = clone(old.tempers); ng.q = Math.max(ng.q || 0, old.q || 0); if (!(ng.gems || []).length && (old.gems || []).length) ng.gems = clone(old.gems);
+      const best = bestAspects(slotId, ng, evalBuild()); if (best.length) ng.item = { t: 'aspect', id: best[0].a.id }; return { g: ng, how: 'aspect', best, unique: oldIt.name, own: it ? it.name : '' }; }
+    return { g, how: oldIt ? (oldIt.kind ? 'uniques' : 'unique') : 'empty', aspect: oldIt && !oldIt.kind ? oldIt.name : '', unique: it ? it.name : '' };
+  }
+  // one line on the power question: keep the aspect, switch aspect, or take the unique's power
+  function powerCall(P, V) {
+    if (!P) return '';
+    if (P.how === 'mirror') return `Your ${P.aspect} is assumed on the drop, so this is the affixes alone.`;
+    if (P.how === 'aspect') { const top = P.best && P.best[0]; if (!top) return `No aspect the planner can measure fits this slot, so ${P.unique}'s power stands.`;
+      return V.cls === 'up' ? `An aspect beats ${P.unique}'s power here: imprint ${top.a.name} on this drop.` : V.cls === 'down' ? `${P.unique}'s power is worth more than any aspect on this drop. The best one for your build is ${top.a.name}, and it still falls short.` : `It is close between ${P.unique}'s power and ${top.a.name} on this drop.`; }
+    if (P.how === 'unique') return V.cls === 'up' ? `${P.unique}'s power and affixes beat your ${P.aspect} item.` : V.cls === 'down' ? `Your ${P.aspect} item is worth more than ${P.unique}'s power on this build.` : `It is close between ${P.unique}'s power and your ${P.aspect}.`;
+    if (P.how === 'uniques') return 'Both are uniques, so each is judged whole, power included.';
+    return '';
+  }
   function startCompare(slotId) {
     const g = S.gear[slotId]; if (!g || !g.item) return; const it = findItem(g.item);
     S.cmp = { slot: slotId, base: clone(g) };
@@ -2226,18 +2299,25 @@
     const gained = newA.filter(a => !oldA.some(o => o.id === a.id)).map(lineOf).filter(Boolean), lost = oldA.filter(a => !newA.some(o => o.id === a.id)).map(lineOf).filter(Boolean);
     const baseIt = findItem(C.base.item); const legend = !!it && !it.kind && !!baseIt && !baseIt.kind;
     const none = !it || (legend && !newA.length);
+    // the power question: which case this is, and for a legendary replacing a unique, which aspect does best on it
+    const forUnique = !!it && !it.kind && !!baseIt && !!baseIt.kind;
+    const best = forUnique && !none ? bestAspects(sel.id, g, A) : [];
+    const PL = legend ? { how: 'mirror', aspect: baseIt.name } : forUnique ? { how: 'aspect', best, unique: baseIt.name } : it && it.kind && baseIt ? (baseIt.kind ? { how: 'uniques' } : { how: 'unique', unique: it.name, aspect: baseIt.name }) : null;
+    const pCall = none ? '' : powerCall(PL, V); const bestIdx = best.findIndex(x => x.a.id === (g.item || {}).id);
     return `<section class="cmp ${none ? 'side' : V.cls}" aria-live="polite">
       <header><span class="cmp-tag">${none ? 'Enter the drop' : esc(V.tag)}</span><h3>${esc(baseIt ? baseIt.name : sel.name)} against the drop</h3>
         <label class="cmp-focus">Build cares about <select id="cmpFocus">${Object.keys(FOCUS).map(k => `<option value="${k}" ${k === focusOf() ? 'selected' : ''}>${FOCUS[k][0]}</option>`).join('')}</select></label></header>
       ${none ? `<p class="cmp-call">Pick the drop's affixes below and type its rolls. ${legend ? 'Your aspect, temper, quality and gems are carried over, since you would put those on it yourself.' : ''}</p>` : `
       <div class="cmp-nums"><div class="${(V.dD || 0) > 0.05 ? 'pos' : (V.dD || 0) < -0.05 ? 'neg' : ''}"><b>${V.dD == null ? 'No skill' : sgn(V.dD)}</b><span>damage${A.skill ? ` (${esc(A.skill)})` : ''}</span></div>
         <div class="${(V.dE || 0) > 0.05 ? 'pos' : (V.dE || 0) < -0.05 ? 'neg' : ''}"><b>${V.dE == null ? 'No data' : sgn(V.dE)}</b><span>Effective Life</span></div></div>
-      <p class="cmp-call">${esc(V.call)}</p>
+      <p class="cmp-call"><b>${esc(V.act)}.</b> ${esc(V.call)}</p>
+      ${pCall ? `<p class="cmp-power">${esc(pCall)}</p>` : ''}
+      ${best.length ? `<div class="cmp-asp"><span>Best aspects for this drop on your build, against ${esc(baseIt.name)}</span>${best.slice(0, 4).map(x => `<button class="cmp-aspb${x.a.id === (g.item || {}).id ? ' on' : ''}" data-cmpasp="${esc(x.a.id)}"${ttAttr(ttCard(x.a.name, (x.a.cat || 'Aspect').toUpperCase() + ' ASPECT', x.a.desc))}><b>${esc(x.a.name)}</b><small>${x.dD == null ? '' : sgn(x.dD) + ' damage'}${x.dE == null ? '' : ', ' + sgn(x.dE) + ' Effective Life'}</small></button>`).join('')}${bestIdx > 0 ? `<small class="note">The drop is shown with ${esc(it.name)}. Click a better one to try it.</small>` : ''}</div>` : ''}
       ${V.good.map(w => `<p class="cmp-good">${esc(w)}</p>`).join('')}${V.warn.map(w => `<p class="cmp-warn">${esc(w)}</p>`).join('')}
       ${gained.length || lost.length ? `<div class="cmp-diff">${gained.length ? `<div><span>You gain</span>${gained.map(x => `<i class="g">${esc(x)}</i>`).join('')}</div>` : ''}${lost.length ? `<div><span>You lose</span>${lost.map(x => `<i class="l">${esc(x)}</i>`).join('')}</div>` : ''}</div>` : ''}
       ${V.dD == null ? '<p class="note">Take a skill on the Skill tree and pick it on Damage Theory Craft to get a damage number.</p>' : ''}`}
       <div class="cmp-act"><button class="btn" id="cmpKeep" ${none ? 'disabled' : ''}>Keep the drop</button><button class="btn ghost" id="cmpBack">Put the old one back</button></div>
-      ${legend ? '<p class="note">Judged on the affixes only. Aspect, temper, quality and gems are the same on both sides. Effective Life is measured against the monsters picked on Defense Theory Craft.</p>' : '<p class="note">Uniques are compared whole, power included. Effective Life is measured against the monsters picked on Defense Theory Craft.</p>'}
+      ${legend ? '<p class="note">Judged on the affixes only. Aspect, temper, quality and gems are the same on both sides. Effective Life is measured against the monsters picked on Defense Theory Craft.</p>' : forUnique ? '<p class="note">The unique is judged whole, power included. The drop is judged with an aspect imprinted, your temper, quality and gems carried over. Powers count at the middle of their roll with their conditions met; untick any that will not hold on the Theory Craft pages.</p>' : '<p class="note">Uniques are compared whole, power included. Powers count at the middle of their roll with their conditions met. Effective Life is measured against the monsters picked on Defense Theory Craft.</p>'}
     </section>`;
   }
   function wireCompare(sel, redo) {
@@ -2245,6 +2325,7 @@
     const k = $('#cmpKeep'); if (k) k.onclick = () => { delete S.cmp; commit(); redo(); toast('Drop kept'); };
     const b = $('#cmpBack'); if (b) b.onclick = () => { S.gear[S.cmp.slot] = S.cmp.base; delete S.cmp; commit(); redo(); toast('Old item restored'); };
     const f = $('#cmpFocus'); if (f) f.onchange = () => { S.focus = f.value; commit(); redo(); };
+    $$('[data-cmpasp]').forEach(b => b.onclick = () => { const g = S.gear[sel.id]; if (!g) return; g.item = { t: 'aspect', id: b.dataset.cmpasp }; commit(); redo(); });
   }
 
   // ---------- what to upgrade next: the best single affix swap in each slot ----------
@@ -2475,15 +2556,14 @@
       ${M.unplaced.length ? `<p class="cmp-warn">Read but not placed, add by hand if you need them: ${M.unplaced.map(esc).join('; ')}</p>` : ''}
       ${M.notes.map(n => `<p class="cmp-warn">${esc(n)}</p>`).join('')}
       <div class="cmp-act">${curIt && M.item ? `<button class="btn" id="scanCmp">Compare with my ${esc(sl.name.toLowerCase())}</button>` : ''}<button class="btn${curIt && M.item ? ' ghost' : ''}" id="scanEquip" ${M.item ? '' : 'disabled'}>Equip in ${esc(sl.name)}</button><button class="btn ghost" id="scanDrop">Discard</button></div>
-      ${curIt && M.item ? `<p class="note">${legend ? 'Compare keeps your aspect, temper, quality and gems and swaps in only this item\'s affixes, since you would put those on it yourself.' : 'Compare puts the whole item in and shows the difference against what you are wearing.'}</p>` : ''}</section>`;
+      ${curIt && M.item ? `<p class="note">${legend ? 'Compare keeps your aspect, temper, quality and gems and swaps in only this item\'s affixes, since you would put those on it yourself.' : scanned && !scanned.kind && curIt.kind ? 'You wear a unique here, so there is no aspect to carry over. Compare tries every aspect that fits this slot on the drop, keeps the best one for your build, and sets that against ' + esc(curIt.name) + '\'s power.' : 'Compare puts the whole item in, power included, and shows the difference against what you are wearing.'}</p>` : ''}</section>`;
   }
   // ---------- bag check: read a batch of item screenshots and rank them against what is equipped ----------
   let BAG = null;
   function judgeDrop(M) {
     const g = gearFromMatch(M); const it = findItem(g.item); const slots = M.slot === 'ring' ? ['ring1', 'ring2'] : [M.slot]; const base = evalBuild(); let best = null;
-    for (const slot of slots) { const old = S.gear[slot]; const oldIt = old && findItem(old.item); let ng = g;
-      if (it && !it.kind && oldIt && !oldIt.kind) { ng = clone(old); ng.affixes = g.affixes; ng.hor = null; delete ng.cap; if (g.cap != null) ng.cap = g.cap; }
-      const V = verdictOf(base, withGear(slot, ng, evalBuild)); const score = scoreOf(V.dD, V.dE); if (!best || score > best.score) best = { slot, g: ng, V, score, empty: !oldIt }; }
+    for (const slot of slots) { const old = S.gear[slot]; const oldIt = old && findItem(old.item); const plan = dropPlan(slot, g, old); const ng = plan.g;
+      const V = verdictOf(base, withGear(slot, ng, evalBuild)); const score = scoreOf(V.dD, V.dE); if (!best || score > best.score) best = { slot, g: ng, V, score, empty: !oldIt, why: powerCall(plan, V) }; }
     return best;
   }
   async function bagScan(files) {
@@ -2499,10 +2579,10 @@
   function bagHtml() {
     if (!BAG) return '';
     const more = '<div class="pastebox" tabindex="0" data-paste="bag"><b>Paste the next drop here</b><span>Click, then Ctrl+V. It is added to this list.</span></div>';
-    const rows = BAG.rows.map((r, i) => r.err ? `<tr><th>${esc(r.file)}</th><td colspan="4" class="cmp-warn">${esc(r.err)}</td></tr>` : `<tr><th>${esc(r.name)}${r.ga ? ` <small>${r.ga} greater</small>` : ''}</th><td>${esc((SLOTS.find(x => x.id === r.slot) || {}).name || r.slot)}</td><td><b class="verdict ${r.V.cls}">${r.empty ? 'Empty slot' : esc(r.V.tag)}</b></td><td>${r.V.dD == null ? '' : sgn(r.V.dD) + ' damage'}${r.V.dE == null ? '' : ', ' + sgn(r.V.dE) + ' Effective Life'}${r.V.warn.length ? `<br><small class="cmp-warn">${esc(r.V.warn[0])}</small>` : ''}</td><td><button class="btn ghost small" data-bageq="${i}">Equip</button></td></tr>`).join('');
+    const rows = BAG.rows.map((r, i) => r.err ? `<tr><th>${esc(r.file)}</th><td colspan="4" class="cmp-warn">${esc(r.err)}</td></tr>` : `<tr><th>${esc(r.name)}${r.ga ? ` <small>${r.ga} greater</small>` : ''}</th><td>${esc((SLOTS.find(x => x.id === r.slot) || {}).name || r.slot)}</td><td><b class="verdict ${r.V.cls}">${r.empty ? 'Empty slot' : esc(r.V.tag)}</b>${r.empty ? '' : `<br><small>${esc(r.V.act)}</small>`}</td><td>${r.V.dD == null ? '' : sgn(r.V.dD) + ' damage'}${r.V.dE == null ? '' : ', ' + sgn(r.V.dE) + ' Effective Life'}${r.why ? `<br><small>${esc(r.why)}</small>` : ''}${r.V.warn.length ? `<br><small class="cmp-warn">${esc(r.V.warn[0])}</small>` : ''}</td><td><button class="btn ghost small" data-bageq="${i}">Equip</button></td></tr>`).join('');
     return `<section class="scan bag" aria-live="polite"><header><h3>Bag check</h3><span>${BAG.state === 'reading' ? `Reading ${BAG.done + 1} of ${BAG.total}` : `${BAG.rows.length} read, best first`}</span></header>
       ${rows ? `<table class="tc-table"><thead><tr><th>Item</th><th>Slot</th><th>Verdict</th><th>Against what you wear</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : ''}
-      <p class="note">Each item is judged on its own against your current gear, using the focus you set for comparisons. Legendaries are judged on their affixes only.</p>
+      <p class="note">Each item is judged on its own against your current gear, using the focus you set for comparisons. A legendary takes your aspect when you wear a legendary in that slot. When you wear a unique there, it is given the best aspect for your build and set against the unique's power. Uniques are judged whole.</p>
       ${BAG.state === 'done' ? more : ''}<div class="cmp-act"><button class="btn ghost" id="bagClear">Close bag check</button></div></section>`;
   }
   document.addEventListener('click', e => { const t = e.target.closest ? e.target : null; if (!t) return;
@@ -2560,14 +2640,13 @@
     x.fillStyle = '#7d705c'; x.font = '18px Georgia, serif'; x.textAlign = 'right'; x.fillText('Made with D4 Build Planner', W - 56, H - 44); x.textAlign = 'left';
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (S.name || 'build').replace(/[^\w -]+/g, '').trim().replace(/\s+/g, '_') + '_card.png'; a.click(); toast('Build card saved as a picture'); }, 'image/png');
   }
-  window.__D4X = { buildCard, bagScan, sheetCheck, judgeDrop };
+  window.__D4X = { buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S };
   function wireScan() {
     const pick = $('#scanPick'), file = $('#scanFile'); if (pick && file) { pick.onclick = () => file.click(); file.onchange = () => { if (file.files[0]) scanImage(file.files[0]); }; }
     const drop = $('#scanDrop'); if (drop) drop.onclick = () => { SCAN = null; renderGear(); };
     const eq = $('#scanEquip'); if (eq) eq.onclick = () => { const slot = SCAN.slot; if (S.cmp && S.cmp.slot === slot) delete S.cmp; S.gear[slot] = scanGear(); SCAN = null; commit(); renderGear(); toast('Item equipped from the screenshot'); };
     const cp = $('#scanCmp'); if (cp) cp.onclick = () => { const slot = SCAN.slot; const old = S.gear[slot]; const oldIt = findItem(old.item); const g = scanGear(); const it = findItem(g.item);
-      S.cmp = { slot, base: clone(old) };
-      if (it && !it.kind && oldIt && !oldIt.kind) { const ng = clone(old); ng.affixes = g.affixes; ng.hor = null; delete ng.cap; if (g.cap != null) ng.cap = g.cap; S.gear[slot] = ng; } else S.gear[slot] = g;
+      const plan = dropPlan(slot, g, old); S.cmp = { slot, base: clone(old) }; S.gear[slot] = plan.g;
       SCAN = null; commit(); renderGear(); };
   }
   // pasted or dropped images go to the box that has focus; with no box picked, to whatever fits the page being viewed
@@ -2831,10 +2910,20 @@
     const tier = SC.tiers.find(t => t.t === tierNo) || SC.tiers[0];
     const L = SC.levels.find(l => l.l === MON_LEVEL);
     const baseLife = SC.healthBase * L.hp;
+    // what equipped powers do for survival: Damage Reduction, Armor and Maximum Life written into an aspect, a unique or a set bonus, at its middle roll.
+    // Each has its own switch, since most only hold while a condition is met.
+    const pwDef = []; const NUMP = '(?:\\[([\\d.,]+)\\s*[–-]\\s*([\\d.,]+)\\]|([\\d.,]+))';
+    sheetData().powers.filter(q => /^(Aspect|Legendary aspect|Prism aspect|Unique|Mythic unique|Runeword|Charm|Unique charm|Set bonus)$/.test(q.kind)).forEach(q => { const t = decode(strip(q.desc)).replace(/\s+/g, ' '); let k = 0;
+      const grab = (re, kind) => { let m; const rx = new RegExp(re, 'g'); while ((m = rx.exec(t))) { const lo = parseFloat((m[1] || m[3]).replace(/,/g, '')), hi = parseFloat((m[2] || m[3]).replace(/,/g, '')); const pre = t.slice(0, m.index).split(/\.(?=\s|[A-Z])/).pop().trim(); const upTo = /\bup to$/i.test(pre); const v = (lo + hi) / 2 * (upTo ? 0.5 : 1); const id = 'pw:' + q.name + ':' + kind + (k++);
+        if (!(v > 0 && v <= 100 + (kind === 'dr' ? -1 : 400)) || scopeMiss(powerScope(pre, t.slice(m.index, m.index + 120).split(/\.(?=\s|[A-Z])/)[0]), null, '')) continue;
+        pwDef.push({ id, name: q.name, kind, v, upTo, on: (T.mdr || {})[id] !== false }); } };
+      grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?Damage Reduction', 'dr'); grab('take ' + NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:less|reduced) damage', 'dr');
+      grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?(?:Total\\s+)?Armor\\b', 'armor'); grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?Maximum Life', 'life'); });
+    const pwSum = kind => pwDef.filter(x => x.on && x.kind === kind).reduce((a, x) => a + x.v, 0);
     const lifeFlat = M.life ? M.life.v : 0;
-    const lifeMul = (1 + (M.lifep ? M.lifep.v : 0) / 100) * (1 + (M.lifep ? M.lifep.x : 0) / 100);
+    const lifeMul = (1 + ((M.lifep ? M.lifep.v : 0) + pwSum('life')) / 100) * (1 + (M.lifep ? M.lifep.x : 0) / 100);
     const barrier = Math.max(0, +T.barrier || 0); const life = (baseLife + lifeFlat) * lifeMul + barrier;
-    const armorBase = M.armor ? M.armor.v : 0, armorPct = M.armorp ? M.armorp.v : 0, armorX = M.armorp ? M.armorp.x : 0;
+    const armorBase = M.armor ? M.armor.v : 0, armorPct = (M.armorp ? M.armorp.v : 0) + pwSum('armor'), armorX = M.armorp ? M.armorp.x : 0;
     const armor = armorBase * (1 + armorPct / 100) * (1 + armorX / 100);
     const aDRof = A => Math.min(SC.maxArmor || 0.9, L.as * A / (A + L.ad));
     const armorDR = aDRof(armor);
@@ -2847,7 +2936,7 @@
       if (m && +m[1] > 0) { const id = q.role + ':' + q.name; mercDR.push({ id, v: +m[1], name: q.name, merc: q.merc, role: q.role, on: (T.mdr || {})[id] !== false && mercSt[q.role] !== false }); } });
     const mercInfo = ['mercMain', 'mercSup'].map(role => { const l = sheetData().powers.filter(q => q.kind === 'Mercenary' && q.role === role); return l.length ? { role, name: l[0].merc, n: l.length, on: mercSt[role] !== false } : null; }).filter(Boolean);
     const spFx = splinterFx(); const spOn = spFx.list.some(q => q.on);
-    const drParts = (M.dr ? M.dr.parts : []).concat(spOn && spFx.dr ? [{ v: spFx.dr, src: 'Splinter of Pain' }] : []).concat(spOn && spFx.taken ? [{ v: -spFx.taken, src: 'Soul Splinters, more damage taken' }] : []).concat(mercDR.filter(x => x.on).map(x => ({ v: x.v, src: x.name + ' (' + x.merc + ')' }))); const drMul = drParts.reduce((k, p) => k * (1 - Math.min(100, p.v) / 100), 1);
+    const drParts = (M.dr ? M.dr.parts : []).concat(spOn && spFx.dr ? [{ v: spFx.dr, src: 'Splinter of Pain' }] : []).concat(spOn && spFx.taken ? [{ v: -spFx.taken, src: 'Soul Splinters, more damage taken' }] : []).concat(mercDR.filter(x => x.on).map(x => ({ v: x.v, src: x.name + ' (' + x.merc + ')' }))).concat(pwDef.filter(x => x.on && x.kind === 'dr').map(x => ({ v: x.v, src: x.name }))); const drMul = drParts.reduce((k, p) => k * (1 - Math.min(100, p.v) / 100), 1);
     const block = Math.min(100, M.block ? M.block.v : 0) / 100, blockR = Math.min(80, (M.blockr ? M.blockr.v : 0)) / 100;
     const dodge = Math.min(100, M.dodge ? M.dodge.v : 0) / 100;
     // HIT_CAL: measured in game on 14 Nov 2026. Two Fallen basic hits on Torment I each took 783 Life from a level 70 Paladin whose own Toughness figure gives 70.18% reduction: exactly twice what the file values alone predict.
@@ -2888,7 +2977,7 @@
       else if (n === 'All Resistance') e = mixEhp(life, armor, v, 0);
       else e = mixEhp(life, armor, 0, v / 100);
       return { n, d, gain: now ? e / now - 1 : 0 }; }).sort((a, b) => b.gain - a.gain);
-    return { spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    return { pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
   }
   function renderDefense() {
     invalidate();
@@ -2945,6 +3034,7 @@
           ${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" data-tt="mercsum|${m.role}"><input type="checkbox" data-dfmerc="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}
           ${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}"${ttAttr(ttCard(q.tname, 'SOUL SPLINTER', esc(q.text)))}><input type="checkbox" data-dfmerc="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}${R.spFx.notes.length ? `<p class="note" style="flex-basis:100%">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
           ${R.mercDR.filter(x => R.mercInfo.some(m => m.role === x.role && m.on)).map(x => `<label class="chip merc${x.on ? ' on' : ''}" title="${esc(x.merc)}, ${x.role === 'mercMain' ? 'hired mercenary' : 'reinforcement'}. Counted at its full value."><input type="checkbox" data-dfm="${esc(x.id)}" ${x.on ? 'checked' : ''}><span>${esc(x.merc)}: ${esc(x.name)}</span><small>${f(x.v, 0)}% less</small></label>`).join('')}
+          ${R.pwDef.map(x => `<label class="chip merc${x.on ? ' on' : ''}"${ttAttr(ttCard(x.name, 'ITEM POWER', esc(x.kind === 'dr' ? 'Counted as ' + f(x.v, 1) + '% Damage Reduction.' : x.kind === 'armor' ? 'Counted as ' + f(x.v, 1) + '% more Armor.' : 'Counted as ' + f(x.v, 1) + '% more Maximum Life.') + '<br>Middle of its roll' + (x.upTo ? ', and half of that because the text says "up to"' : '') + '. Untick it when its condition will not be met.'))}><input type="checkbox" data-dfm="${esc(x.id)}" ${x.on ? 'checked' : ''}><span>${esc(x.name)}</span><small>${f(x.v, 0)}% ${x.kind === 'dr' ? 'less' : x.kind === 'armor' ? 'Armor' : 'Life'}</small></label>`).join('')}
         </div>
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}
         <p class="note">Tier ${R.tierNo}: monsters deal x${f(R.tier.dmg, 2)} damage and have x${f(R.tier.hp, 2)} life. Monsters are level ${MON_LEVEL}. Weakened enemies deal 20% less if normal, 15% if elite and 10% if a boss. Block and dodge feed the Average column only.</p>

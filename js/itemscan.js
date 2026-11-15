@@ -15,7 +15,7 @@
     const lines = String(text || '').replace(/\r/g, '').split('\n').map(l => l.replace(/[|¦]+\s*$/g, '').trim()).filter(Boolean);
     const ipIdx = lines.findIndex(l => /Item\s*Power/i.test(l));
     const typeIdx = lines.findIndex(l => /\b(Legendary|Unique|Rare|Magic)\b/.test(l) && !/Unique Equipped/i.test(l));
-    const out = { title: '', rarity: '', mythic: false, slot: '', wtype: '', q: 0, power: 0, entries: [], text: '' };
+    const out = { title: '', rarity: '', mythic: false, slot: '', wtype: '', q: 0, power: 0, entries: [], missed: [], text: '' };
     if (typeIdx < 0) return out;
     out.title = lines.slice(0, typeIdx).filter(l => !/^EQUIPPED/i.test(l.replace(/[^A-Za-z]/g, ''))).join(' ').replace(/[@®]/g, 'o').replace(/[^A-Za-z' -]/g, ' ').replace(/\s+/g, ' ').trim();
     const head = lines.slice(typeIdx, (ipIdx > typeIdx ? ipIdx : typeIdx + 2)).join(' ');
@@ -40,9 +40,13 @@
       else { textBlocks.push(raw.replace(/^[^A-Za-z0-9]*/, '')); inText = true; }
     }
     for (const e of entries) {
-      const r = e.match(/^([+x]?)(\d[\d,.]*)\s*(%?)\s+((?:to\s+)?[A-Z][A-Za-z'\- ]{1,48}?)\s*\+?\s*[\[{(\/|]{0,2}\s*(\d[\d,.]*)(?:\s*-\s*(\d[\d,.]*))?\s*[\]})|]{1,2}/);
+      const r = e.match(/^([+x]?)(\d[\d,.]*)\s*(%?)\s+((?:to\s+)?[A-Z][A-Za-z'\- ]{1,48}?)\s*\+?\s*[\[{(\/|]{0,2}\s*(\d[\d,.]*)(?:\s*-\s*(\d[\d,.]*))?\s*[\]})|]{0,2}/);
       const n = !r && e.match(/^([+x]?)(\d[\d,.]*)\s*(%?)\s+((?:to\s+)?[A-Z][A-Za-z'\- ]{1,48}?)\s*$/);
-      const m = r || n; if (!m) { if (e.length > 30) textBlocks.push(e); continue; }
+      const m = r || n;
+      // a line that starts like an affix but could not be read is reported, not folded into the power text
+      if (!m) { if (/^[+x]?\d/.test(e)) out.missed.push(e); else if (e.length > 30) textBlocks.push(e); continue; }
+      // the text reader often turns the closing bracket into a 1: "[20.0 - 24.01%". Drop it when what is left still covers the roll.
+      if (r && !/[\]})]/.test(e)) { const k = r[6] != null ? 6 : 5; const cut = String(r[k]).replace(/[1lI]$/, '').replace(/[.,]$/, ''); const c = cut ? num(cut) : NaN; if (cut !== String(r[k]) && c >= num(r[2]) && c >= num(r[5] === r[k] ? cut : r[5])) r[k] = cut; }
       const name = m[4].trim(); if (IGNORE.test(norm(name))) continue;
       out.entries.push({ raw: e, mult: m[1] === 'x', v: num(m[2]), pct: m[3] === '%', name, lo: r ? num(r[5]) : null, hi: r ? num(r[6] != null ? r[6] : r[5]) : null });
     }
@@ -92,6 +96,7 @@
         else res.unplaced.push(e.raw);
       }
     }
+    (R.missed || []).forEach(e => res.unplaced.push(e));
     if ((opt && opt.maxAff) && res.affixes.length > opt.maxAff) res.unplaced.push(...res.affixes.splice(opt.maxAff).map(a => a.label));
     if ((opt && opt.maxTemp != null) && res.tempers.length > opt.maxTemp) res.unplaced.push(...res.tempers.splice(opt.maxTemp).map(a => a.label));
     return res;

@@ -43,6 +43,15 @@ Not yet confirmed:
 - The Paladin seal's flat Thorns line has no level in the files, so it is not scaled up: 40 to 50 Thorns. Confirmed in game, where it never rolls above 50.
 - Judgement: 80% weapon damage as Holy, 3 seconds after the mark lands (Paladin_Sub_Judgement). The Judicator Oath lets Core Judicator Skills set it off early, adds 100%[x] when it hits one enemy and 80%[x] damage taken by Judged enemies. How often it goes off in a real fight is not in the files, so the rate can be typed in.
 
+## How a drop is judged
+
+- Legendary for legendary: your aspect, temper, quality and gems are assumed on the drop, so only its affixes are judged.
+- Legendary where you wear a unique: there is no aspect to carry over, so every aspect that fits the slot is tried on the drop, the best one for the build is kept, and that is set against the unique's power.
+- A unique drop is judged whole, power included, against what you wear.
+- A power only counts when the build can use it: the skill it names, the kind of skill, the Oath, a two-handed weapon, the element. Anything left out is listed under the multipliers on Damage Theory Craft.
+- Damage Reduction, Armor and Maximum Life written into an aspect, unique or set bonus count toward Effective Life at the middle of the roll, with a switch each on Defense Theory Craft. "Up to" amounts count at half.
+- Aspect slots follow the game's rule: Offensive on weapons, gloves, rings and amulet; Defensive on helm, chest, pants, shield and amulet; Utility on helm, chest, gloves, boots, shield and amulet; Resource on rings and amulet; Mobility on boots and amulet.
+
 ## Updating game data
 The `data` folder is generated from the DiabloTools d4data repository by `tools/extract.js` (paragon boards and glyphs come from `tools/paragon.js`, which it calls).
 
