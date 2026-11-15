@@ -73,12 +73,13 @@
     }
     const okCls = x => !x.cls || !x.cls.length || (Array.isArray(x.cls) ? x.cls.includes(cls) : x.cls === cls);
     const scales = [[0, 0], [1, 0], [0, 1], [1, 1]];
+    const uDef = res.item && res.item.t === 'u' ? D.uniques.find(u => u.id === res.item.id) : null; const fixedU = uDef ? (uDef.affixes || []).map(h => norm(String(h).replace(/<[^>]+>/g, '').replace(/[\d.,%+\[\]–-]+/g, ' '))) : [];
     for (const e of R.entries) {
       const key = norm(e.name);
       if (e.lo != null) {
         const pool = G.affixes.filter(a => tkey(a.t) === key && /^x/.test(a.t) === e.mult);
         const d = pool.find(a => a.slots.includes(kind) && okCls(a)) || pool.find(a => a.slots.includes(kind)) || pool.find(okCls) || pool[0];
-        if (R.rarity === 'Unique') continue;   // a unique's affixes are fixed, the planner already has them
+        if (R.rarity === 'Unique' && fixedU.some(f => f.includes(key))) continue;   // one of the unique's own fixed lines, the planner already has it
         if (!d) { res.unplaced.push(e.raw.replace(/\s*\+?[\[{(\/|]?\s*[\d,.]+\s*-.*$/, '')); continue; }
         // which mix of greater affix and quality capstone puts the base roll inside the range printed on the tooltip
         let pick = null; for (const [ga, cap] of scales) { const base = e.v / (1 + 0.01 * q + ga * 0.5 + cap * 0.5); if (base >= e.lo * 0.94 - 0.06 && base <= e.hi * 1.06 + 0.06) { pick = { ga, cap, base }; break; } }
@@ -87,8 +88,8 @@
         res.affixes.push({ id: d.id, val, ga: !!pick.ga, cap: !!pick.cap, label: `${e.mult ? 'x' : '+'}${e.v}${e.pct ? '%' : ''} ${e.name}`, inSlot: d.slots.includes(kind) });
       } else {
         let hit = null; for (const m of G.tempers) { if (m.cls && m.cls.length && m.cls !== cls) continue; const o = m.opts.find(x => tkey(x.t) === key); if (!o) continue; const ok = m.slots.includes(kind); if (!hit || (ok && !hit.ok) || (ok === hit.ok && (m.tier || 0) > (hit.m.tier || 0))) hit = { m, o, ok }; }
-        if (hit && R.rarity !== 'Unique') res.tempers.push({ rid: hit.m.id, oid: hit.o.id, label: `${e.mult ? 'x' : '+'}${e.v}${e.pct ? '%' : ''} ${e.name}` });
-        else if (R.rarity !== 'Unique') res.unplaced.push(e.raw);
+        if (hit) res.tempers.push({ rid: hit.m.id, oid: hit.o.id, label: `${e.mult ? 'x' : '+'}${e.v}${e.pct ? '%' : ''} ${e.name}` });
+        else res.unplaced.push(e.raw);
       }
     }
     if ((opt && opt.maxAff) && res.affixes.length > opt.maxAff) res.unplaced.push(...res.affixes.splice(opt.maxAff).map(a => a.label));

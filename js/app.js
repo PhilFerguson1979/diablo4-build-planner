@@ -687,8 +687,9 @@
   function itemLines(it, g, slotId) {
     g = craft(g || {}); const out = [];
     const unique = it && it.kind && it.kind !== 'charm';
-    if (unique) (it.affixes || []).forEach((h, i) => { const ga = !!(g.mythic || g.uga[i]); out.push({ kind: 'base', ga, html: scaleHtml(h, lineScale(g, out.length, ga)), label: strip(h) }); });
-    else g.affixes.slice(0, N_AFF).forEach(a => { const d = a && affixDef(a.id); if (!d) return; const ga = !!a.ga; const v = rollOf(a, d); out.push({ kind: 'base', ga, html: fillTpl(d.t, v, lineScale(g, out.length, ga)), label: d.t.replace('§', v) }); });
+    const nFix = unique ? Math.min(N_AFF, (it.affixes || []).length) : 0;
+    if (unique) (it.affixes || []).forEach((h, i) => { const ga = !!g.uga[i]; out.push({ kind: 'base', ga, html: scaleHtml(h, lineScale(g, out.length, ga)), label: strip(h) }); });
+    g.affixes.slice(0, N_AFF - nFix).forEach(a => { const d = a && affixDef(a.id); if (!d) return; const ga = !!a.ga; const v = g.mythic ? d.v : rollOf(a, d); out.push({ kind: 'base', ga, html: fillTpl(d.t, v, lineScale(g, out.length, ga)), label: d.t.replace('§', v) }); });
     g.tempers.slice(0, N_TEMP).forEach(t => { const m = t && temperDef(t.rid); const o = m && m.opts.find(x => x.id === t.oid); if (!o) return; const v = rollOf(t, o); out.push({ kind: 'temper', html: fillTpl(o.t, v, lineScale(g, out.length, false)), label: o.t.replace('§', v), from: m.name }); });
     const sd = g.sanct && sanctDef(g.sanct);
     if (sd) { const k = lineScale(g, out.length, false); const v = sd.html ? 0 : rollOf({ val: g.sanctVal }, sd); out.push({ kind: 'sanct', html: sd.html ? scaleHtml(sd.html, k) : fillTpl(sd.t, v, k), label: sd.html ? strip(sd.html) : sd.t.replace('§', v) }); }
@@ -757,18 +758,16 @@
     g = craft(g); const kind = slotKind(sel.id); const unique = it && it.kind && it.kind !== 'charm';
     const okCls = x => !x.cls || !x.cls.length || (Array.isArray(x.cls) ? x.cls.includes(S.cls) : x.cls === S.cls);
     const pool = GD().affixes.filter(a => a.slots.includes(kind) && okCls(a));
-    const manuals = GD().tempers.filter(t => t.slots.includes(kind) && okCls(t));
+    const manuals = GD().tempers.filter(t => t.slots.includes(kind) && okCls(t)); const manualsOther = GD().tempers.filter(t => !t.slots.includes(kind) && okCls(t));
     const lines = itemLines(it, g).filter(l => l.kind !== 'gem');
     let rows = '';
-    if (unique) {
-      rows = (it.affixes || []).map((h, i) => `<div class="frow"><span class="fval">${lines[i] ? lines[i].html : h}</span><button class="ga-btn${g.mythic || g.uga[i] ? ' on' : ''}" data-uga="${i}" ${g.mythic ? 'disabled' : ''} aria-pressed="${!!(g.mythic || g.uga[i])}" title="Greater affix">${GA_ICON}GA</button></div>`).join('') || '<p class="empty">This item has no rolled affixes.</p>';
-    } else {
-      for (let i = 0; i < N_AFF; i++) {
-        const a = g.affixes[i] || {}; const used = new Set(g.affixes.filter((x, k) => x && k !== i).map(x => x.id));
-        rows += `<div class="frow"><select data-aff="${i}" aria-label="Affix ${i + 1}"><option value="">Affix ${i + 1}: choose...</option>${pool.filter(p => !used.has(p.id)).map(p => `<option value="${p.id}" ${p.id === a.id ? 'selected' : ''}>${esc(p.t.replace('§', p.v))}</option>`).join('')}</select>
-          ${a.id && affixDef(a.id) ? rollInput('data-av', i, a, affixDef(a.id)) : ''}
-          <button class="ga-btn${a.ga ? ' on' : ''}" data-ga="${i}" ${a.id ? '' : 'disabled'} aria-pressed="${!!a.ga}" title="Greater affix: 50% more">${GA_ICON}GA</button></div>`;
-      }
+    const nFix = unique ? Math.min(N_AFF, (it.affixes || []).length) : 0;
+    if (unique) rows = (it.affixes || []).map((h, i) => `<div class="frow"><span class="fval">${lines[i] ? lines[i].html : h}</span><button class="ga-btn${g.uga[i] ? ' on' : ''}" data-uga="${i}" aria-pressed="${!!g.uga[i]}" title="Greater affix: 50% more">${GA_ICON}GA</button></div>`).join('');
+    for (let i = 0; i < N_AFF - nFix; i++) {
+      const a = g.affixes[i] || {}; const used = new Set(g.affixes.filter((x, k) => x && k !== i).map(x => x.id));
+      rows += `<div class="frow"><select data-aff="${i}" aria-label="Affix ${nFix + i + 1}"><option value="">Affix ${nFix + i + 1}: choose...</option>${pool.filter(p => !used.has(p.id)).map(p => `<option value="${p.id}" ${p.id === a.id ? 'selected' : ''}>${esc(p.t.replace('§', p.v))}</option>`).join('')}</select>
+        ${a.id && affixDef(a.id) && !g.mythic ? rollInput('data-av', i, a, affixDef(a.id)) : ''}
+        <button class="ga-btn${a.ga ? ' on' : ''}" data-ga="${i}" ${a.id ? '' : 'disabled'} aria-pressed="${!!a.ga}" title="Greater affix: 50% more">${GA_ICON}GA</button></div>`;
     }
     const used4 = new Set(g.affixes.filter(Boolean).map(x => x.id)); const h = g.hor || {};
     const horRow = unique ? '' : `<h3>Horadric affix</h3>
@@ -781,7 +780,7 @@
       const t = g.tempers[i] || {}; const m = t.rid && temperDef(t.rid);
       const other = g.tempers[1 - i] && g.tempers[1 - i].rid;
       const groups = {}; manuals.filter(x => x.id !== other).forEach(x => (groups[x.cat] = groups[x.cat] || []).push(x));
-      trows += `<div class="frow two"><select data-tm="${i}" aria-label="Tempering manual"><option value="">Temper: choose a manual...</option>${Object.entries(groups).map(([c, list]) => `<optgroup label="${esc(c)}">${list.map(x => `<option value="${x.id}" ${x.id === t.rid ? 'selected' : ''}>${esc(x.name)}${x.cls ? '' : ' (any class)'}</option>`).join('')}</optgroup>`).join('')}</select>
+      trows += `<div class="frow two"><select data-tm="${i}" aria-label="Tempering manual"><option value="">Temper: choose a manual...</option>${Object.entries(groups).map(([c, list]) => `<optgroup label="${esc(c)}">${list.map(x => `<option value="${x.id}" ${x.id === t.rid ? 'selected' : ''}>${esc(x.name)}${x.cls ? '' : ' (any class)'}</option>`).join('')}</optgroup>`).join('')}${(() => { const og = {}; manualsOther.filter(x => x.id !== other).forEach(x => (og[x.cat] = og[x.cat] || []).push(x)); return Object.entries(og).map(([c, list]) => `<optgroup label="${esc(c)} (listed for other slots)">${list.map(x => `<option value="${x.id}" ${x.id === t.rid ? 'selected' : ''}>${esc(x.name)}${x.cls ? '' : ' (any class)'}</option>`).join('')}</optgroup>`).join(''); })()}</select>
         <select data-to="${i}" aria-label="Temper affix" ${m ? '' : 'disabled'}>${m ? m.opts.map(o => `<option value="${o.id}" ${o.id === t.oid ? 'selected' : ''}>${esc(o.t.replace('§', o.v))}</option>`).join('') : '<option>Pick a manual first</option>'}</select>
         ${m && m.opts.find(o => o.id === t.oid) ? rollInput('data-tv', i, t, m.opts.find(o => o.id === t.oid)) : ''}</div>`;
     }
@@ -793,7 +792,7 @@
       <p class="note">${g.wtype && TWO_HAND_RE.test(g.wtype) ? 'Two-handed: the off-hand slot is blocked and this weapon has 2 sockets.' : 'One-handed weapons have 1 socket and leave the off-hand free. Two-handed weapons block the off-hand.'}</p>` : '';
     return `<section class="forge">${baseRow}
       <h3>Affixes</h3>${rows}
-      ${unique ? '' : '<p class="note">Type the base roll from your item into the box beside each affix. Leave it empty for the top roll. Greater affixes add 50% and item quality adds its share on top.</p>'}
+      <p class="note">${g.mythic ? 'Mythic: every roll is at its maximum. Greater affixes are still yours to mark.' : 'Type the base roll from your item into the box beside each affix. Leave it empty for the top roll. Greater affixes add 50% and item quality adds its share on top.'}</p>
       ${horRow}
       <h3>Tempering</h3>${trows}
       <h3>Item quality</h3>
@@ -872,7 +871,7 @@
         ${scanHtml()}${bagHtml()}
         ${compareHtml(sel, it, g)}
         ${it ? forgeHtml(sel, it, g) : ''}
-        ${it && it.kind === 'unique' ? `<label class="check"><input type="checkbox" id="gearMythic" ${g.mythic ? 'checked' : ''}> Mythic version (all affixes greater)</label>` : ''}
+        ${it && it.kind === 'unique' ? `<label class="check"><input type="checkbox" id="gearMythic" ${g.mythic ? 'checked' : ''}> Mythic version (every roll at its maximum)</label>` : ''}
         <div class="field"><label for="gearNote">Notes</label><input id="gearNote" type="text" value="${esc(g.note || '')}" placeholder="For example: swap to Paladin Guard on bosses"></div>
       </div></div>`;
     $$('#panel-gear .tile').forEach(t => {
@@ -2210,7 +2209,7 @@
       if (!uq && !as) { miss.push(`${to}: ${title}`); return; }
       const g = st.gear[to] = { item: { t: uq ? 'u' : 'aspect', id: (uq || as).id }, affixes: [], tempers: [], gems: [] }; const kind = slotKind(to);
       if (uq && mythic) g.mythic = true;
-      if (!uq) (stats || []).slice(0, N_AFF).forEach(raw => { const ga = raw.endsWith('!'); let s = raw.replace(/!$/, '').replace(/-s04-corestat$/, '').replace(/^\d+-\d+-/, ''); s = LIB_ALIAS[s] || s;
+      (stats || []).slice(0, N_AFF - (uq ? Math.min(N_AFF, (uq.affixes || []).length) : 0)).forEach(raw => { const ga = raw.endsWith('!'); let s = raw.replace(/!$/, '').replace(/-s04-corestat$/, '').replace(/^\d+-\d+-/, ''); s = LIB_ALIAS[s] || s;
         if (s === 'primary-core-stat') s = MAINSTAT[b.cls][0].toLowerCase();
         const want = lnorm(s.replace(/^ranks-to-/, 'to-')); const pool = G.affixes.filter(a => a.slots.includes(kind) && okCls(a) && !g.affixes.some(z => z.id === a.id));
         const d = pool.find(a => tkey(a.t) === want) || pool.filter(a => tkey(a.t).includes(want)).sort((x, y) => x.t.length - y.t.length)[0];
@@ -2316,7 +2315,9 @@
   function gearFromMatch(M) { const g = { item: M.item, affixes: M.affixes.map(a => Object.assign({ id: a.id, val: a.val }, a.ga ? { ga: true } : {})), tempers: M.tempers.map(t => ({ rid: t.rid, oid: t.oid })), q: M.q || 0, gems: [] };
     const ci = M.affixes.findIndex(a => a.cap); if (ci >= 0) g.cap = ci; if (M.mythic) g.mythic = true; if (M.wtype) g.wtype = M.wtype; return g; }
   function scanHtml() {
-    if (!SCAN) return `<div class="scan-start"><button class="btn ghost" id="scanPick">Read an item screenshot</button><input type="file" id="scanFile" accept="image/*" hidden><small>Or copy a screenshot of an item tooltip in the game and press Ctrl+V on this page.</small><button class="btn ghost" id="bagPick">Check a bag of drops</button><input type="file" id="bagFile" accept="image/*" multiple hidden><small>Pick several item screenshots at once to rank them.</small></div>`;
+    if (!SCAN) return `<div class="pastebox" tabindex="0" data-paste="scan"><b>Paste an item here</b><span>Click this box, then press Ctrl+V to paste a snip of an item tooltip. You can also drop an image on it. It reads the item so you can equip it or compare it with what you wear.</span></div>
+      <div class="pastebox" tabindex="0" data-paste="bag"><b>Paste a bag of drops here</b><span>Click this box and paste one item after another, or drop several images. Each one is ranked against your gear.</span></div>
+      <div class="scan-start"><button class="btn ghost" id="scanPick">Read an item screenshot</button><input type="file" id="scanFile" accept="image/*" hidden><small>Or copy a screenshot of an item tooltip in the game and press Ctrl+V on this page.</small><button class="btn ghost" id="bagPick">Check a bag of drops</button><input type="file" id="bagFile" accept="image/*" multiple hidden><small>Pick several item screenshots at once to rank them.</small></div>`;
     if (SCAN.state === 'reading') return `<section class="scan busy" aria-live="polite"><p>${esc(SCAN.msg)}</p></section>`;
     if (SCAN.state === 'error') return `<section class="scan err" aria-live="polite"><p>${esc(SCAN.msg)}</p><div class="cmp-act"><button class="btn ghost" id="scanDrop">Close</button></div></section>`;
     const { M, R, slot } = SCAN; const sl = SLOTS.find(s => s.id === slot); const cur = S.gear[slot]; const curIt = cur && findItem(cur.item); const scanned = M.item && findItem(M.item);
@@ -2339,7 +2340,7 @@
     return best;
   }
   async function bagScan(files) {
-    const list = [...files].filter(f => /^image\//.test(f.type)); if (!list.length) return; BAG = { state: 'reading', done: 0, total: list.length, rows: [] }; renderGear();
+    const list = [...files].filter(f => /^image\//.test(f.type)); if (!list.length) return; if (BAG && BAG.state === 'reading') { toast('Still reading the last batch. Paste again in a moment.'); return; } BAG = { state: 'reading', done: 0, total: list.length, rows: BAG ? BAG.rows : [] }; if (tab !== 'gear') showTab('gear'); else renderGear();
     const D = { gear: GD(), uniques: data().uniques, aspects: data().aspects };
     for (const f of list) { let row = { file: f.name };
       try { const R = window.D4SCAN.read(await ocrText(f)); const M = window.D4SCAN.match(R, D, S.cls, { maxAff: N_AFF, maxTemp: N_TEMP });
@@ -2350,11 +2351,12 @@
   }
   function bagHtml() {
     if (!BAG) return '';
+    const more = '<div class="pastebox" tabindex="0" data-paste="bag"><b>Paste the next drop here</b><span>Click, then Ctrl+V. It is added to this list.</span></div>';
     const rows = BAG.rows.map((r, i) => r.err ? `<tr><th>${esc(r.file)}</th><td colspan="4" class="cmp-warn">${esc(r.err)}</td></tr>` : `<tr><th>${esc(r.name)}${r.ga ? ` <small>${r.ga} greater</small>` : ''}</th><td>${esc((SLOTS.find(x => x.id === r.slot) || {}).name || r.slot)}</td><td><b class="verdict ${r.V.cls}">${r.empty ? 'Empty slot' : esc(r.V.tag)}</b></td><td>${r.V.dD == null ? '' : sgn(r.V.dD) + ' damage'}${r.V.dE == null ? '' : ', ' + sgn(r.V.dE) + ' Effective Life'}${r.V.warn.length ? `<br><small class="cmp-warn">${esc(r.V.warn[0])}</small>` : ''}</td><td><button class="btn ghost small" data-bageq="${i}">Equip</button></td></tr>`).join('');
     return `<section class="scan bag" aria-live="polite"><header><h3>Bag check</h3><span>${BAG.state === 'reading' ? `Reading ${BAG.done + 1} of ${BAG.total}` : `${BAG.rows.length} read, best first`}</span></header>
       ${rows ? `<table class="tc-table"><thead><tr><th>Item</th><th>Slot</th><th>Verdict</th><th>Against what you wear</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : ''}
       <p class="note">Each item is judged on its own against your current gear, using the focus you set for comparisons. Legendaries are judged on their affixes only.</p>
-      <div class="cmp-act"><button class="btn ghost" id="bagClear">Close bag check</button></div></section>`;
+      ${BAG.state === 'done' ? more : ''}<div class="cmp-act"><button class="btn ghost" id="bagClear">Close bag check</button></div></section>`;
   }
   document.addEventListener('click', e => { const t = e.target.closest ? e.target : null; if (!t) return;
     if (t.closest('#bagPick')) { const f = $('#bagFile'); if (f) f.click(); }
@@ -2379,7 +2381,7 @@
     if (tab === 'sheet') renderSheet();
   }
   function sheetChkHtml() {
-    const start = '<div class="scan-start"><button class="btn ghost" id="sheetChkPick">Check against a character screenshot</button><input type="file" id="sheetChkFile" accept="image/*" hidden><small>Open your stats in the game (Character, then Stats), take a screenshot and pick it here.</small></div>';
+    const start = '<div class="pastebox" tabindex="0" data-paste="sheet"><b>Paste your stats screen here</b><span>Click this box, then press Ctrl+V to paste a snip of your in-game stats, or drop an image on it.</span></div><div class="scan-start"><button class="btn ghost" id="sheetChkPick">Check against a character screenshot</button><input type="file" id="sheetChkFile" accept="image/*" hidden><small>Open your stats in the game (Character, then Stats), take a screenshot and pick it here.</small></div>';
     if (!SHEETCHK) return start;
     if (SHEETCHK.state === 'reading') return '<section class="scan busy" aria-live="polite"><p>Reading the screenshot. The first one takes a few seconds while the text reader loads.</p></section>';
     if (SHEETCHK.state === 'error') return `<section class="scan err"><p>${esc(SHEETCHK.msg)}</p><div class="cmp-act"><button class="btn ghost" id="sheetChkClear">Close</button></div></section>`;
@@ -2421,7 +2423,16 @@
       if (it && !it.kind && oldIt && !oldIt.kind) { const ng = clone(old); ng.affixes = g.affixes; ng.hor = null; delete ng.cap; if (g.cap != null) ng.cap = g.cap; S.gear[slot] = ng; } else S.gear[slot] = g;
       SCAN = null; commit(); renderGear(); };
   }
-  document.addEventListener('paste', e => { const items = (e.clipboardData && e.clipboardData.items) || []; for (const it of items) if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) { e.preventDefault(); scanImage(f); } return; } });
+  // pasted or dropped images go to the box that has focus; with no box picked, to whatever fits the page being viewed
+  let PASTE_TO = '';
+  function takeImages(files, where) { const list = [...files].filter(f => f && /^image\//.test(f.type)); if (!list.length) return false;
+    const to = where || PASTE_TO || (tab === 'sheet' ? 'sheet' : BAG ? 'bag' : 'scan');
+    if (to === 'sheet') sheetCheck(list[0]); else if (to === 'bag' || list.length > 1) bagScan(list); else scanImage(list[0]); return true; }
+  document.addEventListener('focusin', e => { const b = e.target.closest && e.target.closest('[data-paste]'); PASTE_TO = b ? b.dataset.paste : ''; });
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-paste]'); if (b) { PASTE_TO = b.dataset.paste; $$('.pastebox.armed').forEach(x => x.classList.remove('armed')); b.classList.add('armed'); } });
+  document.addEventListener('paste', e => { const items = (e.clipboardData && e.clipboardData.items) || []; const fs = []; for (const it of items) if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) fs.push(f); } if (fs.length) { e.preventDefault(); takeImages(fs); } });
+  document.addEventListener('dragover', e => { if (e.target.closest && e.target.closest('[data-paste]')) e.preventDefault(); });
+  document.addEventListener('drop', e => { const b = e.target.closest && e.target.closest('[data-paste]'); if (!b || !e.dataTransfer) return; e.preventDefault(); takeImages(e.dataTransfer.files, b.dataset.paste); });
   window.__D4SCANUI = { scanText };
 
 
