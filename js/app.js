@@ -1682,17 +1682,20 @@
     const X = scopeCtx(); const sent = pre + ' ' + what;
     const named = X.names.filter(nm => new RegExp('\\b' + reEsc(nm) + '\\b(?! Oath)').test(sent)); if (/\bArbiter\b/.test(sent) && !named.includes('Arbiter of Justice') && X.names.includes('Arbiter of Justice')) named.push('Arbiter of Justice');
     const own = named.find(nm => pre.startsWith(nm + ' deals') || pre.startsWith('Your ' + nm + ' deals') || pre.startsWith(nm + "'s damage") || pre.startsWith(nm + ' gains')) || '';
-    let cat = ''; const cm = sent.match(/\b((?:[A-Z][a-z]+ )?[A-Z][a-z]+) Skills?\b/); if (cm) { const w = cm[1].split(' ').filter(x => !/^(Your|All|Other|Non|Casting|Cast|Using|When|While|After|Each|Every|The|Those|These|Their)$/.test(x)); cat = w.join(' '); if (!X.cats.has(cat)) cat = X.cats.has(w[w.length - 1] || '') ? w[w.length - 1] : ''; }
-    const strict = !!cat && (new RegExp('^(?:Your )?' + reEsc(cat) + ' Skills? (?:deal|gain|have)\\b').test(pre) || new RegExp(reEsc(cat) + ' Skills? damage', 'i').test(sent));
-    const elems = /damage (?:is|are) increased by$/i.test(pre) && !/\ball damage\b/i.test(pre) ? ELEMS.filter(e => new RegExp('\\b' + e + '\\b').test(pre)) : [];
-    return { own, named, cat, strict, oath: (sent.match(/\b(Zealot|Judicator|Juggernaut|Disciple) Oath\b/) || [])[1] || '', twoH: /Two-Handed/.test(sent), chan: /\bchannel/i.test(sent), judge: /\bJudg(?:e|ing|ed|ement)\b/.test(sent), elems };
+    // the kind of skill named: "Juggernaut Skills", "Juggernaut Core Skills", "the Basic Skill's damage". Every word that is a real category has to fit.
+    let cats = []; const cm = sent.match(/\b((?:[A-Z][a-z]+ )?[A-Z][a-z]+) Skills?\b/); if (cm) cats = cm[1].split(' ').filter(x => X.cats.has(x)); const cat = cats.join(' ');
+    // it raises that kind of skill only, unless the sentence says the damage is yours in general ("you deal", "grants you")
+    const strict = !!cat && !/\b(you deal|grants? you|you gain|your damage|all damage)\b/i.test(sent);
+    const elems = /\ball damage\b/i.test(pre) ? [] : ELEMS.filter(e => new RegExp('\\b' + e + '\\b[^.]*\\bdamage (?:is|are|has|have|deals?)\\b', 'i').test(pre));
+    const thorns = /\bThorns (?:has|have|deals?|damage (?:is|are))\b/i.test(pre);
+    return { own, named, cat, cats, strict, thorns, oath: (sent.match(/\b(Zealot|Judicator|Juggernaut|Disciple) Oath\b/) || [])[1] || '', twoH: /Two-Handed/.test(sent), chan: /\bchannel/i.test(sent), judge: /\bJudg(?:e|ing|ed|ement)\b/.test(sent), elems };
   }
   // '' when the build meets what the power needs, otherwise the reason it is left out. Pm is the skill being measured, when there is one.
   function scopeMiss(sc, Pm, elem) {
     if (!sc) return ''; const C = cdata(); let unl = []; try { unl = unlockedSkills().map(id => C.powers[id]).filter(Boolean); } catch (e) { return ''; }
     if (sc.own && Pm && sc.own !== Pm.name) return 'only raises ' + sc.own;
     if (sc.named.length && !sc.named.some(nm => unl.some(q => q.name === nm) || (Pm && Pm.name === nm))) return 'needs ' + sc.named[0];
-    if (sc.cat) { const has = unl.some(q => skillIs(q, sc.cat)) || (Pm && skillIs(Pm, sc.cat)); if (sc.strict && Pm ? !skillIs(Pm, sc.cat) : !has) return sc.strict && Pm ? 'only raises ' + sc.cat + ' Skills' : 'needs a ' + sc.cat + ' Skill'; }
+    if (sc.cat) { const is = q => sc.cats.every(c => skillIs(q, c)); const has = unl.some(is) || (Pm && is(Pm)); if (sc.strict && Pm ? !is(Pm) : !has) return sc.strict && Pm ? 'only raises ' + sc.cat + ' Skills' : 'needs a ' + sc.cat + ' Skill'; }
     if (sc.oath && !mechLines().some(l => l.name.includes(sc.oath))) return 'needs the ' + sc.oath + ' Oath';
     if (sc.twoH && !twoHanded()) return 'needs a two-handed weapon';
     if (sc.judge && !mechLines().some(l => /Judicator/.test(l.name)) && !unl.some(q => /Judg/.test(q.desc || '')) && !(Pm && Pm.name === 'Judgement')) return 'needs Judgement';
@@ -1711,11 +1714,19 @@
         // "increase the damage they take from you by 80%[x] until they die": the word damage sits before the number. Only read this way for Judgement text.
         const viaBy = (/Judg/.test(pre) && /damage[^.]*\bby$/i.test(pre) && !/reduc|less/i.test(pre)) || /damage (?:is|are) increased by$/i.test(pre);
         if (!/damage/i.test(what) && !viaBy) continue;
+        if (/^Overpower Damage/i.test(what)) continue;   // Overpower is not in the maths
+        // a multiplier to Critical Strike Damage or Vulnerable Damage only counts on those hits, not on everything
+        const only = /^Critical Strike Damage/i.test(what) ? 'crit' : /^Vulnerable Damage/i.test(what) ? 'vuln' : '';
+        // "8%[x] for each enemy, up to 45%[x]": the cap is the number to use
+        const cap = !viaBy && m[3].match(/up to \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?%\s*\[x\]/);
+        // "has a 30% chance to deal 225%[x]": count it at its chance
+        const chm = pre.match(/(?:has|have) (?:up to )?an? ([\d.]+)% chance to deal$/i);
         const jud = /Judgement(?:'s explosion)? deals|Judgement's explosion|your Judgement damage|Judgement only hits one enemy/.test(pre);
         const scope = role ? null : powerScope(pre, m[3]); const skill = scope ? scope.own : '';
         if (viaBy) { const times = what.match(/up to (\d+) times/); if (times) hi *= +times[1]; what = pre.slice(-70) + (what ? ' ... ' + what : ''); }
         else if (/only hits one enemy/.test(pre)) what = 'when Judgement hits only one enemy';
-        out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '', scope }); }
+        let lo2 = cap ? +cap[1] : lo, hi2 = cap ? +(cap[2] || cap[1]) : hi; if (chm) { lo2 *= chm[1] / 100; hi2 *= chm[1] / 100; what += ', counted at its ' + chm[1] + '% chance'; }
+        out.push({ id, n: name, lo: lo2, hi: hi2, what, role, jud, skill: skill || '', scope, only }); }
     };
     SLOTS.forEach(sl => { const g = S.gear[sl.id] || {}; const it = findItem(g.item); if (it) scan(it.name, it.desc); const a2 = g.aspect2 && data().aspects.find(a => a.id === g.aspect2); if (a2) scan(a2.name, a2.desc); });
     sockets().forEach(x => { const it = socketItem(x); if (it && it.desc) scan(it.name, it.desc); });
@@ -1809,10 +1820,18 @@
       D.powers.forEach(q => { if (q.kind !== 'Passive' && q.kind !== 'Class mechanic' && /Judg/.test(strip(q.desc || ''))) src.push(q.name); });
       if (src.length) { const tw = oath ? D.powers.map(q => strip(q.desc || '').match(/([\d.]+)% chance to explode twice/)).find(Boolean) : null;
         judge = { pct: 80, timer: 3, oath, src: [...new Set(src)], twice: tw ? +tw[1] / 100 : 0 }; pays.push({ k: 'JUDGEMENT', v: judge.pct, judge: 1 }); } }
-    const pay0 = pays.find(x => x.k === T.pay && (x.thorns || x.judge)) || pay || pays.find(x => x.thorns && !x.hit) || pays[0]; const payD = dawn && (T.pay === 'DAWNFIRE' || !pays.some(x => x.k === T.pay)) ? pays[0] : pay0; const isDawn = !!(payD && payD.dawn); const isThorns = !!(payD && payD.thorns); const isJudge = !!(payD && payD.judge);
-    const Pd = isJudge ? { id: '__judgement', name: 'Judgement', dmg: 'Holy', tag: '', tags: judge.oath ? ['Judicator'] : [], mods: [], desc: '' } : isDawn ? Object.assign({}, P, { dmg: 'Fire' }) : P;
-    const Pf = isJudge ? Pd : P; const SBj = isJudge ? Object.assign({}, SB, { csc: 0, csd: 0, as: 0, cs: 0 }) : SB;
-    const skillPct = payD ? payD.v : 0; const dot = payD && !isDawn && !isThorns && !isJudge ? dotInfo(sk, payD.k) : null;
+    // Grief: every direct hit also poisons for a share of it. The line is the picked skill's hit times that share, as Poison.
+    const worn = SLOTS.map(sl => findItem((S.gear[sl.id] || {}).item)).filter(Boolean);
+    { const gr = worn.find(it => it.name === 'Grief'); const gm = gr && strip(gr.desc).match(/([\d.]+)% bonus Poisoning damage over ([\d.]+) seconds/); if (gm && pay && !pay.thorns) pays.push({ k: 'GRIEF', v: pay.v * gm[1] / 100, grief: 1, share: +gm[1], over: +gm[2], of: pay.v }); }
+    // Lucky Hit procs that deal a flat amount: the game writes them as a multiple of weapon damage (the tooltip number is that multiple of a 2,000 damage weapon)
+    worn.forEach(it => { const t = strip(it.desc); const n = x => +String(x).replace(/,/g, ''); let m = t.match(/Lucky Hit:[^.]*?up to an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to explode, dealing ([\d,]+) (Physical|Fire|Lightning|Cold|Holy|Poison|Shadow) Damage/i);
+      if (m) pays.push({ k: 'PROC:' + it.name, v: n(m[3]) / 2000 * 100, proc: 1, n: it.name, ch: (+m[1] + +(m[2] || m[1])) / 2, el: m[4][0].toUpperCase() + m[4].slice(1).toLowerCase(), cut: /reducing your Cooldowns by 1 second/.test(t) ? 1 : 0 });
+      m = t.match(/Up to a ([\d.]+)% chance to Moo[^]*?Up to a ([\d.]+)% chance to summon a Cow that explodes for \[?([\d,]+)(?:\s*[–-]\s*([\d,]+))?\]? Fire damage/);
+      if (m) pays.push({ k: 'PROC:' + it.name, v: (n(m[3]) + n(m[4] || m[3])) / 2 / 2000 * 100, proc: 1, n: it.name, ch: m[1] * m[2] / 100, el: 'Fire', cut: 0 }); });
+    const pay0 = pays.find(x => x.k === T.pay && (x.thorns || x.judge || x.grief || x.proc)) || pay || pays.find(x => x.thorns && !x.hit) || pays[0]; const payD = dawn && (T.pay === 'DAWNFIRE' || !pays.some(x => x.k === T.pay)) ? pays[0] : pay0; const isDawn = !!(payD && payD.dawn); const isThorns = !!(payD && payD.thorns); const isJudge = !!(payD && payD.judge); const isGrief = !!(payD && payD.grief); const isProc = !!(payD && payD.proc);
+    const Pd = isProc ? { id: '__proc', name: payD.n, dmg: payD.el, tag: '', tags: [], mods: [], desc: '' } : isGrief ? Object.assign({}, P, { dmg: 'Poison' }) : isJudge ? { id: '__judgement', name: 'Judgement', dmg: 'Holy', tag: '', tags: judge.oath ? ['Judicator'] : [], mods: [], desc: '' } : isDawn ? Object.assign({}, P, { dmg: 'Fire' }) : P;
+    const Pf = isJudge || isProc ? Pd : P; const SBj = isJudge || isProc ? Object.assign({}, SB, { csc: 0, csd: 0, as: 0, cs: 0 }) : SB;
+    const skillPct = payD ? payD.v : 0; const dot = payD && !isDawn && !isThorns && !isJudge && !isGrief && !isProc ? dotInfo(sk, payD.k) : null;
     const [msName, msScal] = MAINSTAT[S.cls]; const msKey = { Strength: 'str', Intelligence: 'int', Willpower: 'wil', Dexterity: 'dex' }[msName];
     const msTotal = (M[msKey] ? M[msKey].v : 0) + (+T.base || 0); const msMult = 1 + msTotal * msScal;
     // additive pool
@@ -1842,18 +1861,19 @@
     const dotX = (1 + dotSum / 100) * dotOwn * (dot ? mDot : 1);
     // powers that only raise Judgement stay off every other line, and a power that names one skill ("Blessed Hammer deals...") counts on that skill alone
     // Retribution, the Thorns pulse, is a Juggernaut Skill, so Juggernaut bonuses reach that line
-    const Pm = isJudge ? Pd : isThorns && payD.hit ? { id: '__retribution', name: 'Retribution', dmg: 'Physical', tag: '', tags: ['Juggernaut'], mods: [], desc: '' } : P;
+    const Pm = isJudge || isProc ? Pd : isThorns && payD.hit ? { id: '__retribution', name: 'Retribution', dmg: 'Physical', tag: '', tags: ['Juggernaut'], mods: [], desc: '' } : P;
     const xLeft = [];
-    const xGear = gearMultipliers().filter(x => { if (isJudge ? x.skill : x.jud) return false; const why = isJudge && x.jud ? '' : scopeMiss(x.scope, Pm, Pd.dmg); if (why) xLeft.push({ n: x.n, why }); return !why; }).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
+    const xGear = gearMultipliers().filter(x => { if (isJudge || isProc ? x.skill : x.jud) return false; const why = isJudge && x.jud ? '' : x.scope && x.scope.thorns && !isThorns ? 'only raises Thorns' : scopeMiss(x.scope, Pm, Pd.dmg); if (why) xLeft.push({ n: x.n, why }); return !why; }).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
     if (isJudge) { try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => { const mm = strip(powerText(q, md.desc, c2.lvl, C.powers)).match(/Judgement damage by ([\d.]+)%\s*\[x\]/); if (mm) { const xid = 'jud:' + id + ':' + md.key; xGear.push({ id: xid, n: q.name + ': ' + md.name, lo: +mm[1], hi: +mm[1], what: 'Judgement damage for a few seconds after a detonation', on: !T.off[xid] }); } }); }); } catch (e) { /* skip */ } }
     const prod = (l, f) => l.reduce((a, x) => a * (1 + f(x) / 100), 1);
     const xS = (1 + xSumEl / 100) * Object.values(xSumBy).reduce((a, v) => a * (1 + v / 100), 1) * xOwn;
-    const xLo = xS * prod(xGear.filter(x => x.on), x => x.lo), xHi = xS * prod(xGear.filter(x => x.on), x => x.hi), xMid = xS * prod(xGear.filter(x => x.on), x => (x.lo + x.hi) / 2);
+    const xAll = xGear.filter(x => x.on && !x.only); const xOnly = k => prod(xGear.filter(x => x.on && x.only === k), x => (x.lo + x.hi) / 2);
+    const xLo = xS * prod(xAll, x => x.lo), xHi = xS * prod(xAll, x => x.hi), xMid = xS * prod(xAll, x => (x.lo + x.hi) / 2);
     // crit and vulnerable
     // [+] Critical Strike and Vulnerable Damage join the additive pool on hits that qualify; the built-in x1.5 and x1.2 are their own multipliers
     const cc = spOn && spFx.noCrit ? 0 : Math.min(100, (M.csc ? M.csc.v : 0) + SBj.csc + mCc + (spOn ? spFx.cc : 0)); const csdAdd = (M.csd ? M.csd.v : 0) + SBj.csd; const csdX = M.csd ? M.csd.x : 0;
-    const critMult = 1.5 * (1 + csdX / 100) * mCsd;
-    const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100);
+    const critMult = 1.5 * (1 + csdX / 100) * mCsd * xOnly('crit');
+    const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100) * xOnly('vuln');
     const monDR = 1 - ((data().scaling && (data().scaling.levels.find(l => l.l === MON_LEVEL) || {}).dr) || 0);
     const vu = spFx.vulnAlways ? 1 : Math.max(0, Math.min(100, +T.vuln || 0)) / 100;
     const wd = +T.wd || 0;
@@ -1862,14 +1882,28 @@
     const as1 = Math.max(0, Math.min(100, (SBj.as || 0) + spdSum('as') + (spOn ? spFx.as : 0))); const as2 = Math.max(0, Math.min(100, (SBj.cs || 0) + spdSum('cs'))); const asTotal = as1 + as2;
     const aps = (+T.ws || 0) * (1 + asTotal / 100);
     // skills only speed up at set animation lengths (frames at 60 a second); between two steps extra attack speed does nothing
-    const bp = isJudge ? null : AS_FRAMES[P.name]; let frames = 0, nextAps = 0; if (bp && aps > 0) { for (let i = 0; i < bp.length; i += 2) { if (bp[i + 1] <= aps + 1e-9) frames = bp[i]; else { nextAps = bp[i + 1]; break; } } if (!frames) frames = bp[0]; }
+    const bp = isJudge || isProc ? null : AS_FRAMES[P.name]; let frames = 0, nextAps = 0; if (bp && aps > 0) { for (let i = 0; i < bp.length; i += 2) { if (bp[i + 1] <= aps + 1e-9) frames = bp[i]; else { nextAps = bp[i + 1]; break; } } if (!frames) frames = bp[0]; }
     // passive pulses such as Holy Light Aura tick on a fixed timer and gain damage from attack speed instead of hitting faster
-    const pulse = !isJudge && /Attack Speed further increases this damage/.test(P.desc || '') && !(payD && /ACTIVE|EXPLOSION/i.test(payD.k || '')); let pulseEvery = 0;
+    const pulse = !isJudge && !isProc && /Attack Speed further increases this damage/.test(P.desc || '') && !(payD && /ACTIVE|EXPLOSION/i.test(payD.k || '')); let pulseEvery = 0;
     if (pulse) { const m = (P.desc || '').match(/every \{c_number\}\{SF_(\d+)\}\{\/c\} seconds/); pulseEvery = isDawn ? 1 : m && +P.sf[+m[1]] > 0 ? +P.sf[+m[1]] : 1; }
     const asDmg = pulse && !isThorns ? 1 + asTotal / 100 : 1;
     // Judgement goes off once per mark: every 3 seconds on its own timer unless a rate is typed in; a second blast from Seal of the Second Trumpet counts by its chance
     const judRate = isJudge ? (+T.jud > 0 ? +T.jud : 1 / judge.timer) * (1 + judge.twice) : 0;
-    const hps = isJudge ? judRate : isThorns ? 1 : pulse ? 1 / pulseEvery : frames ? 60 / frames : aps;
+    // a skill with a cooldown is cast once per cooldown. A proc that takes a second off cooldowns (Messerschmidt's Reaver) shortens it by its chance on each enemy the cast hits.
+    const lhFrac = (() => { try { const v = sk.lhEff(); return Math.min(1, v > 1 ? v / 100 : v); } catch (e) { return 0; } })();
+    const cdBase = (() => { try { return sk.cd() > 0 ? sk.cdEff() : 0; } catch (e) { return 0; } })();
+    const cutter = pays.find(x => x.proc && x.cut); const tg = Math.max(1, +T.tg || 1);
+    // powers that take time off cooldowns, as seconds removed for every second of fighting. The cooldown then runs at 1 + that rate.
+    const cuts = []; const blk = Math.max(0, T.blk === '' || T.blk == null ? 1 : +T.blk || 0);
+    if (cdBase) { const mid = (m, a, b) => (parseFloat(m[a]) + parseFloat(m[b] || m[a])) / 2; let unl = []; try { unl = unlockedSkills().map(id => C.powers[id]).filter(Boolean); } catch (e) { unl = []; }
+      const nCd = +T.ncd > 0 ? +T.ncd : Math.max(1, (S.hotbar || []).filter(id => { try { return C.powers[id] && skillCtx(id).cd() > 0; } catch (e) { return false; } }).length);
+      worn.forEach(it => { const t = strip(it.desc); let m;
+        if ((m = t.match(/Core Skill damage reduces the Cooldown of one of your Skills by \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]? second/)) && unl.some(q => skillIs(q, 'Core'))) cuts.push({ n: it.name, v: aps * mid(m, 1, 2) / nCd, how: `${D4T.fmtNum(Math.round(mid(m, 1, 2) * 100) / 100)} seconds off one cooldown on each Core cast, ${D4T.fmtNum(Math.round(aps * 100) / 100)} casts a second, shared by ${nCd} skill${nCd === 1 ? '' : 's'} with a cooldown on your bar` });
+        if ((m = t.match(/Blocks have a \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to reduce all Cooldowns by ([\d.]+) second/)) && blk > 0) cuts.push({ n: it.name, v: blk * mid(m, 1, 2) / 100 * +m[3], how: `${D4T.fmtNum(Math.round(mid(m, 1, 2) * 10) / 10)}% of ${D4T.fmtNum(blk)} block${blk === 1 ? '' : 's'} a second`, blk: 1 }); });
+      if (cutter) cuts.push({ n: cutter.n, v: aps * tg * lhFrac * cutter.ch / 100 * cutter.cut, how: `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of Lucky Hits, ${D4T.fmtNum(tg)} enem${tg === 1 ? 'y' : 'ies'} hit` }); }
+    const cutRate = cuts.reduce((a, x) => a + x.v, 0); const cdCut = cutRate; const castEvery = cdBase ? Math.max(1 / Math.max(aps, 0.01), cdBase / (1 + cutRate)) : 0;
+    const procRate = isProc ? (cdBase ? tg / castEvery : aps) * lhFrac * payD.ch / 100 : 0;
+    const hps = isJudge ? judRate : isProc ? procRate : isDawn ? 1 : isThorns ? (payD.hit || payD.per || !cdBase ? 1 : 1 / castEvery) : pulse ? 1 / pulseEvery : frames ? 60 / frames : cdBase ? Math.min(aps, 1 / castEvery) : aps;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
@@ -1889,7 +1923,7 @@
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
-    return { xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? 'Grief poison from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -1912,13 +1946,16 @@
         <section class="tc-box"><h3>Setup</h3>
           <div class="kv">
             <label for="tcSkill">Skill</label><select id="tcSkill">${R.skills.map(id => `<option value="${id}" ${id === T.skill ? 'selected' : ''}>${esc(C.powers[id].name)}</option>`).join('')}</select>
-            <label for="tcPay">Damage line</label><select id="tcPay">${R.pays.map(x => `<option value="${x.k}" ${R.payD && x.k === R.payD.k ? 'selected' : ''}>${x.judge ? 'Judgement explosion, ' + f(x.v) + '% of weapon damage' : x.dawn ? 'Dawnfire fire pulse, ' + f(x.v) + '% of weapon damage' : x.thorns ? (x.hit ? 'Thorns, each time you are hit (Retribution)' : f(x.v) + '% of your Thorns' + (x.per ? ' a second' : '')) : f(x.v) + '% skill damage'}</option>`).join('')}</select>
+            <label for="tcPay">Damage line</label><select id="tcPay">${R.pays.map(x => `<option value="${x.k}" ${R.payD && x.k === R.payD.k ? 'selected' : ''}>${x.judge ? 'Judgement explosion, ' + f(x.v) + '% of weapon damage' : x.grief ? 'Grief poison, ' + f(x.share) + '% of the ' + f(x.of) + '% hit' : x.proc ? esc(x.n) + ' proc, ' + f(x.v) + '% of weapon damage as ' + x.el : x.dawn ? 'Dawnfire fire pulse, ' + f(x.v) + '% of weapon damage' : x.thorns ? (x.hit ? 'Thorns, each time you are hit (Retribution)' : f(x.v) + '% of your Thorns' + (x.per ? ' a second' : '')) : f(x.v) + '% skill damage'}</option>`).join('')}</select>
             <label for="tcWd">Weapon damage (from your weapon tooltip)</label><input id="tcWd" type="number" value="${esc(T.wd)}" placeholder="${R.isThorns ? 'Not used for Thorns' : 'Type it in'}" ${R.isThorns ? 'disabled' : ''}>
             <label for="tcWs">Weapon speed (attacks per second)</label><input id="tcWs" type="number" step="0.01" value="${esc(T.ws)}">
             <label for="tcBase">${R.msName} not on gear (level and base)</label><input id="tcBase" type="number" value="${esc(T.base)}">
             ${R.dawn ? `<label for="tcDawn">Dawnfire stacks from kills (0 to ${R.dawn.max})</label><input id="tcDawn" type="number" min="0" max="${R.dawn.max}" value="${R.dawn.stacks}">` : ''}
             <label for="tcThorns">Thorns (type the number from your character sheet to override)</label><input id="tcThorns" type="number" value="${esc(T.thorns != null && T.thorns !== '' ? T.thorns : '')}" placeholder="${R.thornsAuto ? f(R.thornsAuto) + ' from the build' : 'None on the build'}">
             ${R.isJudge ? `<label for="tcJud">Judgement explosions per second on one enemy</label><input id="tcJud" type="number" step="0.01" min="0" value="${esc(T.jud != null && T.jud !== '' ? T.jud : '')}" placeholder="${f(1 / R.judge.timer, 2)}, one every ${R.judge.timer} seconds">` : ''}
+            ${R.cuts.some(x => x.blk) || (R.cdBase && R.T.blk != null && R.T.blk !== '') ? `<label for="tcBlk">Blocks a second, for cooldown powers</label><input id="tcBlk" type="number" min="0" step="0.5" value="${f(R.blk)}">` : ''}
+            ${R.cuts.some(x => /shared by/.test(x.how)) ? `<label for="tcNcd">Skills you keep on cooldown, for powers that cut one of them</label><input id="tcNcd" type="number" min="1" step="1" value="${esc(R.T.ncd != null && R.T.ncd !== '' ? R.T.ncd : '')}" placeholder="every cooldown skill on your bar">` : ''}
+            ${R.cutter || R.isProc ? `<label for="tcTg">Enemies hit by each cast</label><input id="tcTg" type="number" min="1" step="1" value="${f(R.tg)}">` : ''}
             <label for="tcVuln">Vulnerable uptime for expected (%)</label><input id="tcVuln" type="number" value="${esc(T.vuln)}">
           </div>
         </section>
@@ -1929,7 +1966,7 @@
           <table class="tc-table"><thead><tr><th>Monster</th><th>${R.dot ? 'Lowest total' : 'Min hit'}</th><th>${R.dot ? 'Expected total' : 'Expected hit'}</th><th>${R.dot ? 'Highest total' : 'Max hit'}</th><th>Selected</th><th>Expected DPS</th></tr></thead>
           <tbody>${R.segs.map(([l, x, sh, ph]) => `<tr><th>${l}</th><td>${f(x.min)}</td><td><b>${f(x.exp)}</b></td><td>${f(x.max)}</td><td class="selhit"><b>${f(sh)}</b><small>${ph ? `x${f(sh / ph, 2)} vs none` : ''}</small></td><td><b>${f(x.exp * R.hps)}</b></td></tr>`).join('')}</tbody></table>
           ${R.dot ? `<p class="note"><b>${esc(R.dot.kind)}.</b> Each number is the whole amount one cast puts on the monster${R.dot.dur ? `, paid out over ${f(R.dot.dur, 1)} seconds in ${f(R.dot.dur * 2)} ticks of ${f(R.segs[0][1].exp / (R.dot.dur * 2))} (every half second)` : ', paid out in ticks every half second'}. It cannot crit and has no high or low roll. Recasting adds to what is left: once stacked, at ${f(R.hps, 2)} casts a second each half-second tick settles at ${f(R.segs[0][1].exp * R.hps / 2)}, which is ${f(R.segs[0][1].exp * R.hps)} a second.</p>` : ''}${R.isDawn ? `<p class="note"><b>Dawnfire.</b> A flat ${f(R.dawn.lo * 100)} to ${f(R.dawn.hi * 100)}% of your weapon's top damage as Fire every second, x${R.dawnX.toFixed(2)} at ${R.dawn.stacks} kill stacks (${f(R.dawn.per)}%[x] each, up to ${R.dawn.max}).</p>` : ''}
-          <p class="note">${R.isJudge ? `Explosions per second on one enemy: ${f(R.hps, 2)}${R.judge.twice ? `, which includes a ${f(R.judge.twice * 100)}% chance to explode twice` : ''}. Type your own rate in Setup if your Core Judicator Skills set it off faster than the ${R.judge.timer} second timer.` : R.pulse ? `This is a pulse on a fixed timer: one hit every ${f(R.pulseEvery, 2)} s. Attack speed does not make it tick faster; it raises each pulse by x${R.asDmg.toFixed(2)} instead (${f(R.as1, 1)}% Attack Speed plus ${f(R.as2, 1)}% Cast Speed).` : `Hits per second: ${f(R.hps, 2)}. Weapon speed ${f(+T.ws || 0, 2)} with ${f(R.as1, 1)}% Attack Speed (first cap, 100%) and ${f(R.as2, 1)}% Cast Speed (second cap, 100%) gives ${f(R.aps, 3)} attacks per second.${R.frames ? ` ${esc(R.P.name)} then takes ${f(R.frames, 1)} frames a cast${R.nextAps ? `; it gets faster at ${f(R.nextAps, 3)} attacks per second, which needs ${f((R.nextAps / (+T.ws || 1) - 1) * 100, 1)}% total speed` : ', its fastest measured step'}.` : ' No frame table for this skill yet, so this assumes every bit of speed counts.'}`} Bosses use the elite bonus; boss-only powers can be added as gear or ticked below. Every number already includes the ${f((1 - R.monDR) * 100)}% damage reduction all monsters have at your level, so it should match the numbers you see in game.</p>
+          ${R.isGrief ? `<p class="note"><b>Grief.</b> Every direct hit of ${esc(R.P.name)} also poisons for ${f(R.payD.share)}% of it over ${f(R.payD.over)} seconds. This line is that poison on its own, so add it to the skill's own line for the total. It follows the hit, crit included, and takes Poison bonuses in place of the skill's own element.</p>` : ''}${R.isProc ? `<p class="note"><b>${esc(R.payD.n)}.</b> A Lucky Hit proc worth ${f(R.payD.v)}% of weapon damage as ${esc(R.payD.el)}. It goes off on ${f(R.payD.ch, 1)}% of Lucky Hits, and ${esc(R.P.name)} has a ${f(R.lhFrac * 100, 1)}% Lucky Hit Chance, so that is ${f(R.procRate, 2)} procs a second from this skill alone. Skill-specific bonuses are left out. Other skills you use add their own procs on top.</p>` : ''}<p class="note">${R.cdBase && !R.isJudge && !R.isProc ? `${esc(R.P.name)} has a ${f(R.cdBase, 2)} second cooldown after Cooldown Reduction${R.cuts.length ? `. ${R.cuts.map(x => esc(x.n) + ' takes off ' + f(x.v, 2) + ' seconds every second (' + esc(x.how) + ')').join('; ')}` : ''}, so it is cast every ${f(R.castEvery, 2)} seconds. ` : ''}${R.isJudge ? `Explosions per second on one enemy: ${f(R.hps, 2)}${R.judge.twice ? `, which includes a ${f(R.judge.twice * 100)}% chance to explode twice` : ''}. Type your own rate in Setup if your Core Judicator Skills set it off faster than the ${R.judge.timer} second timer.` : R.pulse ? `This is a pulse on a fixed timer: one hit every ${f(R.pulseEvery, 2)} s. Attack speed does not make it tick faster; it raises each pulse by x${R.asDmg.toFixed(2)} instead (${f(R.as1, 1)}% Attack Speed plus ${f(R.as2, 1)}% Cast Speed).` : `Hits per second: ${f(R.hps, 2)}. Weapon speed ${f(+T.ws || 0, 2)} with ${f(R.as1, 1)}% Attack Speed (first cap, 100%) and ${f(R.as2, 1)}% Cast Speed (second cap, 100%) gives ${f(R.aps, 3)} attacks per second.${R.frames ? ` ${esc(R.P.name)} then takes ${f(R.frames, 1)} frames a cast${R.nextAps ? `; it gets faster at ${f(R.nextAps, 3)} attacks per second, which needs ${f((R.nextAps / (+T.ws || 1) - 1) * 100, 1)}% total speed` : ', its fastest measured step'}.` : ' No frame table for this skill yet, so this assumes every bit of speed counts.'}`} Bosses use the elite bonus; boss-only powers can be added as gear or ticked below. Every number already includes the ${f((1 - R.monDR) * 100)}% damage reduction all monsters have at your level, so it should match the numbers you see in game.</p>
           ${(() => { let Dd = null; try { Dd = defense(); } catch (e) { return ''; } const cs = (Dd.cards || []).filter(c => c && c.cat !== 'boss' && c.cat !== 'world'); if (!cs.length || !R.wd) return '';
             const t = v => v < 1 ? 'under 1 second' : v < 90 ? f(v, 1) + ' seconds' : v < 5400 ? f(v / 60, 1) + ' minutes' : f(v / 3600, 1) + ' hours';
             return `<table class="tc-table ttk"><thead><tr><th>Time to kill, ${esc(Dd.tier && Dd.tier.name ? Dd.tier.name : 'at your Defense page difficulty')}</th><th>Life (estimate)</th><th>Time</th></tr></thead><tbody>${cs.map(c => { const seg = R.segs[c.cat === 'normal' && c.rarity === 'normal' ? 0 : c.cat === 'boss' || c.cat === 'world' ? 2 : 1][1]; const dps = seg.exp * R.hps; return `<tr><th>${esc(c.m.name)}</th><td>${f(c.life)}</td><td><b>${dps > 0 ? t(c.life / dps) : 'No damage yet'}</b></td></tr>`; }).join('')}</tbody></table><p class="note">One target, the monsters and difficulty picked on Defense Theory Craft. Monster Life comes from the game files and has not been checked in game. Bosses are left out because their Life is not in the files.</p>`; })()}
@@ -1968,7 +2005,7 @@
     const set = (k, v) => { T[k] = v; commit(); renderTheory(); };
     $('#tcSkill').onchange = e => { T.pay = ''; set('skill', e.target.value); };
     $('#tcPay').onchange = e => set('pay', e.target.value);
-    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns'], ['tcJud', 'jud']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
+    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns'], ['tcJud', 'jud'], ['tcTg', 'tg'], ['tcBlk', 'blk'], ['tcNcd', 'ncd']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
     const ops = $('#opStacks'); if (ops) ops.onchange = () => { T.st.opStacks = Math.max(1, Math.min(12, Math.round(+ops.value || 4))); commit(); renderTheory(); };
     $$('#panel-theory [data-st]').forEach(c => c.onchange = () => { const k = c.dataset.st; T.st[k] = c.checked; if (TC_COND.some(([x]) => x === k)) T.cond[k] = c.checked; commit(); renderTheory(); });
     $$('#panel-theory [data-xoff]').forEach(c => c.onchange = () => { T.off[c.dataset.xoff] = !c.checked; commit(); renderTheory(); });
@@ -2412,6 +2449,8 @@
   const libUrl = b => b.url || `https://${window.D4LIB.source}/diablo-4/${b.id}`; const libSrc = b => b.src || window.D4LIB.source;
   // turn one variant of a library build (names and slugs) into a planner build, and list what could not be matched
   function libResolve(b, vi) {
+    // a lab build carries its whole saved state
+    { const V0 = b.variants[vi] || b.variants[0]; if (V0 && V0.st) { const st0 = JSON.parse(JSON.stringify(V0.st)); st0.ver = S.ver; return { st: st0, miss: [], extra: [] }; } }
     const D = window.D4DATA[S.ver] || data(); const C = D.classes[b.cls]; const G = D.gear; const V = b.variants[vi] || b.variants[0]; const miss = [];
     const st = blank(b.cls); st.ver = S.ver; st.name = `${b.name} ${b.cls}${b.variants.length > 1 ? ', ' + V.t : ''}`;
     // skills: active skills first, then upgrades and passives
@@ -2482,19 +2521,20 @@
     const dirty = Object.keys(S.gear || {}).length || Object.keys(S.alloc || {}).length;
     const crest = c => `<span class="lib-crest"><svg viewBox="-2 -2 36 36" aria-hidden="true">${D4ART.crest(c)}</svg></span>`;
     const card = b => { const vi = Math.min(libVar[b.id] || 0, b.variants.length - 1); const V = b.variants[vi]; const key = [...new Set(V.gear.filter(g => g[2] !== 'a').map(g => g[1]))].slice(0, 5);
-      return `<article class="lib-card" data-cls="${esc(b.cls)}"><header>${crest(b.cls)}<div><h3>${esc(b.name)}</h3><p>${esc(b.cls)}</p></div><span class="lib-tier t-${esc(b.tier)}" title="${esc(b.tier)} tier on ${esc(libSrc(b))}">${esc(b.tier || '-')}</span></header>
+      return `<article class="lib-card" data-cls="${esc(b.cls)}"><header>${crest(b.cls)}<div><h3>${esc(b.name)}</h3><p>${esc(b.cls)}</p></div><span class="lib-tier t-${esc(b.tier)}" title="${b.lab ? 'Off-meta build tested in the planner' : esc(b.tier) + ' tier on ' + esc(libSrc(b))}">${esc(b.tier || '-')}</span></header>
         ${b.variants.length > 1 ? `<label class="lib-var">Variant <select data-libvar="${esc(b.id)}">${b.variants.map((v, i) => `<option value="${i}" ${i === vi ? 'selected' : ''}>${esc(v.t)}</option>`).join('')}</select></label>` : ''}
         <p class="lib-skills">${V.bar.map(esc).join(', ')}</p>
         ${key.length ? `<p class="lib-items"><span>Built around</span> ${key.map(esc).join(', ')}</p>` : ''}
+        ${b.note ? `<p class="lib-note">${esc(b.note)}</p>` : ''}
         <footer><button class="btn" data-lib="${esc(b.id)}">${libArm === b.id ? 'Replace my current build' : 'Load into planner'}</button>
-          <a class="lib-src" href="${libUrl(b)}" target="_blank" rel="noopener">Guide by ${esc(b.author)}${b.src ? ', ' + esc(b.src) : ''}</a></footer></article>`; };
+          ${b.lab ? '<span class="lib-src">Built and tested in this planner, not checked in game</span>' : `<a class="lib-src" href="${libUrl(b)}" target="_blank" rel="noopener">Guide by ${esc(b.author)}${b.src ? ', ' + esc(b.src) : ''}</a>`}</footer></article>`; };
     const gcard = r => `<article class="lib-card guide" data-cls="${esc(r[2])}"><header>${crest(r[2])}<div><h3>${esc(r[1])}</h3><p>${esc(r[2])}</p></div><span class="lib-tier t-${esc(r[0])}" title="${esc(r[0])} tier on ${esc(GS.source)}">${esc(r[0])}</span></header>
         <footer><a class="btn ghost" href="https://mobalytics.gg/diablo-4/${esc(r[4])}" target="_blank" rel="noopener">Open the guide</a><span class="lib-src">By ${esc(r[3])}, ${esc(GS.source)}</span></footer></article>`;
     const nVar = L.builds.reduce((n, b) => n + b.variants.length, 0);
     box.innerHTML = `<div class="tc lib">
       <header class="tc-head"><div><h2>Build library</h2><p>${L.builds.length} ${esc(L.season)} endgame builds with ${nVar} variants, across S, A, B and C tier. Pick a variant and load it: skills, gear, tempers, class mechanic, Paragon boards with glyphs, and mercenaries are filled in for you to tune. Each build is credited to its author, with a link to the full guide.</p></div></header>
       <div class="lib-filter" role="group" aria-label="Class"><button class="chip" data-libcls="" aria-pressed="${!libCls}">All classes</button>${classes.map(c => `<button class="chip" data-libcls="${esc(c)}" aria-pressed="${libCls === c}">${esc(c)}</button>`).join('')}</div>
-      <div class="lib-filter" role="group" aria-label="Tier"><button class="chip" data-libtier="" aria-pressed="${!libTier}">All tiers</button>${['S', 'A', 'B', 'C'].map(t => `<button class="chip" data-libtier="${t}" aria-pressed="${libTier === t}">${t} tier</button>`).join('')}</div>
+      <div class="lib-filter" role="group" aria-label="Tier"><button class="chip" data-libtier="" aria-pressed="${!libTier}">All tiers</button>${['S', 'A', 'B', 'C'].map(t => `<button class="chip" data-libtier="${t}" aria-pressed="${libTier === t}">${t} tier</button>`).join('')}${L.builds.some(b => b.lab) ? `<button class="chip" data-libtier="Lab" aria-pressed="${libTier === 'Lab'}">Lab builds</button>` : ''}</div>
       ${list.length ? `<div class="lib-grid">${list.map(card).join('')}</div>` : ''}
       ${guides.length ? `<h3 class="lib-h">Guide links only <small>${guides.length} builds whose data could not be read</small></h3><div class="lib-grid">${guides.map(gcard).join('')}</div>` : ''}
       ${!list.length && !guides.length ? '<p class="note">No builds match those filters.</p>' : ''}
@@ -2640,7 +2680,7 @@
     x.fillStyle = '#7d705c'; x.font = '18px Georgia, serif'; x.textAlign = 'right'; x.fillText('Made with D4 Build Planner', W - 56, H - 44); x.textAlign = 'left';
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (S.name || 'build').replace(/[^\w -]+/g, '').trim().replace(/\s+/g, '_') + '_card.png'; a.click(); toast('Build card saved as a picture'); }, 'image/png');
   }
-  window.__D4X = { buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S };
+  window.__D4X = { buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
   function wireScan() {
     const pick = $('#scanPick'), file = $('#scanFile'); if (pick && file) { pick.onclick = () => file.click(); file.onchange = () => { if (file.files[0]) scanImage(file.files[0]); }; }
     const drop = $('#scanDrop'); if (drop) drop.onclick = () => { SCAN = null; renderGear(); };

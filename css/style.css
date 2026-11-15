@@ -1465,3 +1465,7 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .cmp-aspb.on { border-color: #d6a23a; box-shadow: inset 0 0 0 1px rgba(214,162,58,.5); }
 .cmp-aspb small { color: #a89a82; font-size: 13px; }
 .cmp-asp .note { flex-basis: 100%; }
+
+/* lab builds in the library */
+.lib-tier.t-Lab { width: auto; padding: 0 8px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; border-color: #6f8f6a; color: #a9cfa2; }
+.lib-note { margin: 6px 0 0; font-size: 14px; color: #b9ad98; }
