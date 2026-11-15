@@ -1429,3 +1429,8 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .merc-how { border-left: 3px solid #7fc27f; padding-left: 10px; }
 .scan.bag .tc-table td, .scan.bag .tc-table th { vertical-align: top; } .verdict.up { color: #8fd07a; } .verdict.down { color: #e8574a; } .verdict.side { color: #d6a23a; }
 .tc-table.ttk { margin-top: 14px; } .scan-start { flex-wrap: wrap; }
+/* paste boxes for screenshots */
+.pastebox { display: grid; gap: 4px; margin: 10px 0; padding: 14px 16px; border: 2px dashed rgba(214, 162, 58, .55); background: rgba(214, 162, 58, .05); cursor: pointer; outline: none; }
+.pastebox b { font: 600 16px var(--display); color: #f0d9a0; } .pastebox span { font-size: 13.5px; color: var(--mute); }
+.pastebox:hover, .pastebox:focus, .pastebox.armed { border-style: solid; border-color: #f0d9a0; background: rgba(214, 162, 58, .12); }
+.pastebox.armed b::after { content: '  ready, press Ctrl+V'; font: 500 13px var(--body); color: #8fd07a; }
