@@ -64,8 +64,9 @@
     const num = v => D4T.fmtNum(Math.round(v));
     [...(D.aspects || []), ...(D.uniques || [])].forEach(a => { const f = FLAT_POWERS[a.id]; if (!f) return; const sc = flatScale(D, GEAR_LEVEL * f[2]);
       a.desc = String(a.desc || '').replace(/<b class="num">[^<]*<\/b>(<\/span>\s*)(Thorns|Life)/, (m, sp, w) => `<b class="num">${f[0] === f[1] ? num(f[0] * sc) : '[' + num(f[0] * sc) + ' – ' + num(f[1] * sc) + ']'}</b>${sp}${w}`); });
-    // the Paladin seal's flat Thorns line has no level of its own in the files; it is read at character level like the gear affix it shares a formula with
-    ((D.gear || {}).sealAffixes || []).forEach(a => { if (a.id === 'Talisman_SealAffix_Set_Paladin_01_Thorns' && a.html) { const sc = flatScale(D, CHAR_LEVEL); a.t = '+§ Thorns'; a.v = Math.round(sc); a.lo = Math.round(0.8 * sc); delete a.html; } });
+    // the Paladin seal's flat Thorns line has no level of its own in the files, so it is not scaled up: 0.8 to 1 x base Life at level 1, which is 40 to 50.
+    // Confirmed in game: the line never rolls above 50 Thorns.
+    ((D.gear || {}).sealAffixes || []).forEach(a => { if (a.id === 'Talisman_SealAffix_Set_Paladin_01_Thorns' && a.html) { const sc = flatScale(D, 1); a.t = '+§ Thorns'; a.v = Math.round(sc); a.lo = Math.round(0.8 * sc); delete a.html; } });
   }
   Object.keys(ALL).forEach(k => patchFlat(ALL[k]));
 

@@ -40,7 +40,7 @@ Not yet confirmed:
 
 - Flat Thorns on powers: the game files store a share, and the game multiplies it by base Life at a level (50 x that level's Life scalar in LevelScaling). Checked against three databases: Aspect of Spiked Armor reads 1,361, 1,813 and 2,415 Thorns at levels 68, 73 and 78, each exactly 50 x the scalar, and Aspect of Lapa's Scripture matches at 1.5 times those levels. The planner uses level 75, the level the files give for 900 item power.
 - Skills that grant Thorns (Defiance Aura's Rite of Thorns, Clash's Punishment) use their own formula on character level, read at level 70.
-- The Paladin seal's flat Thorns line has no level in the files. It is read at level 70 like the gear affix it shares a formula with, and is not confirmed.
+- The Paladin seal's flat Thorns line has no level in the files, so it is not scaled up: 40 to 50 Thorns. Confirmed in game, where it never rolls above 50.
 - Judgement: 80% weapon damage as Holy, 3 seconds after the mark lands (Paladin_Sub_Judgement). The Judicator Oath lets Core Judicator Skills set it off early, adds 100%[x] when it hits one enemy and 80%[x] damage taken by Judged enemies. How often it goes off in a real fight is not in the files, so the rate can be typed in.
 
 ## Updating game data
