@@ -2713,6 +2713,9 @@
     return out;
   }
   const HIT_CAL = 2;
+  // Every hit measured in game so far, from a Fallen to a Vile Overseer, landed at or under 3.3% of the monster's base Life scale, whatever share its file lists.
+  // Unmeasured attacks are held to that ceiling, so big file shares on elites and bosses no longer produce hits no real build could survive.
+  const HIT_CEIL = 0.033;
   // Per-monster corrections from the same in-game test (level 70, Torment I, 11 clean hits). Fallen: three identical hits, exact. Fallen hounds: four single hits of 827 to 887, about 1.63 times the file value, with a spread of about 4% either side.
   function defense() {
     const SC = data().scaling; const D = window.D4MON || {}; const MON = D.monsters || []; if (!SC || !MON.length) return null;
@@ -2749,7 +2752,7 @@
       return { raw, hit, exp };
     };
     const monLife = (m, rarity) => { const rh = RARITY_HP[rarity]; const rk = rh >= 0 && L.rh ? 1 + (L.rh[rh] || 0) : 1; return L.mhp * m.hp * tier.hp * rk; };
-    const card = (cat, m, rarity, tierKey) => m ? { cat, m, rarity, life: monLife(m, rarity), attacks: m.attacks.map(a => { const c = calOf(m, a); return Object.assign({ a, cal: c }, taken(a.s, a.type, tierKey, m.dmg * (c ? c.k / HIT_CAL : 1))); }) } : null;
+    const card = (cat, m, rarity, tierKey) => m ? { cat, m, rarity, life: monLife(m, rarity), attacks: m.attacks.map(a => { const c = calOf(m, a); return Object.assign({ a, cal: c }, taken(a.s, a.type, tierKey, m.dmg * (c ? c.k / HIT_CAL : Math.min(1, HIT_CEIL / (a.s * HIT_CAL))))); }) } : null;
     const nm = MON.find(x => x.id === T.mon.normal);
     const eb = eliteBase(MON, T.mon.elite);
     const kind = eb ? (eb.promoted ? (T.rar === 'champion' ? 'champion' : 'elite') : 'superElite') : 'elite';
@@ -2799,7 +2802,7 @@
       return `<select data-aff="${i}" aria-label="Affix ${i + 1}"><option value="">Affix ${i + 1}: none</option>${groups.map(g => `<optgroup label="${g === 'CrowdControl' ? 'Crowd control' : g}">${R.D.affixes.filter(a => a.cat === g && !taken.has(a.id)).map(a => `<option value="${a.id}" ${a.id === cur ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</optgroup>`).join('')}</select>`; };
     const monCard = c => { const m = c.m; const title = c.cat === 'elite' && R.eb && R.eb.promoted ? `${m.name} (${kindName.toLowerCase()})` : m.name;
       return `<section class="tc-box mon-card"><header class="mon-h"><h3>${esc(title)}</h3><span class="mon-tag ${c.cat}">${c.cat === 'normal' ? 'Normal' : c.cat === 'elite' ? kindName : c.cat === 'world' ? 'World boss' : 'Boss'}</span>${m.tag ? `<span class="mon-tag">${esc(m.tag)}</span>` : ''}${(() => { const cs = c.attacks.map(r => r.cal).filter(Boolean); const hits = cs.reduce((t, x) => Math.max(t, x.n), 0); const sp = cs.reduce((t, x) => Math.max(t, x.spread || 0), 0);
-          return cs.length ? `<span class="mon-tag ok" title="Checked against ${hits} real hit${hits === 1 ? '' : 's'} reported from the game.">Measured in game${sp >= 0.005 ? ', within ' + f(sp * 100, 0) + '%' : hits > 1 ? ', exact' : ''}</span>` : '<button class="mon-tag est" data-gosubmit="' + esc(m.id) + '" title="Not yet checked against real hits. Monsters tested so far came in up to 45% below this estimate. Click to report a hit from this monster.">Estimate, may read high. Report a hit</button>'; })()}</header>
+          return cs.length ? `<span class="mon-tag ok" title="Checked against ${hits} real hit${hits === 1 ? '' : 's'} reported from the game.">Measured in game${sp >= 0.005 ? ', within ' + f(sp * 100, 0) + '%' : hits > 1 ? ', exact' : ''}</span>` : '<button class="mon-tag est" data-gosubmit="' + esc(m.id) + '" title="Not yet measured. Its hits are held to the hardest hit measured in game so far, so elites and bosses may really hit harder than shown. Click to report a hit from this monster.">Estimate from measured monsters. Report a hit</button>'; })()}</header>
         <div class="mon-stats"><div><span>Life (estimate)</span><b>${c.cat === 'boss' || c.cat === 'world' ? 'Not in the files' : big(c.life)}</b></div><div><span>Damage scaling</span><b>x${f(m.dmg, 2)}</b></div><div><span>Element</span><b>${esc(m.el)}</b></div><div><span>Attacks</span><b>${m.attacks.length}</b></div>${(() => { const top = c.attacks.reduce((a, r) => r.hit > a.hit ? r : a, { hit: 0 }); const need = Math.floor(top.hit) + 1; const ok = R.life > top.hit;
           return `<div class="${ok ? 'ok' : 'bad'}" title="Biggest single hit after your defenses: ${esc(top.a ? top.a.name : '')}"><span>Life to survive its biggest hit</span><b>${f(need)}</b><small>${ok ? `you have ${f(R.life - top.hit)} to spare` : `you are ${f(need - R.life)} short`}</small></div>`; })()}</div>
         <table class="tc-table df">${head}<tbody>${c.attacks.map(r => hitRow(r.a.name, sub(r.a), r)).join('')}</tbody></table>
