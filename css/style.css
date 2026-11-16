@@ -1469,3 +1469,12 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 /* lab builds in the library */
 .lib-tier.t-Lab { width: auto; padding: 0 8px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; border-color: #6f8f6a; color: #a9cfa2; }
 .lib-note { margin: 6px 0 0; font-size: 14px; color: #b9ad98; }
+
+/* Theory Craft pages listed under Build Planner in the side rail */
+.nav-b.nav-sub { padding: 6px 10px 6px 26px; font-size: .92em; color: var(--mute); position: relative; }
+.nav-b.nav-sub::before { content: ''; position: absolute; left: 14px; top: 50%; width: 6px; height: 1px; background: var(--brass-lo); }
+.nav-b.nav-sub[aria-current=page] { color: var(--brass-hi); }
+@media (max-width: 760px) { .nav-b.nav-sub { padding-left: 10px; } .nav-b.nav-sub::before { display: none; } }
+
+/* on narrow screens the header stacks, so the title block must not take its 420px width as height */
+@media (max-width: 900px) { .title-block { flex: 0 0 auto; } }

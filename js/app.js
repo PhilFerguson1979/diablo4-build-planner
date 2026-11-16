@@ -242,8 +242,9 @@
 
   // ---------- class rail ----------
   function renderRail() {
-    $('#rail').innerHTML = '<div class="mark">D4 Build Planner</div>' + NAV.map(([g, items]) => `<p class="nav-g">${g}</p>` + items.map(([id, label]) => `<button class="nav-b" data-site="${id}" aria-current="${id === site ? 'page' : 'false'}">${esc(label)}</button>`).join('')).join('');
-    $$('#rail [data-site]').forEach(b => b.onclick = () => showSite(b.dataset.site));
+    $('#rail').innerHTML = '<div class="mark">D4 Build Planner</div>' + NAV.map(([g, items]) => `<p class="nav-g">${g}</p>` + items.map(([id, label, sub]) => `<button class="nav-b" data-site="${id}">${esc(label)}</button>` + (sub || []).map(([t, l]) => `<button class="nav-b nav-sub" data-site="${id}" data-subtab="${t}">${esc(l)}</button>`).join('')).join('')).join('');
+    $$('#rail [data-site]').forEach(b => b.onclick = () => { if (b.dataset.subtab) { if (site !== 'planner') { tab = b.dataset.subtab; showSite('planner'); } else showTab(b.dataset.subtab); return; } if (b.dataset.site === 'planner' && NAV_SUB.some(([t]) => t === tab)) tab = 'sheet'; showSite(b.dataset.site); });
+    railCurrent();
     $('#classStrip').innerHTML = CLASS_LIST.map(c =>
       `<button class="sigil" data-cls="${c}" aria-pressed="${c === S.cls}" title="${c}"><svg class="rail-crest" viewBox="-4 -4 40 40" aria-hidden="true"><circle cx="16" cy="16" r="19" class="rc-plate"/><circle cx="16" cy="16" r="17.2" class="rc-ring"/><g transform="translate(2.4 2.4) scale(0.85)">${D4ART.crest(c)}</g></svg><span>${c}</span></button>`).join('');
     $$('#classStrip .sigil').forEach(b => b.onclick = () => {
@@ -2934,11 +2935,14 @@
 
   // ---------- site navigation: the sidebar switches between the planner, the build library and reference pages ----------
   let site = 'planner';
-  const NAV = [['Planner', [['planner', 'Build Planner'], ['library', 'Build Library']]], ['Reference', Object.keys(window.D4PAGES || {}).map(k => [k, window.D4PAGES[k].nav])]];
+  // the two Theory Craft pages sit under Build Planner: they are planner tabs, so they always work on the build that is loaded
+  const NAV_SUB = [['theory', 'Damage Theory Craft'], ['defense', 'Defense Theory Craft']];
+  const NAV = [['Planner', [['planner', 'Build Planner', NAV_SUB]]], ['Reference', [['library', 'Build Library']].concat(Object.keys(window.D4PAGES || {}).map(k => [k, window.D4PAGES[k].nav]))]];
+  function railCurrent() { const sub = NAV_SUB.some(([t]) => t === tab); $$('#rail .nav-b').forEach(b => { const on = b.dataset.subtab ? site === 'planner' && tab === b.dataset.subtab : b.dataset.site === 'planner' ? site === 'planner' && !sub : b.dataset.site === site; b.setAttribute('aria-current', on ? 'page' : 'false'); }); }
   function showSite(id) {
     if (id !== 'planner' && id !== 'library' && !(window.D4PAGES || {})[id]) id = 'planner';
     site = id; $('#app').dataset.site = id === 'planner' || id === 'library' ? id : 'page';
-    $$('#rail [data-site]').forEach(b => b.setAttribute('aria-current', b.dataset.site === id ? 'page' : 'false'));
+    railCurrent();
     const lib = $('#panel-library'), pg = $('#sitePage');
     if (id === 'planner') { pg.hidden = true; showTab(tab === 'library' ? 'sheet' : tab); }
     else { $$('.stage > .panel').forEach(p => { p.hidden = true; }); lib.hidden = id !== 'library'; pg.hidden = id === 'library'; if (id === 'library') renderLibrary(); else renderPage(id); $('.stage').scrollTop = 0; }
@@ -3468,7 +3472,7 @@
     if (t === 'library') { showSite('library'); return; }
     if (site !== 'planner') { tab = t; showSite('planner'); return; }
     tab = t;
-    $$('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+    $$('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t)); railCurrent();
     const MECH = S.cls === 'Warlock' ? { title: 'Soul Shards' } : (data().mechanics || {})[S.cls];
     if (t === 'shards' && !MECH) t = tab = 'sheet';
     $$('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
