@@ -1716,7 +1716,9 @@
     const sk = skillCtx(skill); const P = sk.P; const order = []; const re = /\{payload:([A-Z0-9_]+)\}/g; let m;
     const scan = t => { re.lastIndex = 0; while ((m = re.exec(t || ''))) if (!order.includes(m[1])) order.push(m[1]); };
     scan(P.desc); P.mods.filter(md => sk.mods.has(md.key)).forEach(md => scan(md.desc));
-    Object.keys(P.payloads).forEach(k => { if (!order.includes(k)) order.push(k); });
+    // a payload named only by an upgrade you have not taken (Storm Bolt's hurled bolt without Storm Bolt) is not yours to use
+    const off = []; const re2 = /\{payload:([A-Z0-9_]+)\}/g; P.mods.filter(md => !sk.mods.has(md.key)).forEach(md => { let q; re2.lastIndex = 0; while ((q = re2.exec(md.desc || ''))) off.push(q[1]); });
+    Object.keys(P.payloads).forEach(k => { if (!order.includes(k) && !off.includes(k)) order.push(k); });
     return order.map((k, i) => ({ k, v: (sk.ev(P.payloads[k]) || 0) * 100, inTip: i < order.length })).filter(x => x.v > 0);
   }
   // [x] powers on equipped aspects, uniques and charms: "[20 – 60]%[x]" gives a low and high roll
@@ -2119,7 +2121,7 @@
     // how often a proc goes off: on Lucky Hits (every enemy hit rolls), on every cast, or on every cast of a skill with a cooldown
     const auraHost = !!dawn || /Holy Light Aura/.test(P.name); const cdCasts = () => (S.hotbar || []).reduce((a, id) => { if (id === P.id) return a + (cdBase ? 1 / castEvery : 0); try { const c = C.powers[id] && skillCtx(id); const cd = c ? cdOf(c, C.powers[id]) : 0; return a + (cd > 0 ? 1 / Math.max(cd, 1 / Math.max(aps, 0.01)) : 0); } catch (e) { return a; } }, 0);
     const procRate = !isProc ? 0 : payD.per === 'kill' ? Math.max(0, +T.kps || 0) : payD.per === 'hit' ? Math.max(0, T.hin === '' || T.hin == null ? 1 : +T.hin || 0) : payD.per === 'timer' ? 1 / Math.max(0.1, payD.every) : payD.per === 'cdcast' ? cdCasts() : payD.per === 'cast' ? (cdBase ? 1 / castEvery : aps) : (auraHost ? tg : cdBase ? tg / castEvery : aps * tg) * lhFrac * payD.ch / 100;
-    const hps0 = isJudge ? judRate : isProc ? procRate : isDawn ? 1 : isThorns ? (payD.onBlock ? Math.max(0, blk) : payD.hit || payD.per || !cdBase ? 1 : 1 / castEvery) : pulse ? 1 / pulseEvery : frames ? 60 / frames : cdBase ? Math.min(aps, 1 / castEvery) : aps;
+    const hps0 = isJudge ? judRate : isProc ? procRate : isDawn ? 1 : isThorns ? (payD.onBlock ? Math.max(0, blk) : payD.hit || payD.per || !cdBase ? 1 : 1 / castEvery) : pulse ? 1 / pulseEvery : frames ? (cdBase ? Math.min(60 / frames, 1 / castEvery) : 60 / frames) : cdBase ? Math.min(aps, 1 / castEvery) : aps;
     // what you can afford: with "Resource you generate a second" filled in, a skill with a cost casts no faster than your income pays for
     const resI = (() => { if (isJudge || isProc || isDawn || isThorns || pulse || T.res === '' || T.res == null || !(+T.res >= 0)) return null; let cost = 0; try { cost = sk.costEff(); } catch (e) { cost = 0; } if (!(cost > 0)) return null;
       const mid = (m, a, b) => (parseFloat(String(m[a]).replace(/,/g, '')) + parseFloat(String(m[b] || m[a]).replace(/,/g, ''))) / 2;
