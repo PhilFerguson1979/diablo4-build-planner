@@ -102,9 +102,22 @@
   function commit() { invalidate(); save(); renderLedger(); }
 
   // ---------- skill math ----------
+  // item and set powers that hand out a skill's upgrades or variants for free, in any class
+  let FM_BUSY = false, FM_CACHE = { k: undefined, v: [] };
+  function freeModTexts() {
+    if (FM_BUSY) return []; if (FM_CACHE.k === SD_CACHE && SD_CACHE) return FM_CACHE.v;
+    FM_BUSY = true; let v = []; try { v = sheetData().powers.map(q => strip(q.desc || '').replace(/\s+/g, ' ')); } catch (e) { v = []; } finally { FM_BUSY = false; }
+    FM_CACHE = { k: SD_CACHE, v }; return v;
+  }
   function activeMods(power) {
-    const C = cdata(); const keys = new Set();
-    for (const [i, r] of Object.entries(S.alloc)) { const n = C.nodes[i]; if (n && r > 0 && n.power === power && n.kind === 'mod') { const m = C.powers[power].mods.find(x => x.id === n.mod); if (m) keys.add(m.key); } }
+    const C = cdata(); const keys = new Set(); const P = C.powers[power];
+    for (const [i, r] of Object.entries(S.alloc)) { const n = C.nodes[i]; if (n && r > 0 && n.power === power && n.kind === 'mod') { const m = P.mods.find(x => x.id === n.mod); if (m) keys.add(m.key); } }
+    if (P && P.name && P.mods && P.mods.length && skillRank(power) > 0) { const nm = reEsc(P.name); const isVar = k => /^Upgrade[A-Z]$/.test(k); const tagOf = w => skillIs(P, w.replace(/s$/, ''));
+      freeModTexts().forEach(t => { let m;
+        if ((m = t.match(/Your (\w+?)s? Skills gain all of their Variants and Upgrades/)) && tagOf(m[1])) P.mods.forEach(x => keys.add(x.key));
+        if (new RegExp('\\b' + nm + ' gains all Variants').test(t)) P.mods.filter(x => isVar(x.key)).forEach(x => keys.add(x.key));
+        if (((m = t.match(/Your (\w+?)s? Skills (?:gain all Upgrades|benefit from all their Upgrades)/)) && tagOf(m[1])) || ((m = t.match(/Your (\w+?)s? gain all Upgrades for free/)) && tagOf(m[1])) || new RegExp('\\b' + nm + ' gains the effect of every Upgrade|all ' + nm + ' Upgrades for free').test(t)) P.mods.filter(x => !isVar(x.key)).forEach(x => keys.add(x.key));
+        if ((m = t.match(new RegExp('\\b' + nm + ' gains the ([A-Z][\\w\' -]+?) Variant for free')))) { const v = P.mods.find(x => x.name === m[1]); if (v) keys.add(v.key); } }); }
     return keys;
   }
   function skillRank(power) {
@@ -162,6 +175,28 @@
       csc: sum(skillLines(P, /^§% (.*?)\s*Critical Strike Chance$/)), csd: sum(skillLines(P, /^§% (.*?)\s*Critical Strike Damage$/)),
     };
   }
+  // Aura Potency, as fractions: 'all' for every aura, 'per' for the one aura a temper names.
+  // Sources: the Cathan's Iron Conviction 2-piece, its seal line, the per-aura tempers, Sundered Night while in Consecration, Sanctis of Kethamar in Arbiter form.
+  let POT_BUSY = false, POT_CACHE = { k: null, v: {} };
+  function potOn(k) { const st = (S.tc && S.tc.st) || {}; return st[k] !== false; }
+  function auraPotency(pid) {
+    if (POT_BUSY || S.cls !== 'Paladin') return { all: 0, per: 0 };
+    const key = SD_CACHE ? 'sd' : ''; if (POT_CACHE.k !== SD_CACHE || POT_CACHE.st !== JSON.stringify((S.tc && S.tc.st) || {})) POT_CACHE = { k: SD_CACHE, st: JSON.stringify((S.tc && S.tc.st) || {}), v: {} };
+    if (POT_CACHE.v[pid]) return POT_CACHE.v[pid];
+    POT_BUSY = true; let all = 0, per = 0; const src = [];
+    try { const P = cdata().powers[pid]; const nm = P ? P.name.replace(/ Aura$/, '') : ''; const D = sheetData(); const mid = (a, b) => (+a + +(b || a)) / 2;
+      D.stats.forEach(e => { const m = e.key.match(/([A-Z][A-Za-z' ]*?) Aura Potency$/); if (m && /^(?:Defiance|Fanaticism|Holy Light)$/.test(m[1].trim())) { if (m[1].trim() === nm) { per += e.v; src.push({ n: 'Tempers', v: e.v }); } } else if (/Aura Potency$/.test(e.key)) { all += e.v; src.push({ n: e.parts.map(p => p.src).join(', ') || 'Seal', v: e.v }); } });
+      const seen = new Set(); let arb = false; try { arb = unlockedSkills().some(id => /Arbiter/.test((cdata().powers[id] || {}).name || '')); } catch (e) { arb = false; }
+      D.powers.forEach(q => { if (seen.has(q.name)) return; seen.add(q.name); const t = strip(q.desc || ''); let m;
+        if ((m = t.match(/Gain ([\d.]+)% Aura Potency/))) { all += +m[1]; src.push({ n: q.name, v: +m[1] }); }
+        if ((m = t.match(/\[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% Aura Potency while standing in Consecration/)) && potOn('consec')) { all += mid(m[1], m[2]); src.push({ n: q.name + ', in Consecration', v: mid(m[1], m[2]) }); }
+        if ((m = t.match(/Arbiter form increases Aura Potency by ([\d.]+)%/)) && arb) { all += +m[1]; src.push({ n: q.name + ', in Arbiter form', v: +m[1] }); } });
+    } catch (e) { /* no sheet yet */ } finally { POT_BUSY = false; }
+    return (POT_CACHE.v[pid] = { all: all / 100, per: per / 100, src });
+  }
+  // the Season 16 rule: potency multiplies the rank-adjusted value instead of adding to the rank 1 value
+  const pot16 = () => S.cls === 'Paladin' && !!((S.tc && S.tc.st) || {}).pot16;
+  const POT_RE = /([\d.]+)\s*\*\s*Table\((\d+),\s*sLevel\)\s*\+\s*\(\s*\1\s*\*\s*(SF_\d+)\s*\)/g;
   function skillCtx(power, rankOverride) {
     const P = cdata().powers[power]; const D = data(); const mods = activeMods(power);
     const baseRank = rankOverride != null ? rankOverride : skillRank(power); const SB = skillBonus(power);
@@ -175,8 +210,11 @@
       if (m) {
         if (memo[name] !== undefined) return memo[name];
         if (depth > 30) return 0; depth++;
-        const v = D4F.evaluate(P.sf[+m[1]] || '0', ctx); depth--; memo[name] = v; return v;
+        let f = P.sf[+m[1]] || '0'; if (pot16() && /_Aura$/.test(P.id || power)) f = f.replace(POT_RE, '$1 * Table($2,sLevel) * (1 + $3)');
+        const v = D4F.evaluate(f, ctx); depth--; memo[name] = v; return v;
       }
+      if (name === 'Paladin_Aura_Potency') return auraPotency(power).all;
+      if (name.startsWith('Paladin_Aura_Potency_Per_Skill#')) return auraPotency(name.split('#')[1]).per;
       return 0;
     };
     const table = (i, l) => { const t = D.tables[i]; if (!t) return 0; return t[Math.max(0, Math.min(t.length - 1, Math.round(l)))]; };
@@ -1791,7 +1829,8 @@
           // per-stack bonuses are counted at full stacks; per-point bonuses at the stated cap, or at 100 of the resource
           const judOld = /Judg/.test(pre); const stk = rest.match(/(?:stack(?:ing|s)?(?: up)? to|seconds, up to) (\d+) times/) || nextSent.match(/^(?:This (?:bonus |effect )?(?:can )?stacks?|Stacks?|Can stack) up to (\d+) times/) || (/for each point Consumed/.test(rest) && t.match(/Consumes up to (\d+) Resolve/));
           const unit = /for every 1 |[Ee]ach point of|per point of|for each point of|per (?:point of )?(?:Mana|Energy|Fury|Essence|Spirit|Vigor|Faith|Wrath)\b/.test(pre + ' ' + rest); const ucap = unit && (pre + ' ' + rest).match(/up to (\d+)(?!\s*(?:times|%|\]|\.\d))/);
-          if (stk) { hi *= +stk[1]; if (!judOld) lo *= +stk[1]; what += ', at ' + stk[1] + ' stacks'; }
+          const prk = rest.match(/per Skill Rank you have in all your (\w+?)s? Skills/); if (prk) { let n = 0; try { unlockedSkills().forEach(id => { const q = cdata().powers[id]; if (q && skillIs(q, prk[1])) n += skillCtx(id).lvl; }); } catch (e) { n = 0; } lo *= n; hi *= n; what += ', at ' + n + ' ' + prk[1] + ' Skill Ranks'; }
+          else if (stk) { hi *= +stk[1]; if (!judOld) lo *= +stk[1]; what += ', at ' + stk[1] + ' stacks'; }
           else if (ucap) { lo *= +ucap[1]; hi *= +ucap[1]; what += ', at ' + ucap[1]; }
           else if (unit && hi < 2) { lo *= 100; hi *= 100; what += ', counted at 100 of the resource'; }
         }
@@ -1892,7 +1931,10 @@
     // Dawnfire turns Holy Light Aura's passive into a fire pulse every second, a flat share of weapon damage that grows with each kill
     let dawn = null; { const dw = SLOTS.map(sl => findItem((S.gear[sl.id] || {}).item)).find(it => it && it.name === 'Dawnfire');
       if (dw && P.id === 'Paladin_HolyShock_Aura') { const tx = strip(dw.desc); const r = tx.match(/\[([\d,]+)\s*[–-]\s*([\d,]+)\]/); const per = tx.match(/by ([\d.]+)%\s*\[x\]/); const mx = tx.match(/up to (\d+) times/);
-        if (r) { const num = x => +x.replace(/,/g, ''); dawn = { lo: num(r[1]) / 2000, hi: num(r[2]) / 2000, per: per ? +per[1] : 0, max: mx ? +mx[1] : 0 }; dawn.stacks = Math.max(0, Math.min(dawn.max, T.dawn !== '' && T.dawn != null ? +T.dawn || 0 : dawn.max)); pays.unshift({ k: 'DAWNFIRE', v: (dawn.lo + dawn.hi) / 2 * 1.2 * 100, dawn: 1 }); } } }
+        if (r) { const num = x => +x.replace(/,/g, ''); dawn = { lo: num(r[1]) / 2000, hi: num(r[2]) / 2000, per: per ? +per[1] : 0, max: mx ? +mx[1] : 0 };
+          // the game file gives Dawnfire as its value times Holy Light's rank table, plus the value times Aura Potency
+          try { const hl = skillCtx('Paladin_HolyShock_Aura'); const tb = (data().tables[34] || [])[Math.max(0, Math.min(99, Math.round(hl.lvl)))] || 1; const pe = +hl.ev('SF_37') || 0; dawn.k = pot16() ? tb * (1 + pe) : tb + pe; dawn.rank = hl.lvl; dawn.pot = pe; } catch (e) { dawn.k = 1; }
+          dawn.lo *= dawn.k; dawn.hi *= dawn.k; dawn.stacks = Math.max(0, Math.min(dawn.max, T.dawn !== '' && T.dawn != null ? +T.dawn || 0 : dawn.max)); pays.unshift({ k: 'DAWNFIRE', v: (dawn.lo + dawn.hi) / 2 * 1.2 * 100, dawn: 1 }); } } }
     // Thorns lines: damage that is a share of your Thorns stat. Weapon damage and skill % are not used for these.
     // Thorns: what the sheet has, plus what your skills grant (Defiance Aura, Clash and the like). A number typed in the box wins.
     const thParts = []; const thAdd = (id, n, v, pct, what) => { if (v > 0) thParts.push({ id: 'th:' + id, n, v, pct: !!pct, what: what || '', on: !T.off['th:' + id] }); };
@@ -1990,6 +2032,7 @@
     const condOn = Object.keys(cond).filter(k => T.cond[k]);
     const GM = gearMultipliers(); const pwStat = kind => GM.filter(x => x.stat === kind && !scopeMiss(x.scope, isJudge || isProc ? Pd : P, Pd.dmg, !!(dot || isGrief)));
     try { GM.filter(x => x.add).forEach(x => { if (x.scope && x.scope.thorns ? !isThorns : !!scopeMiss(x.scope, isJudge || isProc ? Pd : P, Pd.dmg)) return; always.push({ v: (x.lo + x.hi) / 2, src: x.n, what: x.what }); }); } catch (e) { /* skip */ }
+    let fanCc = 0; try { const fa = 'Paladin_Offensive_Aura'; if (S.cls === 'Paladin' && C.powers[fa] && skillRank(fa) > 0) { const fc = skillCtx(fa); fanCc = (fc.ev(C.powers[fa].sf[4]) || 0) * (fc.ev(C.powers[fa].sf[8]) || 0) * 100; } } catch (e) { fanCc = 0; }
     const pwCcx = pwStat('ccx').reduce((a, x) => a * (1 + (x.lo + x.hi) / 200), 1); const pwCc = pwStat('cc').reduce((a, x) => a + (x.lo + x.hi) / 2, 0), pwCsd = pwStat('csd').reduce((a, x) => a + (x.lo + x.hi) / 2, 0), pwLhx = pwStat('lhx').reduce((a, x) => a * (1 + (x.lo + x.hi) / 200), 1);
     const addAlways = sum(always), addCondAll = Object.values(cond).reduce((a, l) => a + sum(l), 0), addCondOn = condOn.reduce((a, k) => a + sum(cond[k]), 0), addElite = sum(elite);
     // [x] multipliers: stat lines marked [x] that fit this skill, plus aspect and unique powers
@@ -2015,7 +2058,7 @@
     const xLo = xS * prod(xAll, x => x.lo), xHi = xS * prod(xAll, x => x.hi), xMid = xS * prod(xAll, x => (x.lo + x.hi) / 2);
     // crit and vulnerable
     // [+] Critical Strike and Vulnerable Damage join the additive pool on hits that qualify; the built-in x1.5 and x1.2 are their own multipliers
-    const cc = spOn && spFx.noCrit ? 0 : Math.min(100, ((M.csc ? M.csc.v : 0) + SBj.csc + mCc + pwCc + (spOn ? spFx.cc : 0)) * pwCcx); const csdAdd = (M.csd ? M.csd.v : 0) + SBj.csd + pwCsd; const csdX = M.csd ? M.csd.x : 0;
+    const cc = spOn && spFx.noCrit ? 0 : Math.min(100, ((M.csc ? M.csc.v : 0) + SBj.csc + mCc + pwCc + fanCc + (spOn ? spFx.cc : 0)) * pwCcx); const csdAdd = (M.csd ? M.csd.v : 0) + SBj.csd + pwCsd; const csdX = M.csd ? M.csd.x : 0;
     const critMult = 1.5 * (1 + csdX / 100) * mCsd * xOnly('crit');
     const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100) * xOnly('vuln');
     const monDR = 1 - ((data().scaling && (data().scaling.levels.find(l => l.l === MON_LEVEL) || {}).dr) || 0);
@@ -2078,7 +2121,8 @@
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
-    return { judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    const potI = S.cls === 'Paladin' && /_Aura$/.test(P.id || '') ? auraPotency(P.id) : null; const wornSN = worn.some(it => /Aura Potency while standing in Consecration/.test(strip(it.desc || '')));
+    return { potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -2093,7 +2137,7 @@
         <h3>Status on the hit</h3>
         <div class="chips">${TC_STATES.map(([k, l]) => { const extra = k === 'crit' ? `x${f(R.critMult, 2)}` : k === 'vuln' ? `x${f(R.vulnMult, 2)}` : k === 'op' ? `+${f(R.opPer, 1)}% a stack` : k === 'berserk' ? '+25%' : R.cond[k] ? `+${f(R.cond[k].reduce((a, x) => a + x.v, 0), 1)}%` : '';
           const none = !extra && k !== 'op';
-          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" data-tt="mercsum|${m.role}"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}"${ttAttr(ttCard(q.tname, 'SOUL SPLINTER', esc(q.text)))}><input type="checkbox" data-st="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}</div>${R.spFx.notes.length ? `<p class="note">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
+          return `<label class="chip${R.st[k] ? ' on' : ''}${none ? ' none' : ''}" title="${none ? 'Nothing on this build adds damage for this yet' : ''}"><input type="checkbox" data-st="${k}" ${R.st[k] ? 'checked' : ''}><span>${esc(l)}</span>${extra ? `<small>${extra}</small>` : ''}</label>${k === 'op' && R.st.op ? `<label class="chip stacks"><span>Stacks</span><input type="number" min="1" max="8" id="opStacks" value="${R.opStacks}" aria-label="Overpower stacks"></label>` : ''}`; }).join('')}${S.cls === 'Paladin' ? `${R.wornSN ? `<label class="chip${R.st.consec !== false ? ' on' : ''}"><input type="checkbox" data-st="consec" ${R.st.consec !== false ? 'checked' : ''}><span>In Consecration</span><small>Sundered Night</small></label>` : ''}<label class="chip${R.st.pot16 ? ' on' : ''}" title="Season 16 rule: Aura Potency multiplies the rank-adjusted aura value. Off: the rule in the game files, where potency adds to the rank 1 value."><input type="checkbox" data-st="pot16" ${R.st.pot16 ? 'checked' : ''}><span>Season 16 potency rule</span></label>` : ''}${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" data-tt="mercsum|${m.role}"><input type="checkbox" data-st="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}${R.spFx.list.map(q => `<label class="chip merc${q.on ? ' on' : ''}"${ttAttr(ttCard(q.tname, 'SOUL SPLINTER', esc(q.text)))}><input type="checkbox" data-st="sp:${esc(q.name)}" ${q.on ? 'checked' : ''}><span>${esc(q.tname)}</span></label>`).join('')}</div>${R.spFx.notes.length ? `<p class="note">${R.spFx.notes.map(esc).join('. ')}.</p>` : ''}
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}
         <p class="note">Tick what is true for the hit. The Selected column below shows that hit with mid rolls, next to the same hit with nothing ticked. Ticked conditions also feed Expected. Overpower works the Lord of Hatred way: each stack adds 15% additive damage for 4 seconds, up to 4 stacks unless a power such as the Tidal aspect raises the limit. Your Overpower Damage bonus raises the per-stack amount, and its [x] lines multiply on top.</p>
       </section>
@@ -2122,6 +2166,7 @@
           <table class="tc-table"><thead><tr><th>Monster</th><th>${R.dot ? 'Lowest total' : 'Min hit'}</th><th>${R.dot ? 'Expected total' : 'Expected hit'}</th><th>${R.dot ? 'Highest total' : 'Max hit'}</th><th>Selected</th><th>Expected DPS</th></tr></thead>
           <tbody>${R.segs.map(([l, x, sh, ph]) => `<tr><th>${l}</th><td>${f(x.min)}</td><td><b>${f(x.exp)}</b></td><td>${f(x.max)}</td><td class="selhit"><b>${f(sh)}</b><small>${ph ? `x${f(sh / ph, 2)} vs none` : ''}</small></td><td><b>${f(x.exp * R.hps)}</b></td></tr>`).join('')}</tbody></table>
           ${R.dot ? `<p class="note"><b>${esc(R.dot.kind)}.</b> Each number is the whole amount one cast puts on the monster${R.dot.dur ? `, paid out over ${f(R.dot.dur, 1)} seconds in ${f(R.dot.dur * 2)} ticks of ${f(R.segs[0][1].exp / (R.dot.dur * 2))} (every half second)` : ', paid out in ticks every half second'}. It cannot crit and has no high or low roll. Recasting adds to what is left: once stacked, at ${f(R.hps, 2)} casts a second each half-second tick settles at ${f(R.segs[0][1].exp * R.hps / 2)}, which is ${f(R.segs[0][1].exp * R.hps)} a second.</p>` : ''}${R.isDawn ? `<p class="note"><b>Dawnfire.</b> A flat ${f(R.dawn.lo * 100)} to ${f(R.dawn.hi * 100)}% of your weapon's top damage as Fire every second, x${R.dawnX.toFixed(2)} at ${R.dawn.stacks} kill stacks (${f(R.dawn.per)}%[x] each, up to ${R.dawn.max}).</p>` : ''}
+          ${R.potI && (R.potI.all || R.potI.per) ? `<p class="note"><b>Aura Potency ${f((R.potI.all + R.potI.per) * 100, 1)}%.</b> ${R.potI.src.map(x => esc(x.n) + ' ' + f(x.v, 1) + '%').join(', ')}. ${R.st.pot16 ? 'It multiplies the aura\'s rank-adjusted numbers (the Season 16 rule).' : 'As in the game files, it adds that share of the aura\'s rank 1 value to every number the aura has, damage and passive bonuses alike.'} Upgrades that say an aura gains more bonus from potency raise this further.${R.dawn && R.dawn.k ? ` Dawnfire comes out at ${f(R.dawn.k, 2)} times its tooltip value, from Holy Light rank ${R.dawn.rank}.` : ''}</p>` : R.dawn && R.dawn.k && R.dawn.k !== 1 ? `<p class="note">Dawnfire comes out at ${f(R.dawn.k, 2)} times its tooltip value: the game file scales it with Holy Light's rank (${R.dawn.rank}).</p>` : ''}${R.fanCc ? `<p class="note">Fanaticism Aura adds ${f(R.fanCc, 1)}% Critical Strike Chance at full stacks, counted in your crit chance.</p>` : ''}
           ${R.isGrief ? `<p class="note"><b>${esc(R.payD.n)}.</b> ${R.payD.ch ? `On ${f(R.payD.ch, 1)}% of ${esc(R.P.name)}'s Lucky Hits (${f(R.payD.lh * 100, 1)}% Lucky Hit Chance), it deals ${f(R.payD.share)}% of the hit again as ${esc(R.payD.el)}` : `Every direct hit of ${esc(R.P.name)} also deals ${f(R.payD.share)}% of it as ${esc(R.payD.el)}${R.payD.cond ? ' ' + esc(R.payD.cond) : ''}`}${R.payD.over ? ` over ${f(R.payD.over)} seconds` : ''}. This line is that extra damage on its own, so add it to the skill's own line for the total. It follows the hit, crit included, and takes ${esc(R.payD.el)} bonuses in place of the skill's own element.</p>` : ''}${R.isProc ? `<p class="note"><b>${esc(R.payD.n)}.</b> A proc worth ${f(R.payD.v)}% of weapon damage as ${esc(R.payD.el)}${R.payD.cnt > 1 ? `, from ${R.payD.cnt} tempers and charm affixes together` : ''}. ${R.payD.per === 'kill' ? `It goes off on kills: ${f(R.procRate, 2)} a second, from the Kills a second box in Setup (0 on a boss).` : R.payD.per === 'hit' ? `It goes off when you are hit: ${f(R.procRate, 2)} times a second, from the Hits you take box in Setup.` : R.payD.per === 'timer' ? `It goes off every ${f(R.payD.every, 1)} seconds on its own.` : R.payD.per === 'cdcast' ? `It goes off each time you cast a skill with a cooldown: ${f(R.procRate, 2)} times a second across the cooldown skills on your bar.` : R.payD.per === 'cast' ? `It goes off on every skill cast${R.payD.cond ? ' ' + esc(R.payD.cond) : ''}: ${f(R.procRate, 2)} times a second with ${esc(R.P.name)}.` : `It goes off on ${f(R.payD.ch, 1)}% of Lucky Hits, and ${esc(R.P.name)} has a ${f(R.lhFrac * 100, 1)}% Lucky Hit Chance, so that is ${f(R.procRate, 2)} procs a second from this skill alone. Other skills you use add their own procs on top.`} Skill-specific bonuses are left out.${R.payD.guess ? ` Counted as ${esc(R.payD.guess)}.` : ''}</p>` : ''}<p class="note">${R.cdBase && !R.isJudge && !R.isProc ? `${esc(R.P.name)} has a ${f(R.cdBase, 2)} second cooldown after Cooldown Reduction${R.cuts.length ? `. ${R.cuts.map(x => esc(x.n) + ' takes off ' + f(x.v, 2) + ' seconds every second (' + esc(x.how) + ')').join('; ')}` : ''}, so it is cast every ${f(R.castEvery, 2)} seconds. ` : ''}${R.isJudge ? `Explosions per second on one enemy: ${f(R.hps, 2)}${R.judge.twice ? `, which includes a ${f(R.judge.twice * 100)}% chance to explode twice` : ''}. ${R.judSpear ? ` ${esc(R.judge.spearBy)} adds ${f(R.judSpear, 2)} spears a second from ${esc(R.P.name)}'s Lucky Hits, each dealing Judgement's damage.` : ''} Type your own rate in Setup if your Core Judicator Skills set it off faster than the ${R.judge.timer} second timer.` : R.pulse ? `This is a pulse on a fixed timer: one hit every ${f(R.pulseEvery, 2)} s. Attack speed does not make it tick faster; it raises each pulse by x${R.asDmg.toFixed(2)} instead (${f(R.as1, 1)}% Attack Speed plus ${f(R.as2, 1)}% Cast Speed).` : `Hits per second: ${f(R.hps, 2)}. Weapon speed ${f(+T.ws || 0, 2)} with ${f(R.as1, 1)}% Attack Speed (first cap, 100%) and ${f(R.as2, 1)}% Cast Speed (second cap, 100%) gives ${f(R.aps, 3)} attacks per second.${R.frames ? ` ${esc(R.P.name)} then takes ${f(R.frames, 1)} frames a cast${R.nextAps ? `; it gets faster at ${f(R.nextAps, 3)} attacks per second, which needs ${f((R.nextAps / (+T.ws || 1) - 1) * 100, 1)}% total speed` : ', its fastest measured step'}.` : ' No frame table for this skill yet, so this assumes every bit of speed counts.'}`} Bosses use the elite bonus; boss-only powers can be added as gear or ticked below. Every number already includes the ${f((1 - R.monDR) * 100)}% damage reduction all monsters have at your level, so it should match the numbers you see in game.</p>
           ${(() => { let Dd = null; try { Dd = defense(); } catch (e) { return ''; } const cs = (Dd.cards || []).filter(c => c && c.cat !== 'boss' && c.cat !== 'world'); if (!cs.length || !R.wd) return '';
             const t = v => v < 1 ? 'under 1 second' : v < 90 ? f(v, 1) + ' seconds' : v < 5400 ? f(v / 60, 1) + ' minutes' : f(v / 3600, 1) + ' hours';
@@ -3127,11 +3172,12 @@
     const lifeMul = (1 + ((M.lifep ? M.lifep.v : 0) + pwSum('life')) / 100) * (1 + (M.lifep ? M.lifep.x : 0) / 100) * (1 + pwDef.filter(x => x.on && x.kind === 'barrier').reduce((a, x) => a + x.v * barrierUp(x.name), 0) / 100);   // a Barrier is extra Life for the share of the time it is up
     const barrier = Math.max(0, +T.barrier || 0); const life = (baseLife + lifeFlat) * lifeMul + barrier;
     const armorBase = M.armor ? M.armor.v : 0, armorPct = (M.armorp ? M.armorp.v : 0) + pwSum('armor'), armorX = M.armorp ? M.armorp.x : 0;
-    const armor = armorBase * (1 + armorPct / 100) * (1 + armorX / 100);
+    let defA = 0; try { const da = 'Paladin_Defensive_Aura'; if (S.cls === 'Paladin' && cdata().powers[da] && skillRank(da) > 0 && T.defi !== false) defA = +skillCtx(da).ev('SF_4') || 0; } catch (e) { defA = 0; }
+    const armor = armorBase * (1 + armorPct / 100) * (1 + armorX / 100) * (1 + defA);
     const aDRof = A => Math.min(SC.maxArmor || 0.9, L.as * A / (A + L.ad));
     const armorDR = aDRof(armor);
     const resPct = (M.rallp ? M.rallp.v : 0) + pwSum('resall');
-    const resOf = type => { const id = 'r' + type.toLowerCase(); const flat = M[id] ? M[id].v : 0; return flat * (1 + (resPct + pwSum(id)) / 100); };
+    const resOf = type => { const id = 'r' + type.toLowerCase(); const flat = M[id] ? M[id].v : 0; return flat * (1 + (resPct + pwSum(id)) / 100) * (1 + defA); };
     const rDRof = R => Math.min(SC.maxRes || 0.9, L.rs * R / (R + L.rdf));
     const resDR = type => rDRof(resOf(type));
     // mercenary powers that cut the damage you take: each has its own switch because they need the mercenary's skill to be up
@@ -3180,7 +3226,7 @@
       else if (n === 'All Resistance') e = mixEhp(life, armor, v, 0);
       else e = mixEhp(life, armor, 0, v / 100);
       return { n, d, gain: now ? e / now - 1 : 0 }; }).sort((a, b) => b.gain - a.gain);
-    return { pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    return { defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
   }
   function renderDefense() {
     invalidate();
@@ -3230,7 +3276,7 @@
           <label>World boss <select id="dfWorld"><option value="">None</option>${grouped(world, T.mon.world, '', 'World bosses')}</select></label>
         </div>
         <div class="chips">
-          <label class="chip${T.fort ? ' on' : ''}"><input type="checkbox" data-df="fort" ${T.fort ? 'checked' : ''}><span>You are fortified</span><small>10% less</small></label>
+          <label class="chip${T.fort ? ' on' : ''}"><input type="checkbox" data-df="fort" ${T.fort ? 'checked' : ''}><span>You are fortified</span><small>10% less</small></label>${S.cls === 'Paladin' && cdata().powers.Paladin_Defensive_Aura && skillRank('Paladin_Defensive_Aura') > 0 ? `<label class="chip${T.defi !== false ? ' on' : ''}"><input type="checkbox" data-df="defi" ${T.defi !== false ? 'checked' : ''}><span>Defiance Aura passive</span><small>+${f(R.defA * 100, 0)}% Armor and resistances</small></label>` : ''}
           <label class="chip${T.weak ? ' on' : ''}"><input type="checkbox" data-df="weak" ${T.weak ? 'checked' : ''}><span>Enemy weakened</span><small>20, 15, 10%</small></label>
           <label class="chip${T.block ? ' on' : ''}"><input type="checkbox" data-df="block" ${T.block ? 'checked' : ''}><span>Count block</span><small>${pct(R.block)} x ${pct(R.blockR)}</small></label>
           <label class="chip${T.dodge ? ' on' : ''}"><input type="checkbox" data-df="dodge" ${T.dodge ? 'checked' : ''}><span>Count dodge</span><small>${pct(R.dodge)}</small></label>
