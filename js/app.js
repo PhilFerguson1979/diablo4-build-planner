@@ -2049,7 +2049,7 @@
     }
     const sum = l => l.reduce((a, x) => a + x.v, 0);
     // crowd control bonuses count for the share of time skills on your bar keep the enemy controlled, all of it with the Crowd controlled chip on, none against a boss
-    let ccUp = 1, ccHow = 'the Crowd controlled chip is on'; if ((T.st || {}).boss) { ccUp = 0; ccHow = 'bosses cannot be crowd controlled'; } else if (!T.cond.cc) { try { ccUp = ccModel(dfState()).ccUp; } catch (e) { ccUp = 0; } ccHow = 'your bar keeps enemies controlled ' + Math.round(ccUp * 100) + '% of the time'; }
+    let ccUp = 1, ccHow = 'the Crowd controlled chip is on'; if ((T.st || {}).boss) { let st0 = { up: 0, has: false, dur: 4 }; try { st0 = staggerShare(); } catch (e) { /* none */ } ccUp = st0.up; ccHow = st0.has ? `a boss is Staggered ${Math.round(st0.up * 100)}% of the time (${st0.dur} s Stagger, then 20 s of Stagger resistance)` : 'bosses cannot be crowd controlled and nothing on your bar fills their Stagger bar'; } else if (!T.cond.cc) { try { ccUp = ccModel(dfState()).ccUp; } catch (e) { ccUp = 0; } ccHow = 'your bar keeps enemies controlled ' + Math.round(ccUp * 100) + '% of the time'; }
     if (!T.cond.cc && cond.cc && ccUp > 0) cond.cc.forEach(x => always.push({ v: x.v * ccUp, src: x.src, what: 'Damage vs Crowd Controlled, ' + ccHow }));
     const condOn = Object.keys(cond).filter(k => T.cond[k]);
     const GM = gearMultipliers(); const pwStat = kind => GM.filter(x => x.stat === kind && !scopeMiss(x.scope, isJudge || isProc ? Pd : P, Pd.dmg, !!(dot || isGrief)));
@@ -2105,7 +2105,7 @@
     const cdBase = cdOf(sk, P);
     const cutter = pays.find(x => x.proc && x.cut); const tg = Math.max(1, +T.tg || 1);
     // powers that take time off cooldowns, as seconds removed for every second of fighting. The cooldown then runs at 1 + that rate.
-    const cuts = []; let cdFlat = 0, extraCast = 0; const blk = Math.max(0, T.blk === '' || T.blk == null ? 1 : +T.blk || 0);
+    const cuts = []; let cdFlat = 0, extraCast = 0; const blk = blocksIn();
     if (cdBase) { const mid = (m, a, b) => (parseFloat(m[a]) + parseFloat(m[b] || m[a])) / 2; let unl = []; try { unl = unlockedSkills().map(id => C.powers[id]).filter(Boolean); } catch (e) { unl = []; }
       const nCd = +T.ncd > 0 ? +T.ncd : Math.max(1, (S.hotbar || []).filter(id => { try { return C.powers[id] && skillCtx(id).cd() > 0; } catch (e) { return false; } }).length);
       worn.forEach(it => { const t = strip(it.desc); let m;
@@ -2117,7 +2117,7 @@
           if (off > 0) { cdFlat += off; cuts.push({ n: it.name, v: 0, how: `${D4T.fmtNum(Math.round(off * 10) / 10)} seconds off the cooldown` }); } }
         if ((m = t.match(/Defensive and Mobility Skills gain \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% Cooldown Rate while moving/)) && (skillIs(P, 'Defensive') || skillIs(P, 'Mobility'))) cuts.push({ n: it.name, v: mid(m, 1, 2) / 100, how: 'cooldown runs that much faster while you are moving' });
         // Defensive Skill cooldowns cut or reset by Lucky Hits or by taking hits, shared across the Defensive Skills on your bar
-        if (skillIs(P, 'Defensive')) { const nDef = Math.max(1, (S.hotbar || []).filter(id => { try { const q = C.powers[id]; return q && skillIs(q, 'Defensive') && skillCtx(id).cd() > 0; } catch (e) { return false; } }).length); const hin = Math.max(0, T.hin === '' || T.hin == null ? 1 : +T.hin || 0);
+        if (skillIs(P, 'Defensive')) { const nDef = Math.max(1, (S.hotbar || []).filter(id => { try { const q = C.powers[id]; return q && skillIs(q, 'Defensive') && skillCtx(id).cd() > 0; } catch (e) { return false; } }).length); const hin = hitsIn();
           if ((m = t.match(/Lucky Hit: Up to an? ([\d.]+)% chance to reduce the Cooldown of one of your Defensive Skills by \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]? seconds/))) cuts.push({ n: it.name, v: aps * tg * lhFrac * +m[1] / 100 * mid(m, 2, 3) / nDef, how: `${m[1]}% of Lucky Hits, shared by ${nDef} Defensive Skill${nDef > 1 ? 's' : ''}` });
           if ((m = t.match(/Taking direct damage has an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to reset the Cooldown of one of your Defensive Skills/)) && hin > 0) { const r = hin * mid(m, 1, 2) / 100 / nDef; extraCast += r; cuts.push({ n: it.name, v: 0, how: `a reset ${D4T.fmtNum(Math.round(r * 100) / 100)} times a second, from ${D4T.fmtNum(hin)} hits taken a second` }); } }
         // Yen's Blessing: casting sets off a skill that is on cooldown, at most once every 8 seconds
@@ -2129,7 +2129,7 @@
     const judRate = isJudge ? (+T.jud > 0 ? +T.jud : 1 / judge.timer) * (1 + judge.twice) + judSpear : 0;
     // how often a proc goes off: on Lucky Hits (every enemy hit rolls), on every cast, or on every cast of a skill with a cooldown
     const auraHost = !!dawn || /Holy Light Aura/.test(P.name); const cdCasts = () => (S.hotbar || []).reduce((a, id) => { if (id === P.id) return a + (cdBase ? 1 / castEvery : 0); try { const c = C.powers[id] && skillCtx(id); const cd = c ? cdOf(c, C.powers[id]) : 0; return a + (cd > 0 ? 1 / Math.max(cd, 1 / Math.max(aps, 0.01)) : 0); } catch (e) { return a; } }, 0);
-    const procRate = !isProc ? 0 : payD.per === 'kill' ? Math.max(0, +T.kps || 0) : payD.per === 'hit' ? Math.max(0, T.hin === '' || T.hin == null ? 1 : +T.hin || 0) : payD.per === 'timer' ? 1 / Math.max(0.1, payD.every) : payD.per === 'cdcast' ? cdCasts() : payD.per === 'cast' ? (cdBase ? 1 / castEvery : aps) : (auraHost ? tg : cdBase ? tg / castEvery : aps * tg) * lhFrac * payD.ch / 100;
+    const procRate = !isProc ? 0 : payD.per === 'kill' ? Math.max(0, +T.kps || 0) : payD.per === 'hit' ? hitsIn() : payD.per === 'timer' ? 1 / Math.max(0.1, payD.every) : payD.per === 'cdcast' ? cdCasts() : payD.per === 'cast' ? (cdBase ? 1 / castEvery : aps) : (auraHost ? tg : cdBase ? tg / castEvery : aps * tg) * lhFrac * payD.ch / 100;
     const hps0 = isJudge ? judRate : isProc ? procRate : isDawn ? 1 : isThorns ? (payD.onBlock ? Math.max(0, blk) : payD.hit || payD.per || !cdBase ? 1 : 1 / castEvery) : pulse ? 1 / pulseEvery : frames ? (cdBase ? Math.min(60 / frames, 1 / castEvery) : 60 / frames) : cdBase ? Math.min(aps, 1 / castEvery) : aps;
     // what you can afford: with "Resource you generate a second" filled in, a skill with a cost casts no faster than your income pays for
     const resI = (() => { if (isJudge || isProc || isDawn || isThorns || pulse || T.res === '' || T.res == null || !(+T.res >= 0)) return null; let cost = 0; try { cost = sk.costEff(); } catch (e) { cost = 0; } if (!(cost > 0)) return null;
@@ -2140,7 +2140,9 @@
         if ((m = t.match(new RegExp('Lucky Hit:[^.]*?up to an? \\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]?% chance to (?:restore|gain|generate) \\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]? ' + RN, 'i'))) && !/Mobility Skill|Zealot Skills|Pyromancy|Corrupting|Core Skill deals direct damage to at least one Bleeding/.test(t)) { const v = lhs * mid(m, 1, 2) / 100 * mid(m, 3, 4); inc += v; parts.push(it.name + ' ' + D4T.fmtNum(Math.round(v * 10) / 10) + ' a second from Lucky Hits'); }
         if ((m = t.match(/If a Core Skill hits 4 or more enemies, \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% of the Resource cost is refunded/)) && skillIs(P, 'Core') && tg >= 4) { const v = mid(m, 1, 2); cost *= 1 - v / 100; parts.push(it.name + ' refunds ' + D4T.fmtNum(v) + '% of the cost'); } });
       const lim = inc / cost; return { cost, inc, lim, gen, parts, capped: lim < hps0 }; })();
-    const hps = resI && resI.capped ? resI.lim : hps0;
+    // "Blocking has a 15% chance to retaliate with a Shield Bash": free casts of this skill from blocks, outside the resource limit
+    let blkCasts = 0; const blkSrc = []; try { sheetData().powers.forEach(q => { const m = strip(q.desc || '').match(/Blocking has an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to retaliate with an? ([A-Z][\w' ]+?)\./); if (m && m[3] === P.name && !isProc && !isJudge && !isDawn && !isThorns) { const r = blk * (+m[1] + +(m[2] || m[1])) / 200; blkCasts += r; blkSrc.push(q.name); } }); } catch (e) { blkCasts = 0; }
+    const hps = (resI && resI.capped ? resI.lim : hps0) + blkCasts;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
@@ -2161,7 +2163,7 @@
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
     const potI = S.cls === 'Paladin' && /_Aura$/.test(P.id || '') ? auraPotency(P.id) : null; const wornSN = worn.some(it => /Aura Potency while standing in Consecration/.test(strip(it.desc || '')));
-    return { resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -2194,7 +2196,7 @@
             ${R.cuts.some(x => x.blk) || (R.cdBase && R.T.blk != null && R.T.blk !== '') ? `<label for="tcBlk">Blocks a second, for cooldown powers</label><input id="tcBlk" type="number" min="0" step="0.5" value="${f(R.blk)}">` : ''}
             <label for="tcRes">${esc((CLASS_RES[S.cls] || 'Resource'))} you generate a second (blank: no limit)</label><input id="tcRes" type="number" min="0" step="1" value="${esc(R.T.res != null ? R.T.res : '')}" placeholder="not limited">
             ${R.cuts.some(x => /shared by/.test(x.how)) ? `<label for="tcNcd">Skills you keep on cooldown, for powers that cut one of them</label><input id="tcNcd" type="number" min="1" step="1" value="${esc(R.T.ncd != null && R.T.ncd !== '' ? R.T.ncd : '')}" placeholder="every cooldown skill on your bar">` : ''}
-            ${R.isProc && R.payD.per === 'kill' ? `<label for="tcKps">Kills a second</label><input id="tcKps" type="number" min="0" step="0.1" value="${esc(R.T.kps != null && R.T.kps !== '' ? R.T.kps : 0)}">` : ''}${R.isProc && R.payD.per === 'hit' ? `<label for="tcHin">Hits you take a second</label><input id="tcHin" type="number" min="0" step="0.1" value="${esc(R.T.hin != null && R.T.hin !== '' ? R.T.hin : 1)}">` : ''}
+            ${R.isProc && R.payD.per === 'kill' ? `<label for="tcKps">Kills a second</label><input id="tcKps" type="number" min="0" step="0.1" value="${esc(R.T.kps != null && R.T.kps !== '' ? R.T.kps : 0)}">` : ''}${R.isProc && R.payD.per === 'hit' ? `<label for="tcHin">Hits you take a second</label><input id="tcHin" type="number" min="0" step="0.1" value="${f(hitsIn(), 2)}">` : ''}
             ${R.cutter || R.isProc ? `<label for="tcTg">Enemies hit by each cast</label><input id="tcTg" type="number" min="1" step="1" value="${f(R.tg)}">` : ''}
             <label for="tcVuln">Vulnerable uptime for expected (%)</label><input id="tcVuln" type="number" value="${esc(T.vuln)}">
           </div>
@@ -3274,7 +3276,7 @@
     // how long you last against each monster above: its attacks averaged, after block and dodge, at the hits-a-second you set.
     // A tenth-of-a-second step: healing a second, Fortify draining at 9% of the stored amount plus 1% of Maximum Life a second (Maxroll's
     // Season 11 measurement), Life Regeneration paused for 4 seconds after each hit, and a potion whenever one fits without overhealing.
-    const inHits = +T.inHits > 0 ? +T.inHits : 1;
+    const inHits = hitsIn();
     const surv = !ut ? [] : cards.map(c => { const avg = c.attacks.length ? c.attacks.reduce((a, r) => a + r.exp, 0) / c.attacks.length : 0; const inc = avg * inHits;
       const healNoRegen = ut.healPs - ut.regenPs; const regenOn = inHits <= 0.25; const dt = 0.1; let L = life, F = 0, pots = ut.pots, potT = 0, t = 0, used = 0;
       for (; t < 120 && L > 0; t += dt) { L -= inc * dt; L += (healNoRegen + (regenOn ? ut.regenPs : 0)) * dt; F = Math.min(life, F + ut.fortPs * dt);
@@ -3284,12 +3286,19 @@
         L = Math.min(L, life); }
       const net = ut.healPs - (regenOn ? 0 : ut.regenPs) + ut.fortPs - inc;
       return { name: c.m.name, cat: c.cat, inc, avg, net, ttd: L > 0 ? 0 : t, used }; });
-    return { ut, surv, inHits, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    let stag = { up: 0, has: false, dur: 4 }; try { stag = staggerShare(); } catch (e) { /* none */ }
+    return { stag, ut, surv, inHits, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
   }
   // ---------- healing, potions, Fortify, movement and crowd control ----------
   // Read from every equipped power, passive and skill on the bar. Rates come from the damage line loaded on Damage Theory Craft:
   // its hits a second, its Lucky Hit chance, the enemies-in-range and kills-a-second boxes. Potions follow the Season 11 rules:
   // 4 charges, each heals 35% of Maximum Life at once, one charge back every 30 seconds in combat.
+
+  // hits you take and blocks a second: one setting shared by both theory pages. Theory's own boxes win when filled in;
+  // otherwise hits come from Defense's "Hits you take a second" and blocks are those hits times your Block Chance.
+  function hitsIn() { const T = tcState(); if (T.hin !== '' && T.hin != null && !isNaN(+T.hin)) return Math.max(0, +T.hin); const d = dfState(); return +d.inHits > 0 ? +d.inHits : 1; }
+  function blockChance() { const M = statModel(); return Math.min(100, M.block ? M.block.v : 0) / 100; }
+  function blocksIn() { const T = tcState(); if (T.blk !== '' && T.blk != null && !isNaN(+T.blk)) return Math.max(0, +T.blk); return hitsIn() * blockChance(); }
   const POTION = { base: 4, heal: 35, every: 30 };
   function utilityTexts() {
     const C = cdata(); const out = []; const mid = t => decode(strip(t || '')).replace(/\s+/g, ' ').replace(/\[([\d.,]+)\s*[–-]\s*([\d.,]+)\]/g, (m, a, b) => String(Math.round((parseFloat(a.replace(/,/g, '')) + parseFloat(b.replace(/,/g, ''))) / 2 * 100) / 100));
@@ -3311,8 +3320,9 @@
     if (!sents) { sents = []; utilityTexts().forEach(x => x.t.split(/(?<=[.!])\s+(?=[A-Z])/).forEach((st, i) => sents.push(Object.assign({}, x, { st, i })))); }
     if (!(aps > 0)) { const tc = tcState(); aps = (+tc.ws || 1) * (1 + Math.min(100, M.as ? M.as.v : 0) / 100); }
     const ccDur = (M.ccdur ? M.ccdur.v : 0) + sents.reduce((a, x) => { const m = x.st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased )?Crowd Control Duration/i); return a + (m && !/while|if/i.test(x.st) && off['ccd:' + x.src + ':' + x.i] !== false ? +m[1] : 0); }, 0);
-    const rateLite = (x, st) => { if (x.kind === 'Skill') return 0; const ch = (st.match(/(?:up to )?(?:a )?([\d.]+)% chance/i) || [])[1]; const k = ch ? +ch / 100 : 1; const ev = st.match(/(?:once )?every ([\d.]+) seconds/i); if (ev) return 1 / +ev[1]; if (/Lucky Hit/i.test(st)) return aps * 0.3 * k; if (/\bwhen you (?:take|are|would)|damaged|\bkill|\bblock|\bdodge|\bevade/i.test(st)) return 0; if (/\bhit|\bcast|\bdamage|\battack/i.test(st)) return aps * k; return 0; };
-    const ccs = []; sents.forEach(x => { const st = x.st; const w = st.match(CCW); if (!w) return; const lr = x.kind === 'Skill' ? 0 : rateLite(x, st); if (x.kind !== 'Skill' && !(lr > 0)) return;
+    const rateLite = (x, st) => { if (x.kind === 'Skill') return 0; const ch = (st.match(/(?:up to )?(?:a )?([\d.]+)% chance/i) || [])[1]; const k = ch ? +ch / 100 : 1; if (!ch && /\bchance\b/i.test(st)) return 0; const ev = st.match(/(?:once )?every ([\d.]+) seconds/i); if (ev) return 1 / +ev[1]; if (/Lucky Hit/i.test(st)) return aps * 0.3 * k; if (/\bblock/i.test(st)) return blocksIn() * k; if (/\bwhen you (?:take|are)|being hit|taking damage|damaged/i.test(st)) return hitsIn() * k; if (/\bwould|\bkill|\bdodge|\bevade/i.test(st)) return 0; if (/\bhit|\bcast|\bdamage|\battack/i.test(st)) return aps * k; return 0; };
+    const icdOf = x => { const m = (x.t || '').match(/(?:can only (?:happen|occur) )?once every ([\d.]+) seconds|Cooldown: ([\d.]+) seconds|([\d.]+) second Cooldown/i); return m ? +(m[1] || m[2] || m[3]) : 0; };
+    const ccs = []; sents.forEach(x => { const st = x.st; const w = st.match(CCW); if (!w) return; let lr = x.kind === 'Skill' ? 0 : rateLite(x, st); const ic = x.kind === 'Skill' ? 0 : icdOf(x); if (ic && lr > 0) lr = Math.min(lr, 1 / ic); if (x.kind !== 'Skill' && !(lr > 0)) return;
       if (/Crowd Controlled enemies|against (?:Stunned|Frozen|Chilled|Slowed|Dazed|Feared|Immobilized|Knocked)|enemies that are|to (?:Stunned|Frozen|Slowed|Chilled)|while (?:Stunned|Frozen)|(?:you|You) (?:are|become) (?:Stunned|Frozen|Slowed|Chilled)/i.test(st)) return;
       const wd = st.match(new RegExp(CCW.source + '[^.,]{0,40}?for ([\\d.]+) seconds?', 'i'));
       const isBrief = !wd && (new RegExp('briefly ' + CCW.source + '|' + CCW.source + '[^.,]{0,30}?briefly|' + CCW.source + '[^.,]{0,40}?for\\s+seconds', 'i')).test(st);
@@ -3323,6 +3333,10 @@
     const ccUp = 1 - ccs.filter(c => c.on).reduce((k, c) => k * (1 - c.up), 1);
     return { ccDur, ccs, ccUp, brief };
   }
+
+  // Bosses ignore crowd control; it fills their Stagger bar instead. Once Staggered they count as controlled for the Stagger, then
+  // resist Stagger 5 times harder for 20 seconds (Season 12). With steady crowd control the bar refills about as that ends.
+  function staggerShare() { const d = dfState(); const dur = +d.stag > 0 ? +d.stag : 4; const cm = ccModel(d); const has = cm.ccs.some(c => c.on); return { up: has ? dur / (dur + 20) : 0, has, dur }; }
   function utility(life, T) {
     const M = statModel(); T = T || dfState(); const off = T.mdr || {}; const tc = tcState();
     let hps = 0, aps = 1, lh = 0.3, line = '';
@@ -3332,14 +3346,17 @@
     const conditional = st => /\bwhile\b|\bafter\b|\bwhen\b|\bwhenever\b|\bfor [\d.]+ seconds?\b|\bif\b|\bagainst\b|\bduring\b|\bcasting\b|\bAs an? [A-Z]|\bform\b/i.test(st);
     const baseT = {}; sents.forEach(x => { if (x.kind === 'Skill' && !baseT[x.id]) baseT[x.id] = x.t; });
     // how often a sentence's effect happens, and in words
-    const rateOf = (x, st) => {
+    const icdOf = x => { const m = (x.t || '').match(/(?:can only (?:happen|occur) )?once every ([\d.]+) seconds|Cooldown: ([\d.]+) seconds|([\d.]+) second Cooldown/i); return m ? +(m[1] || m[2] || m[3]) : 0; };
+    const rateOf = (x, st) => { const r0 = rateOf0(x, st); const ic = x.kind === 'Skill' ? 0 : icdOf(x); return ic && r0.r > 1 / ic ? { r: 1 / ic, how: r0.how.replace(/ \(.*\)$/, '') + `, once every ${ic} seconds` } : r0; };
+    const rateOf0 = (x, st) => {
       const ch = (st.match(/(?:up to )?(?:a )?([\d.]+)% chance/i) || [])[1]; const k = ch ? +ch / 100 : 1;
+      if (!ch && /\bchance\b/i.test(st)) return { r: 0, how: 'chance not given in the files, not counted' };
       if (/(?:per|every|each) second|a second\b/i.test(st)) return { r: 1, how: 'every second' };
       const ev = st.match(/(?:once )?every ([\d.]+) seconds/i); if (ev) return { r: 1 / +ev[1], how: 'every ' + ev[1] + ' seconds' };
       if (/Lucky Hit/i.test(st)) return { r: hps * tg * lh * k, how: `on Lucky Hits (${D4T.fmtNum(Math.round(hps * tg * lh * k * 100) / 100)} a second)` };
       if (/\bkill|\bdies\b|\bdie\b/i.test(st)) return { r: kps * k, how: kps ? `on kills (${kps} a second)` : 'on kills, set Kills a second on Damage Theory Craft' };
-      if (/\bblock/i.test(st)) return { r: 0, how: 'on block, not counted' };
-      if (/when you (?:take|are) (?:damage|hit)|damaged/i.test(st)) return { r: 0, how: 'when hit, not counted' };
+      if (/\bblock/i.test(st)) { const b = blocksIn(); return { r: b * k, how: `on block (${D4T.fmtNum(Math.round(b * k * 100) / 100)} a second)` }; }
+      if (/when you (?:take|are) (?:damage|hit)|damaged|being hit|taking (?:direct )?damage/i.test(st)) { const h = hitsIn(); return { r: h * k, how: `when hit (${D4T.fmtNum(Math.round(h * k * 100) / 100)} a second)` }; }
       if (x.kind === 'Skill' && x.cd > 0) return { r: k / x.cd, how: `each cast (${D4T.fmtNum(Math.round(x.cd * 10) / 10)} s cooldown)` };
       if (/\bcast|\buse\b|\bspend|\bcasting/i.test(st) || x.kind === 'Skill') return { r: aps * k, how: `each cast (${D4T.fmtNum(Math.round(aps * 100) / 100)} a second)` };
       if (/\bhit|\bdamage/i.test(st)) return { r: hps * tg * k, how: `on hit (${D4T.fmtNum(Math.round(hps * tg * 100) / 100)} a second)` };
@@ -3489,6 +3506,8 @@
           <div class="tc-row"><span>Impairment Reduction</span><b class="num">${f(U.impair, 1)}%</b><small>Crowd control on you is shortened by this much</small></div>
           <div class="tc-row"><span>Crowd Control Duration</span><b class="num">+${f(U.ccDur, 1)}%</b><small>on the crowd control you put on enemies</small></div>
           <div class="ut-in"><label for="dfBrief">Brief crowd control lasts (seconds)</label><input id="dfBrief" type="number" min="0.1" step="0.1" value="${esc(U.brief)}"><small>Used where a skill says "briefly" or the game files leave the time blank.</small></div>
+          <div class="ut-in"><label for="dfStag">Boss Stagger lasts (seconds)</label><input id="dfStag" type="number" min="0.5" step="0.5" value="${esc(R.stag.dur)}"><small>Guides only say "several seconds". After a Stagger a boss resists the next one 5 times harder for 20 seconds.</small></div>
+          <div class="tc-row"><span>Boss Staggered</span><b class="num">${f(R.stag.up * 100)}%</b><small>${R.stag.has ? 'of the time. Damage vs crowd controlled counts this much against bosses' : 'Nothing on your bar or gear fills a boss\'s Stagger bar'}</small></div>
           <div class="tc-row"><span>Enemies controlled</span><b class="num">${f(U.ccUp * 100)}%</b><small>of the time, from skills on your bar and items with a timed trigger. Damage against crowd controlled enemies on Damage Theory Craft counts for this share unless you turn the Crowd controlled chip on. Bosses cannot be controlled; this fills their Stagger bar instead</small></div>
           ${U.ccs.length ? `<div class="chips">${U.ccs.map(c => tog(c, c.src, `${c.what} ${f(c.dur, 1)} s${c.brief ? ' (brief)' : ''}, ${f(c.up * 100)}% of the time`)).join('')}</div>` : '<p class="note">Nothing on your bar or gear puts crowd control on enemies.</p>'}
           </section>`; })() : ''}
@@ -3505,7 +3524,7 @@
     $('#dfDiff').onchange = e => { T.pit = 0; set('diff', +e.target.value); };
     $$('#panel-defense [data-gosubmit]').forEach(b => b.onclick = () => { subSt.mon = b.dataset.gosubmit; subSt.atk = ''; subSt.tier = +T.diff; showSite('submit'); });
     { const bz = $('#dfBarrier'); if (bz) bz.onchange = e => set('barrier', Math.max(0, Math.round(+e.target.value || 0))); }
-    { const ih = $('#dfInHits'); if (ih) ih.onchange = e => set('inHits', Math.max(0.05, +e.target.value || 1)); const br = $('#dfBrief'); if (br) br.onchange = e => set('brief', Math.max(0.1, +e.target.value || 0.5)); }
+    { const ih = $('#dfInHits'); if (ih) ih.onchange = e => { tcState().hin = ''; set('inHits', Math.max(0.05, +e.target.value || 1)); }; const br = $('#dfBrief'); if (br) br.onchange = e => set('brief', Math.max(0.1, +e.target.value || 0.5)); const sg = $('#dfStag'); if (sg) sg.onchange = e => set('stag', Math.max(0.5, +e.target.value || 4)); }
     $('#dfPit').onchange = e => set('pit', Math.max(0, Math.min(150, Math.round(+e.target.value || 0))));
     $('#dfNormal').onchange = e => { T.mon.normal = e.target.value; commit(); renderDefense(); };
     $('#dfElite').onchange = e => { T.mon.elite = e.target.value; commit(); renderDefense(); };
