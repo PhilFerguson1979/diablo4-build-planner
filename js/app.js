@@ -1856,7 +1856,9 @@
           Object.values(mm.powers || {}).forEach(q => { if (!q || !q.name || via) return; const qt = strip(powerText(q, null, 1, mm.powers) || ''); const hit = sent.includes(q.name) || (/Taunted by/.test(sent) && /\bTaunts\b/.test(qt)); if (!hit) return; const cd = qt.match(/Cooldown: ([\d.]+) seconds/); const du = qt.match(/for ([\d.]+) seconds/); if (cd && du) { up = Math.min(1, +du[1] / +cd[1]); via = q.name; } });
           if (via) { lo *= up; hi *= up; what += ', counted for the ' + Math.round(up * 100) + '% of the time ' + via + ' is active'; } } }
         const boss = /worthy enemy|can't be Crowd Controlled|cannot be Crowd Controlled/.test(t.slice(s0, s1)) ? 1 : 0; if (boss) what += ', only against a target that cannot be crowd controlled';
-        out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '', scope, only, boss }); });
+        const ccSelf = /(?:become|becomes|are|is|be) (?:Feared|Stunned|Frozen|Immobilized|Dazed|Knocked Down|Taunted) for|\b(?:Stun|Freeze|Immobilize|Daze|Fear|Knock Down|Taunt)s? (?:them|enemies|the target|it|Close enemies|Nearby enemies)\b/i.test(t); if (ccSelf && /Crowd Controlled|Stunned|Frozen|Immobilized|Knocked Down|Dazed|Feared/.test(t.slice(s0, s1))) what += ', applies its own crowd control so it counts in full';
+        const ccNeed = !boss && !ccSelf && /(?:to|against|deal[^.]{0,40}?) (?:Crowd Controlled|Stunned|Frozen|Immobilized|Knocked Down|Dazed|Feared|Chilled|Slowed) (?:or [A-Z]\w+ )?(?:enemies|targets)|enemies (?:that are|who are) (?:Crowd Controlled|Stunned|Frozen|Immobilized|Knocked Down|Dazed|Feared)/i.test(t.slice(s0, s1)) ? 1 : 0;
+        out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '', scope, only, boss, ccNeed }); });
       if (!role) { const NS = '\\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]?'; const sents = t.split(/(?<=[^\d][.!])\s*(?=[A-Z])|•/); const stat = (kind, lo, hi, sn, extra) => out.push(Object.assign({ id: name + '#s' + (i++), n: name, stat: kind, lo, hi, what: sn.slice(0, 90), scope: powerScope(sn.replace(/\[?[\d.]+(?:\s*[–-]\s*[\d.]+)?\]?%.*$/, ''), 'damage'), skill: '' }, extra || {}));
         sents.forEach(sn => { let q; let M0 = null; const SM = () => { if (!M0) { try { M0 = statModel(); } catch (e) { M0 = {}; } } return M0; };
           if ((q = sn.match(new RegExp('Critical Strike Chance is increased by ' + NS + '% of your Movement Speed bonus')))) { const ms = SM().ms ? SM().ms.v : 0; if (ms > 0) stat('cc', +q[1] * ms / 100, +(q[2] || q[1]) * ms / 100, sn); return; }
@@ -2046,6 +2048,9 @@
       if (ok) always.push(...e.parts.map(pt => ({ v: pt.v, src: pt.src, what: (pre || 'All') + ' damage' })));
     }
     const sum = l => l.reduce((a, x) => a + x.v, 0);
+    // crowd control bonuses count for the share of time skills on your bar keep the enemy controlled, all of it with the Crowd controlled chip on, none against a boss
+    let ccUp = 1, ccHow = 'the Crowd controlled chip is on'; if ((T.st || {}).boss) { ccUp = 0; ccHow = 'bosses cannot be crowd controlled'; } else if (!T.cond.cc) { try { ccUp = ccModel(dfState()).ccUp; } catch (e) { ccUp = 0; } ccHow = 'your bar keeps enemies controlled ' + Math.round(ccUp * 100) + '% of the time'; }
+    if (!T.cond.cc && cond.cc && ccUp > 0) cond.cc.forEach(x => always.push({ v: x.v * ccUp, src: x.src, what: 'Damage vs Crowd Controlled, ' + ccHow }));
     const condOn = Object.keys(cond).filter(k => T.cond[k]);
     const GM = gearMultipliers(); const pwStat = kind => GM.filter(x => x.stat === kind && !scopeMiss(x.scope, isJudge || isProc ? Pd : P, Pd.dmg, !!(dot || isGrief)));
     try { GM.filter(x => x.add).forEach(x => { if (x.scope && x.scope.thorns ? !isThorns : !!scopeMiss(x.scope, isJudge || isProc ? Pd : P, Pd.dmg)) return; always.push({ v: (x.lo + x.hi) / 2, src: x.n, what: x.what }); }); } catch (e) { /* skip */ }
@@ -2069,6 +2074,7 @@
     const xLeft = [];
     const xGear = GM.filter(x => !x.add && !x.stat && (!x.boss || (T.st || {}).boss)).filter(x => { if (isJudge ? x.skill : isProc ? (x.skill || x.jud) : x.jud) return false; const why = isJudge && x.jud ? '' : isJudge && x.scope && x.scope.cat && x.scope.strict ? 'raises ' + x.scope.cat + ' Skills, not Judgement itself' : x.scope && x.scope.thorns && !isThorns ? 'only raises Thorns' : scopeMiss(x.scope, Pm, Pd.dmg, !!(dot || isGrief)); if (why) xLeft.push({ n: x.n, why }); return !why; }).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
     if (isJudge) { try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => { const mm = strip(powerText(q, md.desc, c2.lvl, C.powers)).match(/Judgement damage by ([\d.]+)%\s*\[x\]/); if (mm) { const xid = 'jud:' + id + ':' + md.key; xGear.push({ id: xid, n: q.name + ': ' + md.name, lo: +mm[1], hi: +mm[1], what: 'Judgement damage for a few seconds after a detonation', on: !T.off[xid] }); } }); }); } catch (e) { /* skip */ } }
+    xGear.forEach((x, i) => { if (x.ccNeed && ccUp < 1) xGear[i] = Object.assign({}, x, { lo: x.lo * ccUp, hi: x.hi * ccUp, what: (x.what || '') + ', counted ' + Math.round(ccUp * 100) + '%: ' + ccHow }); });
     const prod = (l, f) => l.reduce((a, x) => a * (1 + f(x) / 100), 1);
     const xS = (1 + xSumEl / 100) * Object.values(xSumBy).reduce((a, v) => a * (1 + v / 100), 1) * xOwn;
     const xAll = xGear.filter(x => x.on && !x.only); const xOnly = k => prod(xGear.filter(x => x.on && x.only === k), x => (x.lo + x.hi) / 2);
@@ -3159,7 +3165,7 @@
   const MON_LEVEL = 70;
   const RARITY_HP = { normal: 0, champion: 1, elite: 2, boss: -1 };
   function dfState() {
-    S.df = Object.assign({ diff: 10, pit: 0, fort: false, weak: false, block: true, dodge: true, mon: {}, rar: 'elite', aff: [] }, S.df || {});
+    { const d = { diff: 10, pit: 0, fort: false, weak: false, block: true, dodge: true, mon: {}, rar: 'elite', aff: [] }; if (!S.df || typeof S.df !== 'object') S.df = {}; for (const k in d) if (S.df[k] == null) S.df[k] = d[k]; }
     if (!S.df.mon) S.df.mon = {}; if (!Array.isArray(S.df.aff)) S.df.aff = [];
     const MON = (window.D4MON || {}).monsters || [];
     if (S.df.mon.world && !MON.some(m => m.id === S.df.mon.world)) S.df.mon.world = '';
@@ -3265,7 +3271,20 @@
       else e = mixEhp(life, armor, 0, v / 100);
       return { n, d, gain: now ? e / now - 1 : 0 }; }).sort((a, b) => b.gain - a.gain);
     let ut = null; try { ut = utility(life, T); } catch (e) { ut = null; }
-    return { ut, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    // how long you last against each monster above: its attacks averaged, after block and dodge, at the hits-a-second you set.
+    // A tenth-of-a-second step: healing a second, Fortify draining at 9% of the stored amount plus 1% of Maximum Life a second (Maxroll's
+    // Season 11 measurement), Life Regeneration paused for 4 seconds after each hit, and a potion whenever one fits without overhealing.
+    const inHits = +T.inHits > 0 ? +T.inHits : 1;
+    const surv = !ut ? [] : cards.map(c => { const avg = c.attacks.length ? c.attacks.reduce((a, r) => a + r.exp, 0) / c.attacks.length : 0; const inc = avg * inHits;
+      const healNoRegen = ut.healPs - ut.regenPs; const regenOn = inHits <= 0.25; const dt = 0.1; let L = life, F = 0, pots = ut.pots, potT = 0, t = 0, used = 0;
+      for (; t < 120 && L > 0; t += dt) { L -= inc * dt; L += (healNoRegen + (regenOn ? ut.regenPs : 0)) * dt; F = Math.min(life, F + ut.fortPs * dt);
+        if (L < life && F > 0) { const h = Math.min(F, (0.09 * F + 0.01 * life) * dt, life - L); F -= h; L += h; }
+        potT += dt; if (potT >= POTION.every) { potT -= POTION.every; pots = Math.min(ut.pots, pots + 1); }
+        if (pots > 0 && L <= life - ut.potOne && L < life * 0.5) { pots--; used++; L += ut.potOne; }
+        L = Math.min(L, life); }
+      const net = ut.healPs - (regenOn ? 0 : ut.regenPs) + ut.fortPs - inc;
+      return { name: c.m.name, cat: c.cat, inc, avg, net, ttd: L > 0 ? 0 : t, used }; });
+    return { ut, surv, inHits, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
   }
   // ---------- healing, potions, Fortify, movement and crowd control ----------
   // Read from every equipped power, passive and skill on the bar. Rates come from the damage line loaded on Damage Theory Craft:
@@ -3280,6 +3299,29 @@
       out.push({ src: q.name, kind: 'Skill', id, t: mid(powerText(q, null, c2.lvl, C.powers)), cd });
       (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => out.push({ src: q.name + ': ' + md.name, kind: 'Skill', id, t: mid(powerText(q, md.desc, c2.lvl, C.powers)), cd })); }); } catch (e) { /* a skill that fails to render adds nothing */ }
     return out;
+  }
+
+  // crowd control you put on enemies: the longest effect from each skill on the bar, stretched by Crowd Control Duration.
+  // "Briefly" and durations the game files leave blank use the Defense page's brief crowd control box.
+  const CCW = /\b(Stun(?:s|ned|ning)?|Knock(?:s|ed|ing)? ?(?:Down|Back)|Knockdown|Immobiliz(?:e|es|ed|ing)|Freez(?:e|es|ing)|Froz(?:en)|Daze(?:s|d)?|Fear(?:s|ed)?|Taunt(?:s|ed|ing)?|Slow(?:s|ed|ing)?|Chill(?:s|ed|ing)?|Tether(?:s|ed)?)\b/i;
+  const CC_NAME = [['stun', 'Stun'], ['knock', 'Knock Down'], ['immobiliz', 'Immobilize'], ['freez', 'Freeze'], ['froz', 'Freeze'], ['daze', 'Daze'], ['fear', 'Fear'], ['taunt', 'Taunt'], ['slow', 'Slow'], ['chill', 'Chill'], ['tether', 'Tether']];
+  const ccNameOf = w => (CC_NAME.find(([k]) => w.toLowerCase().startsWith(k)) || [0, w])[1];
+  function ccModel(T, sents, aps) {
+    T = T || dfState(); const off = T.mdr || {}; const M = statModel(); const brief = +T.brief > 0 ? +T.brief : 0.5;
+    if (!sents) { sents = []; utilityTexts().forEach(x => x.t.split(/(?<=[.!])\s+(?=[A-Z])/).forEach((st, i) => sents.push(Object.assign({}, x, { st, i })))); }
+    if (!(aps > 0)) { const tc = tcState(); aps = (+tc.ws || 1) * (1 + Math.min(100, M.as ? M.as.v : 0) / 100); }
+    const ccDur = (M.ccdur ? M.ccdur.v : 0) + sents.reduce((a, x) => { const m = x.st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased )?Crowd Control Duration/i); return a + (m && !/while|if/i.test(x.st) && off['ccd:' + x.src + ':' + x.i] !== false ? +m[1] : 0); }, 0);
+    const rateLite = (x, st) => { if (x.kind === 'Skill') return 0; const ch = (st.match(/(?:up to )?(?:a )?([\d.]+)% chance/i) || [])[1]; const k = ch ? +ch / 100 : 1; const ev = st.match(/(?:once )?every ([\d.]+) seconds/i); if (ev) return 1 / +ev[1]; if (/Lucky Hit/i.test(st)) return aps * 0.3 * k; if (/\bwhen you (?:take|are|would)|damaged|\bkill|\bblock|\bdodge|\bevade/i.test(st)) return 0; if (/\bhit|\bcast|\bdamage|\battack/i.test(st)) return aps * k; return 0; };
+    const ccs = []; sents.forEach(x => { const st = x.st; const w = st.match(CCW); if (!w) return; const lr = x.kind === 'Skill' ? 0 : rateLite(x, st); if (x.kind !== 'Skill' && !(lr > 0)) return;
+      if (/Crowd Controlled enemies|against (?:Stunned|Frozen|Chilled|Slowed|Dazed|Feared|Immobilized|Knocked)|enemies that are|to (?:Stunned|Frozen|Slowed|Chilled)|while (?:Stunned|Frozen)|(?:you|You) (?:are|become) (?:Stunned|Frozen|Slowed|Chilled)/i.test(st)) return;
+      const wd = st.match(new RegExp(CCW.source + '[^.,]{0,40}?for ([\\d.]+) seconds?', 'i'));
+      const isBrief = !wd && (new RegExp('briefly ' + CCW.source + '|' + CCW.source + '[^.,]{0,30}?briefly|' + CCW.source + '[^.,]{0,40}?for\\s+seconds', 'i')).test(st);
+      if (!wd && !isBrief) return;
+      const base = wd ? +wd[wd.length - 1] : brief; if (!(base > 0)) return; const dur = base * (1 + ccDur / 100); const every = lr > 0 ? 1 / lr : x.cd > 0 ? x.cd : 1 / Math.max(aps, 0.01); const up = Math.min(1, dur / every); const id = 'cc:' + x.src + ':' + x.i;
+      const prev = ccs.find(c => x.id ? c.skill === x.id : c.src === x.src); const row = { id, skill: x.id, src: x.src, what: ccNameOf(wd ? wd[1] : w[1]), dur, up, brief: !wd, on: off[id] !== false };
+      if (!prev) ccs.push(row); else if (row.up > prev.up) Object.assign(prev, row); });
+    const ccUp = 1 - ccs.filter(c => c.on).reduce((k, c) => k * (1 - c.up), 1);
+    return { ccDur, ccs, ccUp, brief };
   }
   function utility(life, T) {
     const M = statModel(); T = T || dfState(); const off = T.mdr || {}; const tc = tcState();
@@ -3320,7 +3362,7 @@
     const fortGen = M.fort ? M.fort.v : 0; const fk = 1 + fortGen / 100;
     const regen = M.regen ? M.regen.v : 0, loh = M.loh ? M.loh.v : 0, lok = M.lok ? M.lok.v : 0;
     const rows = [];
-    if (regen) rows.push({ src: 'Life Regeneration', how: 'every second', ps: regen * hk });
+    if (regen) rows.push({ src: 'Life Regeneration', how: 'every second, but it stops for 4 seconds each time you take damage', ps: regen * hk });
     if (loh) rows.push({ src: 'Life On Hit', how: `${D4T.fmtNum(Math.round(loh))} a hit, ${D4T.fmtNum(Math.round(hps * tg * 100) / 100)} hits a second`, ps: loh * hps * tg * hk });
     if (lok) rows.push({ src: 'Life On Kill', how: kps ? `${D4T.fmtNum(Math.round(lok))} a kill, ${kps} kills a second` : 'set Kills a second on Damage Theory Craft', ps: lok * kps * hk });
     heals.filter(h => h.on).forEach(h => rows.push({ src: h.src, how: (h.pct ? h.pct + '% of Maximum Life ' : D4T.fmtNum(Math.round(h.v)) + ' Life ') + h.how, ps: h.ps * hk }));
@@ -3347,14 +3389,8 @@
       const up = cd ? Math.min(1, +d[1] / cd) : 0; unst.push({ id, src: x.src, up, how: cd ? `${d[1]} s every ${D4T.fmtNum(Math.round(cd * 10) / 10)} s` : `${d[1]} s, trigger not timed`, on: off[id] !== false && up > 0 }); });
     const unstUp = 1 - unst.filter(u => u.on).reduce((k, u) => k * (1 - u.up), 1);
     const impair = (M.impair ? M.impair.v : 0) + sents.reduce((a, x) => { const m = x.st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased )?Impairment Reduction/i); return a + (m && off['im:' + x.src + ':' + x.i] !== false ? +m[1] : 0); }, 0);
-    // crowd control you put on enemies: the longest effect from each skill on the bar, stretched by Crowd Control Duration
-    const ccDur = (M.ccdur ? M.ccdur.v : 0) + sents.reduce((a, x) => { const m = x.st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased )?Crowd Control Duration/i); return a + (m && !/while|if/i.test(x.st) ? +m[1] : 0); }, 0);
-    const CCW = /\b(Stun(?:s|ned|ning)?|Knock(?:s|ed)? ?(?:Down|Back)|Knockdown|Immobiliz(?:e|es|ed|ing)|Freez(?:e|es|ing)|Froz(?:en)|Daze(?:s|d)?|Fear(?:s|ed)?|Taunt(?:s|ed)?|Slow(?:s|ed|ing)?|Chill(?:s|ed)?|Tether(?:s|ed)?)\b/i;
-    const ccs = []; sents.filter(x => x.kind === 'Skill').forEach(x => { const st = x.st; const w = st.match(CCW); const wd = st.match(new RegExp(CCW.source + '[^.,]{0,40}?for ([\\d.]+) seconds?', 'i')); if (!w || !wd || /Crowd Controlled enemies|against (?:Stunned|Frozen|Chilled|Slowed|Dazed|Feared|Immobilized|Knocked)|enemies that are|to (?:Stunned|Frozen|Slowed|Chilled)|while (?:Stunned|Frozen)/i.test(st)) return; const dur = +wd[wd.length - 1] * (1 + ccDur / 100); const every = x.cd > 0 ? x.cd : 1 / Math.max(aps, 0.01); const up = Math.min(1, dur / every); const id = 'cc:' + x.src + ':' + x.i;
-      const prev = ccs.find(c => c.skill === x.id); const row = { id, skill: x.id, src: x.src, what: ({ stun: 'Stun', knock: 'Knock Down', immobiliz: 'Immobilize', freez: 'Freeze', froz: 'Freeze', daze: 'Daze', fear: 'Fear', taunt: 'Taunt', slow: 'Slow', chill: 'Chill', tether: 'Tether' })[Object.keys({ stun: 1, knock: 1, immobiliz: 1, freez: 1, froz: 1, daze: 1, fear: 1, taunt: 1, slow: 1, chill: 1, tether: 1 }).find(k => wd[1].toLowerCase().startsWith(k))] || wd[1], dur, up, on: off[id] !== false };
-      if (!prev) ccs.push(row); else if (row.up > prev.up) Object.assign(prev, row); });
-    const ccUp = 1 - ccs.filter(c => c.on).reduce((k, c) => k * (1 - c.up), 1);
-    return { line, hps, tg, kps, aps, lh, rows, heals, forts, healRecv, hk, fortGen, fortPs, healPs, pots, potHealPct, potOne, potPs, moves, ms1, ms2, msTotal, msBase, maxed, unhind, unst, unstUp, impair, ccDur, ccs, ccUp };
+    const { ccDur, ccs, ccUp, brief } = ccModel(T, sents, aps);
+    return { regenPs: regen * hk, line, hps, tg, kps, aps, lh, rows, heals, forts, healRecv, hk, fortGen, fortPs, healPs, pots, potHealPct, potOne, potPs, moves, ms1, ms2, msTotal, msBase, maxed, unhind, unst, unstUp, impair, ccDur, ccs, ccUp, brief };
   }
   function renderDefense() {
     invalidate();
@@ -3436,8 +3472,10 @@
           <div class="tc-row"><span>Fortify a second</span><b class="num">${f(U.fortPs)}</b><small>${U.fortPs ? `${ofL(U.fortPs)} a second${U.fortGen ? `, with ${f(U.fortGen, 1)}% Fortify Generation` : ''}. Fortify stacks up to your Maximum Life and drains into Life as you lose it, so this is extra healing while you are taking damage` : 'Nothing on the build grants Fortify'}</small></div>
           ${U.forts.filter(h => h.on).map(h => `<div class="bucket"><b>${esc(h.src)}</b><span>${lf(h.ps)} <small>${f(h.pct, 1)}% of Maximum Life ${esc(h.how)}</small></span></div>`).join('')}
           <div class="tc-row"><span>Potions</span><b class="num">${U.pots} x ${f(U.potOne)}</b><small>${f(U.potHealPct, 1)}% of Maximum Life each, at once. One charge comes back every ${POTION.every} seconds in combat, worth ${f(U.potPs)} a second. A full bar heals ${f(U.pots * U.potOne)} (${f(U.pots * U.potOne / R.life * 100)}% of Life)</small></div>
+          <div class="ut-in"><label for="dfInHits">Hits you take a second</label><input id="dfInHits" type="number" min="0.05" step="0.05" value="${esc(R.inHits)}"><small>The monster files do not say how fast monsters attack, so set this to match the fight. 1 is a steady stream of hits.</small></div>
+          ${R.surv.map(v => `<div class="bucket${v.net >= 0 ? ' best' : ''}"><b>${esc(v.name)}</b><span>${f(v.inc)} damage a second taken, ${v.net >= 0 ? `you heal ${f(v.net)} a second more than that` : `${f(-v.net)} a second more than you heal`}. <small>${v.ttd ? `You last ${f(v.ttd, 1)} seconds${v.used ? `, using ${v.used} potion${v.used === 1 ? '' : 's'}` : ''}` : `You last the full 2 minutes${v.used ? `, using ${v.used} potion${v.used === 1 ? '' : 's'}` : ''}`}</small></span></div>`).join('')}
           ${U.heals.length + U.forts.length ? `<div class="chips">${U.heals.concat(U.forts).map(h => tog(h, h.src, h.can ? h.how : 'not counted: ' + h.how)).join('')}</div>` : ''}
-          <p class="note">Hits a second come from the line loaded on Damage Theory Craft${U.line ? ` (${esc(U.line)}: ${f(U.hps, 2)} a second, on ${U.tg} enem${U.tg === 1 ? 'y' : 'ies'})` : ''}, and kills from its Kills a second box. Life Regeneration counts as Life a second. Healing Received is applied to every heal and to potions. Potions follow the Season 11 rules: 4 charges, 35% of Maximum Life each, one back every 30 seconds.</p></section>
+          <p class="note">Hits a second come from the line loaded on Damage Theory Craft${U.line ? ` (${esc(U.line)}: ${f(U.hps, 2)} a second, on ${U.tg} enem${U.tg === 1 ? 'y' : 'ies'})` : ''}, and kills from its Kills a second box. Life Regeneration is Life a second but stops for 4 seconds after you take damage, so it only counts in a fight when you take a hit less than every 4 seconds. Life On Hit has a short internal cooldown in the game that is not in the files, so it may read a little high on fast hits. Healing Received is applied to every heal and to potions. Fortify drains into Life at 9% of what you have stored plus 1% of Maximum Life a second, as Maxroll measured. The time you last starts from full Life with no Fortify, drinks a potion when below half Life, and stops at 2 minutes. Potions follow the Season 11 rules: 4 charges, 35% of Maximum Life each, one back every 30 seconds.</p></section>
           <section class="tc-box ut-box"><h3>Movement</h3>
           <div class="tc-row"><span>Movement Speed</span><b class="num">${f(U.msTotal)}%</b><small>${U.maxed ? 'Something on the build sets Movement Speed to its maximum' : `cap 1: +${f(U.ms1, 1)}% of 100%, cap 2: +${f(U.ms2, 1)}%[x] of 100%`}</small></div>
           <div class="tc-row"><span>Without timed bonuses</span><b class="num">${f(U.msBase)}%</b><small>Only bonuses that are always on</small></div>
@@ -3450,8 +3488,9 @@
           ${U.unst.length ? `<div class="chips">${U.unst.map(u => tog(Object.assign({}, u, { can: u.up > 0 }), u.src, u.how)).join('')}</div>` : ''}
           <div class="tc-row"><span>Impairment Reduction</span><b class="num">${f(U.impair, 1)}%</b><small>Crowd control on you is shortened by this much</small></div>
           <div class="tc-row"><span>Crowd Control Duration</span><b class="num">+${f(U.ccDur, 1)}%</b><small>on the crowd control you put on enemies</small></div>
-          <div class="tc-row"><span>Enemies controlled</span><b class="num">${f(U.ccUp * 100)}%</b><small>of the time, from skills on your bar. Bosses cannot be controlled; this fills their Stagger bar instead</small></div>
-          ${U.ccs.length ? `<div class="chips">${U.ccs.map(c => tog(c, c.src, `${c.what} ${f(c.dur, 1)} s, ${f(c.up * 100)}% of the time`)).join('')}</div>` : '<p class="note">No skill on your bar names a crowd control effect with a set duration.</p>'}
+          <div class="ut-in"><label for="dfBrief">Brief crowd control lasts (seconds)</label><input id="dfBrief" type="number" min="0.1" step="0.1" value="${esc(U.brief)}"><small>Used where a skill says "briefly" or the game files leave the time blank.</small></div>
+          <div class="tc-row"><span>Enemies controlled</span><b class="num">${f(U.ccUp * 100)}%</b><small>of the time, from skills on your bar and items with a timed trigger. Damage against crowd controlled enemies on Damage Theory Craft counts for this share unless you turn the Crowd controlled chip on. Bosses cannot be controlled; this fills their Stagger bar instead</small></div>
+          ${U.ccs.length ? `<div class="chips">${U.ccs.map(c => tog(c, c.src, `${c.what} ${f(c.dur, 1)} s${c.brief ? ' (brief)' : ''}, ${f(c.up * 100)}% of the time`)).join('')}</div>` : '<p class="note">Nothing on your bar or gear puts crowd control on enemies.</p>'}
           </section>`; })() : ''}
         <div class="mon-cards wide">${R.cards.map(monCard).join('')}</div>
         <section class="tc-box wide"><h3>What helps most against these monsters</h3>
@@ -3466,6 +3505,7 @@
     $('#dfDiff').onchange = e => { T.pit = 0; set('diff', +e.target.value); };
     $$('#panel-defense [data-gosubmit]').forEach(b => b.onclick = () => { subSt.mon = b.dataset.gosubmit; subSt.atk = ''; subSt.tier = +T.diff; showSite('submit'); });
     { const bz = $('#dfBarrier'); if (bz) bz.onchange = e => set('barrier', Math.max(0, Math.round(+e.target.value || 0))); }
+    { const ih = $('#dfInHits'); if (ih) ih.onchange = e => set('inHits', Math.max(0.05, +e.target.value || 1)); const br = $('#dfBrief'); if (br) br.onchange = e => set('brief', Math.max(0.1, +e.target.value || 0.5)); }
     $('#dfPit').onchange = e => set('pit', Math.max(0, Math.min(150, Math.round(+e.target.value || 0))));
     $('#dfNormal').onchange = e => { T.mon.normal = e.target.value; commit(); renderDefense(); };
     $('#dfElite').onchange = e => { T.mon.elite = e.target.value; commit(); renderDefense(); };

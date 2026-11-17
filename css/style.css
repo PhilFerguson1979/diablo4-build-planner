@@ -1482,3 +1482,5 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .ut-box .chip small { margin-left: 6px; }
 .ut-box .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .ut-box .chip { white-space: nowrap; }
+.ut-in { display: grid; grid-template-columns: auto 90px; gap: 4px 10px; align-items: center; margin: 10px 0; }
+.ut-in small { grid-column: 1 / -1; opacity: .75; }
