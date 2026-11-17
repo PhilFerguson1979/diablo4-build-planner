@@ -1606,6 +1606,8 @@
     { sec: 'Defensive', id: 'heal', l: 'Healing Received', u: PCT, re: [/Healing Received$/] },
     { sec: 'Defensive', id: 'regen', l: 'Life Regeneration', re: [/^§ Life Regeneration$/, /^§ Life per 5 Seconds$/] },
     { sec: 'Defensive', id: 'loh', l: 'Life On Hit', re: [/^§ Life On Hit$/] },
+    { sec: 'Defensive', id: 'lok', l: 'Life On Kill', re: [/^§ Life On Kill$/] },
+    { sec: 'Defensive', id: 'potheal', l: 'Potion Healing', u: PCT, re: [/^§% Potion Healing$/] },
     { sec: 'Defensive', id: 'block', l: 'Block Chance', u: PCT, cap: 100, re: [/^§% Block Chance$/] },
     { sec: 'Defensive', id: 'blockr', l: 'Block Reduction', u: PCT, cap: 80, capSrc: 'game cap', re: [/^§% Blocked Damage Reduction$/] },
     { sec: 'Defensive', id: 'dr', l: 'All Damage Reduction', u: PCT, cap: 100, re: [/^§% Damage Reduction$/] },
@@ -1619,6 +1621,7 @@
     { sec: 'Utility', id: 'cdr', l: 'Cooldown Reduction', u: PCT, cap: 75, capSrc: 'game cap', re: [/^§% Cooldown Reduction$/] },
     { sec: 'Utility', id: 'lhc', l: 'Lucky Hit Chance Bonus', u: PCT, cap: 100, re: [/^§% Lucky Hit Chance$/] },
     { sec: 'Utility', id: 'ccdur', l: 'Crowd Control Duration', u: PCT, re: [/^§% Crowd Control Duration$/] },
+    { sec: 'Utility', id: 'impair', l: 'Impairment Reduction', u: PCT, re: [/^§% Impairment Reduction$/] },
     { sec: 'Utility', id: 'resolve', l: 'Resolve', re: [/Resolve/] },
   ];
   const STAT_SECS = ['Core Stats', 'Armor & Resistances', 'Offensive', 'Defensive', 'Utility'];
@@ -3227,7 +3230,7 @@
     const rawHit = (s, type, dmgK) => s * baseLife * L.md * (dmgK || 1) * (type === 'Physical' ? 1 : L.mnp) * tier.dmg * HIT_CAL;
     const taken = (s, type, tierKey, dmgK) => {
       const raw = rawHit(s, type, dmgK);
-      const k = (1 - armorDR) * (1 - resDR(type)) * drMul * (T.fort ? 0.9 : 1) * (T.weak ? 1 - WEAKEN[tierKey] / 100 : 1);
+      const k = (1 - armorDR) * (1 - resDR(type)) * drMul * (T.weak ? 1 - WEAKEN[tierKey] / 100 : 1);
       const hit = raw * k; const exp = hit * (T.block ? 1 - block * blockR : 1) * (T.dodge ? 1 - dodge : 1);
       return { raw, hit, exp };
     };
@@ -3245,7 +3248,7 @@
     const caps = D.caps || {}; const capKey = kind; const byCat = {}; affs.forEach(a => { byCat[a.cat] = (byCat[a.cat] || 0) + 1; });
     const overCap = Object.keys(byCat).filter(c => caps[c] && byCat[c] > caps[c][capKey]);
     const types = ['Physical', 'Fire', 'Lightning', 'Cold', 'Poison', 'Shadow'];
-    const mitig = (type, A, R0, dr) => (1 - aDRof(A)) * (1 - rDRof(R0)) * drMul * (1 - (dr || 0)) * (T.fort ? 0.9 : 1);
+    const mitig = (type, A, R0, dr) => (1 - aDRof(A)) * (1 - rDRof(R0)) * drMul * (1 - (dr || 0));
     const ehp = types.map(t => ({ t, dr: 1 - mitig(t, armor, resOf(t)), ehp: life / mitig(t, armor, resOf(t)), R: resOf(t) }));
     // what helps: average Effective Life against every attack on the selected monsters
     const mix = []; cards.forEach(c => c.attacks.forEach(r => mix.push(r.a.type))); affRows.forEach(r => r.hits.forEach(x => mix.push(x.h.type)));
@@ -3261,7 +3264,97 @@
       else if (n === 'All Resistance') e = mixEhp(life, armor, v, 0);
       else e = mixEhp(life, armor, 0, v / 100);
       return { n, d, gain: now ? e / now - 1 : 0 }; }).sort((a, b) => b.gain - a.gain);
-    return { defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    let ut = null; try { ut = utility(life, T); } catch (e) { ut = null; }
+    return { ut, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+  }
+  // ---------- healing, potions, Fortify, movement and crowd control ----------
+  // Read from every equipped power, passive and skill on the bar. Rates come from the damage line loaded on Damage Theory Craft:
+  // its hits a second, its Lucky Hit chance, the enemies-in-range and kills-a-second boxes. Potions follow the Season 11 rules:
+  // 4 charges, each heals 35% of Maximum Life at once, one charge back every 30 seconds in combat.
+  const POTION = { base: 4, heal: 35, every: 30 };
+  function utilityTexts() {
+    const C = cdata(); const out = []; const mid = t => decode(strip(t || '')).replace(/\s+/g, ' ').replace(/\[([\d.,]+)\s*[–-]\s*([\d.,]+)\]/g, (m, a, b) => String(Math.round((parseFloat(a.replace(/,/g, '')) + parseFloat(b.replace(/,/g, ''))) / 2 * 100) / 100));
+    sheetData().powers.forEach(q => out.push({ src: q.name, kind: q.kind, t: mid(q.desc), cd: 0 }));
+    const bar = (S.hotbar || []).filter(Boolean);
+    try { unlockedSkills().forEach(id => { const q = C.powers[id]; if (!q || q.passive) return; if (bar.length && !bar.includes(id)) return; const c2 = skillCtx(id); let cd = 0; try { cd = c2.cd() > 0 ? c2.cdEff() : 0; } catch (e) { cd = 0; }
+      out.push({ src: q.name, kind: 'Skill', id, t: mid(powerText(q, null, c2.lvl, C.powers)), cd });
+      (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => out.push({ src: q.name + ': ' + md.name, kind: 'Skill', id, t: mid(powerText(q, md.desc, c2.lvl, C.powers)), cd })); }); } catch (e) { /* a skill that fails to render adds nothing */ }
+    return out;
+  }
+  function utility(life, T) {
+    const M = statModel(); T = T || dfState(); const off = T.mdr || {}; const tc = tcState();
+    let hps = 0, aps = 1, lh = 0.3, line = '';
+    try { const R = theory(); if (R) { aps = R.aps || 1; hps = R.isProc || R.isJudge || R.isDawn || R.isThorns ? aps : R.hps || aps; lh = R.lhFrac || lh; line = R.lineName || ''; } } catch (e) { /* no damage line yet */ }
+    const tg = Math.max(1, +tc.tg || 1), kps = Math.max(0, +tc.kps || 0);
+    const sents = []; utilityTexts().forEach(x => x.t.split(/(?<=[.!])\s+(?=[A-Z])/).forEach((st, i) => sents.push(Object.assign({}, x, { st, i }))));
+    const conditional = st => /\bwhile\b|\bafter\b|\bwhen\b|\bwhenever\b|\bfor [\d.]+ seconds?\b|\bif\b|\bagainst\b|\bduring\b|\bcasting\b|\bAs an? [A-Z]|\bform\b/i.test(st);
+    const baseT = {}; sents.forEach(x => { if (x.kind === 'Skill' && !baseT[x.id]) baseT[x.id] = x.t; });
+    // how often a sentence's effect happens, and in words
+    const rateOf = (x, st) => {
+      const ch = (st.match(/(?:up to )?(?:a )?([\d.]+)% chance/i) || [])[1]; const k = ch ? +ch / 100 : 1;
+      if (/(?:per|every|each) second|a second\b/i.test(st)) return { r: 1, how: 'every second' };
+      const ev = st.match(/(?:once )?every ([\d.]+) seconds/i); if (ev) return { r: 1 / +ev[1], how: 'every ' + ev[1] + ' seconds' };
+      if (/Lucky Hit/i.test(st)) return { r: hps * tg * lh * k, how: `on Lucky Hits (${D4T.fmtNum(Math.round(hps * tg * lh * k * 100) / 100)} a second)` };
+      if (/\bkill|\bdies\b|\bdie\b/i.test(st)) return { r: kps * k, how: kps ? `on kills (${kps} a second)` : 'on kills, set Kills a second on Damage Theory Craft' };
+      if (/\bblock/i.test(st)) return { r: 0, how: 'on block, not counted' };
+      if (/when you (?:take|are) (?:damage|hit)|damaged/i.test(st)) return { r: 0, how: 'when hit, not counted' };
+      if (x.kind === 'Skill' && x.cd > 0) return { r: k / x.cd, how: `each cast (${D4T.fmtNum(Math.round(x.cd * 10) / 10)} s cooldown)` };
+      if (/\bcast|\buse\b|\bspend|\bcasting/i.test(st) || x.kind === 'Skill') return { r: aps * k, how: `each cast (${D4T.fmtNum(Math.round(aps * 100) / 100)} a second)` };
+      if (/\bhit|\bdamage/i.test(st)) return { r: hps * tg * k, how: `on hit (${D4T.fmtNum(Math.round(hps * tg * 100) / 100)} a second)` };
+      return { r: 0, how: 'trigger not read, not counted' };
+    };
+    // healing and Fortify written into powers
+    const heals = [], forts = []; let healRecvPw = 0, potPw = 0, potCap = 0;
+    sents.forEach(x => { const st = x.st; const id = 'ut:' + x.src + ':' + x.i;
+      if (/\bwhile you have|\bwhile Fortified|\bwhile Healthy|\bif you have\b/i.test(st) && !/Heal|Fortif/i.test(st.split(/,/).slice(-1)[0])) return;
+      const hp = st.match(/Heal(?:s|ing)?(?: you)?(?: and your allies)?(?: for)? ([\d.]+)% (?:of )?(?:your )?Maximum Life/i);
+      const hf = !hp && st.match(/Heal(?:s)?(?: you)? for ([\d,]+) Life\b/i);
+      if ((hp || hf) && !/Potion/i.test(st)) { const rt = rateOf(x, st); const per = hp ? +hp[1] / 100 * life : parseFloat(hf[1].replace(/,/g, '')); heals.push({ id, src: x.src, v: per, pct: hp ? +hp[1] : 0, how: rt.how, ps: per * rt.r, on: off[id] !== false && rt.r > 0, can: rt.r > 0, st }); }
+      const fp = st.match(/Fortif(?:y|ies|ied)(?: you)?(?: and your allies)? for ([\d.]+)% (?:of )?(?:your )?Maximum Life/i) || st.match(/(?:gain|grant[s]?(?: you)?) ([\d.]+)% (?:of )?(?:your )?Maximum Life as Fortify/i);
+      if (fp) { const rt = rateOf(x, st); const per = +fp[1] / 100 * life; forts.push({ id, src: x.src, v: per, pct: +fp[1], how: rt.how, ps: per * rt.r, on: off[id] !== false && rt.r > 0, can: rt.r > 0, st }); }
+      const hr = st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased |more )?Healing Received/i) || st.match(/receive ([\d.]+)%\s*(?:\[[x+]\])?\s*(?:additional|more|increased) Healing/i);
+      if (hr && off[id] !== false) healRecvPw += +hr[1];
+      const ph = st.match(/Potion[s]?[^.]*?(?:heal|Healing)[^.]*?(?:an additional|increased by|by) ([\d.]+)%/i) || st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased )?Potion Healing/i); if (ph && off[id] !== false) potPw += +ph[1];
+      const pc = st.match(/\+?([\d.]+) Potion Capacity/i) || st.match(/carry ([\d]+) (?:additional|more) (?:Healing )?Potions?/i); if (pc && off[id] !== false) potCap += +pc[1]; });
+    const healRecv = (M.heal ? M.heal.v : 0) + healRecvPw; const hk = 1 + healRecv / 100;
+    const fortGen = M.fort ? M.fort.v : 0; const fk = 1 + fortGen / 100;
+    const regen = M.regen ? M.regen.v : 0, loh = M.loh ? M.loh.v : 0, lok = M.lok ? M.lok.v : 0;
+    const rows = [];
+    if (regen) rows.push({ src: 'Life Regeneration', how: 'every second', ps: regen * hk });
+    if (loh) rows.push({ src: 'Life On Hit', how: `${D4T.fmtNum(Math.round(loh))} a hit, ${D4T.fmtNum(Math.round(hps * tg * 100) / 100)} hits a second`, ps: loh * hps * tg * hk });
+    if (lok) rows.push({ src: 'Life On Kill', how: kps ? `${D4T.fmtNum(Math.round(lok))} a kill, ${kps} kills a second` : 'set Kills a second on Damage Theory Craft', ps: lok * kps * hk });
+    heals.filter(h => h.on).forEach(h => rows.push({ src: h.src, how: (h.pct ? h.pct + '% of Maximum Life ' : D4T.fmtNum(Math.round(h.v)) + ' Life ') + h.how, ps: h.ps * hk }));
+    const fortPs = forts.filter(h => h.on).reduce((a, h) => a + h.ps * fk, 0);
+    const potHealPct = POTION.heal * (1 + ((M.potheal ? M.potheal.v : 0) + potPw) / 100); const pots = POTION.base + (M.potion ? M.potion.v : 0) + potCap;
+    const potOne = potHealPct / 100 * life * hk; const potPs = potOne / POTION.every;
+    const healPs = rows.reduce((a, r) => a + r.ps, 0);
+    // movement: +Movement Speed% fills cap 1, Movement Speed%[x] fills cap 2, 100% each on top of the base 100%
+    const moves = []; sents.forEach(x => { const st = x.st; if (/Evade Movement Speed|enemies?[^.]{0,30}Movement Speed|Movement Speed (?:of|for) (?:your )?(?:Minions|allies)/i.test(st)) return;
+      const re = /([\d.]+)%\s*(\[x\])?\s*(?:increased |bonus )?Movement Speed|Movement Speed (?:is increased )?by ([\d.]+)%\s*(\[x\])?/gi; let m; let k = 0; while ((m = re.exec(st))) { const id = 'mv:' + x.src + ':' + x.i + ':' + (k++); moves.push({ id, src: x.src, v: +(m[1] || m[3]), cap: m[2] || m[4] ? 2 : 1, cond: conditional(st), on: off[id] !== false, st }); }
+      if (/Max(?:imum)? Movement Speed\b/i.test(st) && !/\d%\s*(?:\[x\])?\s*(?:increased )?Max/i.test(st)) { const id = 'mv:' + x.src + ':' + x.i + ':max'; moves.push({ id, src: x.src, v: 200, cap: 0, cond: true, on: off[id] !== false, st }); } });
+    const ms1 = (M.ms ? M.ms.v : 0) + moves.filter(q => q.on && q.cap === 1).reduce((a, q) => a + q.v, 0), ms2 = (M.ms ? M.ms.x : 0) + moves.filter(q => q.on && q.cap === 2).reduce((a, q) => a + q.v, 0);
+    const maxed = moves.some(q => q.on && q.cap === 0);
+    const msTotal = maxed ? 300 : 100 + Math.min(100, ms1) + Math.min(100, ms2);
+    const msBase = 100 + Math.min(100, (M.ms ? M.ms.v : 0) + moves.filter(q => q.on && q.cap === 1 && !q.cond).reduce((a, q) => a + q.v, 0)) + Math.min(100, (M.ms ? M.ms.x : 0) + moves.filter(q => q.on && q.cap === 2 && !q.cond).reduce((a, q) => a + q.v, 0));
+    const unhind = sents.filter(x => /\bUnhindered\b/.test(x.st) && !/while Unhindered/i.test(x.st)).map(x => x.src);
+    // Unstoppable you get, and for how much of the time
+    const unst = []; sents.forEach(x => { const st = x.st; if (/while (?:you are )?Unstoppable|Unstoppable enemies|enemies are Unstoppable|after (?:you )?(?:become|are) Unstoppable/i.test(st)) return; const id = 'us:' + x.src + ':' + x.i;
+      if (/permanently Unstoppable/i.test(st) || (/\bare Unstoppable\b/i.test(st) && !/\bwhile\b|\bwhen/i.test(st) && x.kind !== 'Skill')) { unst.push({ id, src: x.src, up: 1, how: 'always', on: off[id] !== false }); return; }
+      let d = st.match(/Unstoppable for ([\d.]+) seconds?/i);
+      if (!d && x.kind === 'Skill' && /\bUnstoppable\b/.test(st) && x.cd > 0) { const ds = (baseT[x.id] || '').match(/for ([\d.]+) seconds/gi) || []; const dd = Math.max(0, ...ds.map(z => +z.match(/[\d.]+/)[0])); if (dd) d = [0, String(dd)]; }
+      if (!d) return;
+      const cdm = x.t.match(/Cooldown: ([\d.]+) seconds/i) || st.match(/once every ([\d.]+) seconds/i) || x.t.match(/([\d.]+) second Cooldown/i); const cd = x.kind === 'Skill' && x.cd > 0 ? x.cd : cdm ? +cdm[1] : 0;
+      const up = cd ? Math.min(1, +d[1] / cd) : 0; unst.push({ id, src: x.src, up, how: cd ? `${d[1]} s every ${D4T.fmtNum(Math.round(cd * 10) / 10)} s` : `${d[1]} s, trigger not timed`, on: off[id] !== false && up > 0 }); });
+    const unstUp = 1 - unst.filter(u => u.on).reduce((k, u) => k * (1 - u.up), 1);
+    const impair = (M.impair ? M.impair.v : 0) + sents.reduce((a, x) => { const m = x.st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased )?Impairment Reduction/i); return a + (m && off['im:' + x.src + ':' + x.i] !== false ? +m[1] : 0); }, 0);
+    // crowd control you put on enemies: the longest effect from each skill on the bar, stretched by Crowd Control Duration
+    const ccDur = (M.ccdur ? M.ccdur.v : 0) + sents.reduce((a, x) => { const m = x.st.match(/([\d.]+)%\s*(?:\[[x+]\])?\s*(?:increased )?Crowd Control Duration/i); return a + (m && !/while|if/i.test(x.st) ? +m[1] : 0); }, 0);
+    const CCW = /\b(Stun(?:s|ned|ning)?|Knock(?:s|ed)? ?(?:Down|Back)|Knockdown|Immobiliz(?:e|es|ed|ing)|Freez(?:e|es|ing)|Froz(?:en)|Daze(?:s|d)?|Fear(?:s|ed)?|Taunt(?:s|ed)?|Slow(?:s|ed|ing)?|Chill(?:s|ed)?|Tether(?:s|ed)?)\b/i;
+    const ccs = []; sents.filter(x => x.kind === 'Skill').forEach(x => { const st = x.st; const w = st.match(CCW); const wd = st.match(new RegExp(CCW.source + '[^.,]{0,40}?for ([\\d.]+) seconds?', 'i')); if (!w || !wd || /Crowd Controlled enemies|against (?:Stunned|Frozen|Chilled|Slowed|Dazed|Feared|Immobilized|Knocked)|enemies that are|to (?:Stunned|Frozen|Slowed|Chilled)|while (?:Stunned|Frozen)/i.test(st)) return; const dur = +wd[wd.length - 1] * (1 + ccDur / 100); const every = x.cd > 0 ? x.cd : 1 / Math.max(aps, 0.01); const up = Math.min(1, dur / every); const id = 'cc:' + x.src + ':' + x.i;
+      const prev = ccs.find(c => c.skill === x.id); const row = { id, skill: x.id, src: x.src, what: ({ stun: 'Stun', knock: 'Knock Down', immobiliz: 'Immobilize', freez: 'Freeze', froz: 'Freeze', daze: 'Daze', fear: 'Fear', taunt: 'Taunt', slow: 'Slow', chill: 'Chill', tether: 'Tether' })[Object.keys({ stun: 1, knock: 1, immobiliz: 1, freez: 1, froz: 1, daze: 1, fear: 1, taunt: 1, slow: 1, chill: 1, tether: 1 }).find(k => wd[1].toLowerCase().startsWith(k))] || wd[1], dur, up, on: off[id] !== false };
+      if (!prev) ccs.push(row); else if (row.up > prev.up) Object.assign(prev, row); });
+    const ccUp = 1 - ccs.filter(c => c.on).reduce((k, c) => k * (1 - c.up), 1);
+    return { line, hps, tg, kps, aps, lh, rows, heals, forts, healRecv, hk, fortGen, fortPs, healPs, pots, potHealPct, potOne, potPs, moves, ms1, ms2, msTotal, msBase, maxed, unhind, unst, unstUp, impair, ccDur, ccs, ccUp };
   }
   function renderDefense() {
     invalidate();
@@ -3311,7 +3404,7 @@
           <label>World boss <select id="dfWorld"><option value="">None</option>${grouped(world, T.mon.world, '', 'World bosses')}</select></label>
         </div>
         <div class="chips">
-          <label class="chip${T.fort ? ' on' : ''}"><input type="checkbox" data-df="fort" ${T.fort ? 'checked' : ''}><span>You are fortified</span><small>10% less</small></label>${S.cls === 'Paladin' && cdata().powers.Paladin_Defensive_Aura && skillRank('Paladin_Defensive_Aura') > 0 ? `<label class="chip${T.defi !== false ? ' on' : ''}"><input type="checkbox" data-df="defi" ${T.defi !== false ? 'checked' : ''}><span>Defiance Aura passive</span><small>+${f(R.defA * 100, 0)}% Armor and resistances</small></label>` : ''}
+          ${S.cls === 'Paladin' && cdata().powers.Paladin_Defensive_Aura && skillRank('Paladin_Defensive_Aura') > 0 ? `<label class="chip${T.defi !== false ? ' on' : ''}"><input type="checkbox" data-df="defi" ${T.defi !== false ? 'checked' : ''}><span>Defiance Aura passive</span><small>+${f(R.defA * 100, 0)}% Armor and resistances</small></label>` : ''}
           <label class="chip${T.weak ? ' on' : ''}"><input type="checkbox" data-df="weak" ${T.weak ? 'checked' : ''}><span>Enemy weakened</span><small>20, 15, 10%</small></label>
           <label class="chip${T.block ? ' on' : ''}"><input type="checkbox" data-df="block" ${T.block ? 'checked' : ''}><span>Count block</span><small>${pct(R.block)} x ${pct(R.blockR)}</small></label>
           <label class="chip${T.dodge ? ' on' : ''}"><input type="checkbox" data-df="dodge" ${T.dodge ? 'checked' : ''}><span>Count dodge</span><small>${pct(R.dodge)}</small></label>
@@ -3334,6 +3427,32 @@
           ${R.ehp.map(e => `<div class="bucket"><b>${e.t}</b><span>${f(e.ehp)} <small>${pct(e.dr)} total reduction</small></span></div>`).join('')}
           <p class="note">Effective Life is your Life divided by what gets through. It ignores block, dodge, barriers and healing.</p>
         </section>
+        ${R.ut ? (() => { const U = R.ut; const lf = v => f(v) + ' a second'; const ofL = v => f(v / R.life * 100, 1) + '% of Life';
+          const tog = (x, label, small) => `<label class="chip merc${x.on ? ' on' : ''}" title="${esc(x.st || '')}"><input type="checkbox" data-dfm="${esc(x.id)}" ${x.on ? 'checked' : ''}${x.can === false ? ' disabled' : ''}><span>${esc(label)}</span>${small ? `<small>${esc(small)}</small>` : ''}</label>`;
+          const top = R.cards.reduce((a, c) => c.attacks.reduce((b, r) => r.hit > b.hit ? r : b, a), { hit: 0 });
+          return `<section class="tc-box wide ut-box"><h3>Healing, potions and Fortify</h3>
+          <div class="tc-row"><span>Healing a second</span><b class="num">${f(U.healPs)}</b><small>${ofL(U.healPs)} a second${U.healRecv ? `, with ${f(U.healRecv, 1)}% Healing Received` : ''}${top.hit ? `. The biggest hit above is healed back in ${U.healPs > 0 ? f(top.hit / U.healPs, 1) + ' seconds' : 'never without potions'}` : ''}</small></div>
+          ${U.rows.map(r => `<div class="bucket"><b>${esc(r.src)}</b><span>${lf(r.ps)} <small>${esc(r.how)}</small></span></div>`).join('')}
+          <div class="tc-row"><span>Fortify a second</span><b class="num">${f(U.fortPs)}</b><small>${U.fortPs ? `${ofL(U.fortPs)} a second${U.fortGen ? `, with ${f(U.fortGen, 1)}% Fortify Generation` : ''}. Fortify stacks up to your Maximum Life and drains into Life as you lose it, so this is extra healing while you are taking damage` : 'Nothing on the build grants Fortify'}</small></div>
+          ${U.forts.filter(h => h.on).map(h => `<div class="bucket"><b>${esc(h.src)}</b><span>${lf(h.ps)} <small>${f(h.pct, 1)}% of Maximum Life ${esc(h.how)}</small></span></div>`).join('')}
+          <div class="tc-row"><span>Potions</span><b class="num">${U.pots} x ${f(U.potOne)}</b><small>${f(U.potHealPct, 1)}% of Maximum Life each, at once. One charge comes back every ${POTION.every} seconds in combat, worth ${f(U.potPs)} a second. A full bar heals ${f(U.pots * U.potOne)} (${f(U.pots * U.potOne / R.life * 100)}% of Life)</small></div>
+          ${U.heals.length + U.forts.length ? `<div class="chips">${U.heals.concat(U.forts).map(h => tog(h, h.src, h.can ? h.how : 'not counted: ' + h.how)).join('')}</div>` : ''}
+          <p class="note">Hits a second come from the line loaded on Damage Theory Craft${U.line ? ` (${esc(U.line)}: ${f(U.hps, 2)} a second, on ${U.tg} enem${U.tg === 1 ? 'y' : 'ies'})` : ''}, and kills from its Kills a second box. Life Regeneration counts as Life a second. Healing Received is applied to every heal and to potions. Potions follow the Season 11 rules: 4 charges, 35% of Maximum Life each, one back every 30 seconds.</p></section>
+          <section class="tc-box ut-box"><h3>Movement</h3>
+          <div class="tc-row"><span>Movement Speed</span><b class="num">${f(U.msTotal)}%</b><small>${U.maxed ? 'Something on the build sets Movement Speed to its maximum' : `cap 1: +${f(U.ms1, 1)}% of 100%, cap 2: +${f(U.ms2, 1)}%[x] of 100%`}</small></div>
+          <div class="tc-row"><span>Without timed bonuses</span><b class="num">${f(U.msBase)}%</b><small>Only bonuses that are always on</small></div>
+          ${U.ms1 > 100 || U.ms2 > 100 ? `<p class="note warnc">${U.ms1 > 100 ? `${f(U.ms1 - 100, 1)}% of cap 1 is wasted. ` : ''}${U.ms2 > 100 ? `${f(U.ms2 - 100, 1)}% of cap 2 is wasted.` : ''}</p>` : ''}
+          ${U.unhind.length ? `<div class="tc-row"><span>Unhindered</span><b class="num">Yes</b><small>${esc([...new Set(U.unhind)].join(', '))}</small></div>` : ''}
+          ${U.moves.length ? `<div class="chips">${U.moves.map(m => tog(m, m.src, m.cap ? `+${f(m.v, 1)}%${m.cap === 2 ? '[x]' : ''}${m.cond ? ', timed' : ''}` : 'max speed, timed')).join('')}</div>` : ''}
+          <p class="note">"+Movement Speed%" fills cap 1 and "Movement Speed%[x]" fills cap 2. Each holds 100% on top of your base 100%, so 300% is the most you can move.</p></section>
+          <section class="tc-box ut-box"><h3>Crowd control</h3>
+          <div class="tc-row"><span>Unstoppable</span><b class="num">${f(U.unstUp * 100)}%</b><small>of the time, from ${U.unst.filter(u => u.on).length} source${U.unst.filter(u => u.on).length === 1 ? '' : 's'}</small></div>
+          ${U.unst.length ? `<div class="chips">${U.unst.map(u => tog(Object.assign({}, u, { can: u.up > 0 }), u.src, u.how)).join('')}</div>` : ''}
+          <div class="tc-row"><span>Impairment Reduction</span><b class="num">${f(U.impair, 1)}%</b><small>Crowd control on you is shortened by this much</small></div>
+          <div class="tc-row"><span>Crowd Control Duration</span><b class="num">+${f(U.ccDur, 1)}%</b><small>on the crowd control you put on enemies</small></div>
+          <div class="tc-row"><span>Enemies controlled</span><b class="num">${f(U.ccUp * 100)}%</b><small>of the time, from skills on your bar. Bosses cannot be controlled; this fills their Stagger bar instead</small></div>
+          ${U.ccs.length ? `<div class="chips">${U.ccs.map(c => tog(c, c.src, `${c.what} ${f(c.dur, 1)} s, ${f(c.up * 100)}% of the time`)).join('')}</div>` : '<p class="note">No skill on your bar names a crowd control effect with a set duration.</p>'}
+          </section>`; })() : ''}
         <div class="mon-cards wide">${R.cards.map(monCard).join('')}</div>
         <section class="tc-box wide"><h3>What helps most against these monsters</h3>
           <p class="note">One more top-roll affix of each kind, measured as average Effective Life across every attack and affix hit above.</p>

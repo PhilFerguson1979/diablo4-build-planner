@@ -1478,3 +1478,7 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 
 /* on narrow screens the header stacks, so the title block must not take its 420px width as height */
 @media (max-width: 900px) { .title-block { flex: 0 0 auto; } }
+
+.ut-box .chip small { margin-left: 6px; }
+.ut-box .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.ut-box .chip { white-space: nowrap; }
