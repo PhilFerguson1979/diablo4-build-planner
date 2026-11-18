@@ -91,7 +91,11 @@
   function addTorch(D) { if (!D || !Array.isArray(D.uniques) || D.uniques.some(u => u.id === TORCH_ID)) return;
     D.uniques.push({ id: TORCH_ID, name: 'Hellfire Torch', kind: 'charm', type: 'Charm', classes: [], mythic: 1, runes: '', affixes: [], flavor: '', handAdded: 1,
       desc: 'Can equip <span class="c-number"><b class="num">1</b></span> more Unique Charm. <span class="c-set">+1 Set count</span> to the class set the Torch rolled (pick it under Extras).' }); }
-  Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); addTorch(ALL[k]); });
+  // Paragon nodes store Maximum Faith, Fury, Spirit, Essence and Primary Resource a hundred times too big (200 for the +2 node, 400 for +4);
+  // the Barbarian glyph-board copy and the Warlock nodes carry the real 1, 2 and 4
+  function patchParaRes(D) { const P = D && D.paragon; if (!P || !P.nodes || !P.texts || P._res) return; P._res = 1;
+    Object.values(P.nodes).forEach(n => (n.s || []).forEach(x => { if (/Maximum (?:Faith|Fury|Spirit|Essence|Resource|Primary Resource)$/.test(P.texts[x[0]] || '') && x[1] >= 100) x[1] = x[1] / 100; })); }
+  Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); addTorch(ALL[k]); patchParaRes(ALL[k]); });
 
   // older saves carried a typed-in gear CDR row; the build now supplies that itself
   function migrate(st) { try { st.calc.cd.cdr = (st.calc.cd.cdr || []).filter(r => r.n !== 'Gear and paragon CDR'); } catch (e) { /* ignore */ } return st; }
@@ -2769,6 +2773,8 @@
     const msg = lvl === 'red' ? `Not yet. ${shots.length} attack${shots.length > 1 ? 's' : ''} would kill you in one hit, starting with ${name(shots.sort((a, b) => b.r.hit - a.r.hit)[0])}. You need ${D4T.fmtNum(need)} Life at your current defenses, or more Armor and Resistance, to live through the biggest.`
       : lvl === 'amber' ? `Risky. Nothing kills you in one hit, but ${heavy.length} attack${heavy.length > 1 ? 's take' : ' takes'} more than half your Life, such as ${name(heavy.sort((a, b) => b.r.hit - a.r.hit)[0])}. Two in a row and you are dead.`
       : `Ready. The biggest hit, ${name(worst)}, takes ${D4T.fmtNum(Math.round(worst.r.hit / R.life * 100))}% of your Life.`;
+    // with Selig the hits land on the Faith shield first, and more Life works against Endurant Faith, so the light is a Life-only reading and no Life fix is offered
+    if (R.selig) return { lvl: lvl === 'green' ? 'green' : 'amber', place, msg: msg + ` This reads Life alone. Melted Heart of Selig puts your ${D4T.fmtNum(Math.round(R.resPool))} ${S.cls === 'Paladin' ? 'Faith' : 'resource'} in front of it at a reduced rate Blizzard does not publish, so test it in game.`, best: null };
     return { lvl, place, msg, best: R.whatIf[0] };
   }
   function readinessHtml(R) {
@@ -3309,7 +3315,13 @@
     const pwSum = kind => pwDef.filter(x => x.on && x.kind === kind).reduce((a, x) => a + x.v, 0);
     const lifeFlat = M.life ? M.life.v : 0;
     const lifeMul = (1 + ((M.lifep ? M.lifep.v : 0) + pwSum('life')) / 100) * (1 + (M.lifep ? M.lifep.x : 0) / 100) * (1 + pwDef.filter(x => x.on && x.kind === 'barrier').reduce((a, x) => a + x.v * barrierUp(x.name), 0) / 100);   // a Barrier is extra Life for the share of the time it is up
-    const barrier = Math.max(0, +T.barrier || 0); const life = (baseLife + lifeFlat) * lifeMul + barrier;
+    // Melted Heart of Selig (amulet or charm): Maximum Life -75%, Primary Resource doubled, and hits drain the resource first at a reduced rate Blizzard does not publish
+    const selig = SLOTS.some(sl => /Amulet_Unique_Generic_100$/.test(((S.gear[sl.id] || {}).item || {}).id || '')) || sockets().some(x => x && x.t === 'u' && /Amulet_Unique_Generic_100$/.test(x.id || ''));
+    const resStat = re => { try { return sheetData().stats.filter(e => re.test(e.key)).reduce((a, e) => a + e.v, 0); } catch (e) { return 0; } };
+    let fanRes = 0; try { const fa = 'Paladin_Offensive_Aura'; if (S.cls === 'Paladin' && skillRank(fa) > 0 && activeMods(fa).has('Upgrade1')) fanRes = +skillCtx(fa).ev('SF_15') || 0; } catch (e) { fanRes = 0; }
+    const rFlat = resStat(/^§ Maximum (?:Resource|Primary Resource|Faith|Fury|Spirit|Essence|Mana|Energy)$/), rPct = resStat(/^§% Maximum (?:Resource|Primary Resource)$/) / 100 + fanRes;
+    const resPool = (100 + rFlat) * (1 + rPct) * (selig ? 2 : 1);   // every class starts with 100 of its resource
+    const barrier = Math.max(0, +T.barrier || 0); const life = (baseLife + lifeFlat) * lifeMul * (selig ? 0.25 : 1) + barrier;
     const armorBase = M.armor ? M.armor.v : 0, armorPct = (M.armorp ? M.armorp.v : 0) + pwSum('armor'), armorX = M.armorp ? M.armorp.x : 0;
     let defA = 0; try { const da = 'Paladin_Defensive_Aura'; if (S.cls === 'Paladin' && cdata().powers[da] && skillRank(da) > 0 && T.defi !== false) defA = +skillCtx(da).ev('SF_4') || 0; } catch (e) { defA = 0; }
     const armor = armorBase * (1 + armorPct / 100) * (1 + armorX / 100) * (1 + defA);
@@ -3382,7 +3394,7 @@
       const net = ut.healPs - (regenOn ? 0 : ut.regenPs) + ut.fortPs - inc;
       return { name: c.m.name, cat: c.cat, inc, avg, net, ttd: L > 0 ? 0 : t, used }; });
     let stag = { up: 0, has: false, dur: 4 }; try { stag = staggerShare(); } catch (e) { /* none */ }
-    return { burnX, burnSrc, stag, ut, surv, inHits, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    return { selig, resPool, resFlat: rFlat, resPctX: rPct, burnX, burnSrc, stag, ut, surv, inHits, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
   }
   // ---------- healing, potions, Fortify, movement and crowd control ----------
   // Read from every equipped power, passive and skill on the bar. Rates come from the damage line loaded on Damage Theory Craft:
@@ -3567,6 +3579,7 @@
       <div class="tc-grid">
         <section class="tc-box"><h3>Your defenses</h3>
           <div class="tc-row"><span>Maximum Life</span><b class="num">${f(R.life)}</b><small>${f(R.baseLife)} base at level ${MON_LEVEL}, plus ${f(R.lifeFlat)} from the build, then Life bonuses${+T.barrier ? ', plus your ' + f(+T.barrier) + ' Barrier' : ''}</small></div>
+          ${R.selig ? `<div class="tc-row"><span>Selig shield</span><b class="num">${f(R.resPool)} ${S.cls === 'Paladin' ? 'Faith' : 'resource'}</b><small>Melted Heart of Selig: hits drain this before Life, at a reduced rate Blizzard does not publish, so it is not counted in Effective Life below. Life above is already cut by 75%. Pool: 100 base plus ${f(R.resFlat)} from the build${R.resPctX ? ', ' + f(R.resPctX * 100) + '% more' : ''}, doubled.</small></div>` : ''}
           <div class="tc-row"><span>Armor</span><b class="num">${f(R.armor)}</b><small>${pct(R.armorDR)} less damage from every hit</small></div>
           ${R.ehp.map(e => `<div class="tc-row"><span>${e.t} Resistance</span><b class="num">${f(e.R)}</b><small>${pct(R.resDR(e.t))} less ${e.t.toLowerCase()} damage</small></div>`).join('')}
           <div class="tc-row"><span>Damage Reduction</span><b class="num">${pct(1 - R.drMul)}</b><small>${R.drParts.length ? R.drParts.map(p => `${f(p.v, 1)}% ${esc(p.src)}`).join(', ') + ', multiplied' : 'None on the build yet'}</small></div>
