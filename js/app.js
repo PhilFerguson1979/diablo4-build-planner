@@ -1495,7 +1495,8 @@
     return { key, v, txt };
   }
   let SD_CACHE = null, SB_CACHE = {};
-  const invalidate = () => { SD_CACHE = null; SB_CACHE = {}; };
+  let HOSTLH = null;
+  const invalidate = () => { SD_CACHE = null; SB_CACHE = {}; HOSTLH = null; };
   function sheetData() { return SD_CACHE || (SD_CACHE = sheetDataRaw()); }
   function sheetDataRaw() {
     const stats = new Map(); const effects = []; const powers = [];
@@ -1629,6 +1630,7 @@
     { sec: 'Utility', id: 'lhc', l: 'Lucky Hit Chance Bonus', u: PCT, cap: 100, re: [/^§% Lucky Hit Chance$/] },
     { sec: 'Utility', id: 'ccdur', l: 'Crowd Control Duration', u: PCT, re: [/^§% Crowd Control Duration$/] },
     { sec: 'Utility', id: 'impair', l: 'Impairment Reduction', u: PCT, re: [/^§% Impairment Reduction$/] },
+    { sec: 'Offensive', id: 'ds', l: 'Deadly Strike Chance', u: PCT, re: [/^§% Deadly Strike Chance$/] },
     { sec: 'Utility', id: 'resolve', l: 'Resolve', re: [/Resolve/] },
   ];
   const STAT_SECS = ['Core Stats', 'Armor & Resistances', 'Offensive', 'Defensive', 'Utility'];
@@ -1828,6 +1830,7 @@
         if (!dmgPost && !viaBy && !viaUp) return;
         // damage done to you, and bonuses to Overpower damage itself, are not multipliers to your hits
         if (/\btake$/.test(pre) && !/\b(enem|they|them|target)/i.test(pre)) return;
+        if (/Deadly Strikes?\s*(?:deal|do)?\s*$/i.test(pre) || /Deadly Strikes? deal/i.test(pre.slice(-40))) return;
         if (/^(?:increased |bonus )?Overpower [Dd]amage/.test(post) || /(?:next|guaranteed)[^.]*Overpower[^.]*$/.test(pre) || /Critical Strikes that Overpower/.test(pre)) return;
         let what = post.replace(/^(increased |bonus )/, '');
         // a multiplier to Critical Strike Damage or Vulnerable Damage only counts on those hits, not on everything
@@ -2092,6 +2095,13 @@
     // [+] Critical Strike and Vulnerable Damage join the additive pool on hits that qualify; the built-in x1.5 and x1.2 are their own multipliers
     const cc = spOn && spFx.noCrit ? 0 : Math.min(100, ((M.csc ? M.csc.v : 0) + SBj.csc + mCc + pwCc + fanCc + (spOn ? spFx.cc : 0)) * pwCcx); const csdAdd = (M.csd ? M.csd.v : 0) + SBj.csd + pwCsd; const csdX = M.csd ? M.csd.x : 0;
     const critMult = 1.5 * (1 + csdX / 100) * mCsd * xOnly('crit');
+    // Deadly Strike (Season 15, from Diablo 2): a hit that does not crit, damage over time included, has this chance to deal double damage.
+    // Chances add up to 100%; "Your Deadly Strikes deal X%[x] increased damage" (Arioc's Needle) raises the double hit further.
+    let dsCh = M.ds ? M.ds.v : 0, dsX = 0; const dsSrc = []; if (M.ds && M.ds.v) dsSrc.push('gear ' + Math.round(M.ds.v) + '%');
+    try { sheetData().powers.forEach(q => { const t = strip(q.desc || '').replace(/\[([\d.]+)\s*[–-]\s*([\d.]+)\]/g, (m0, a1, b1) => String((+a1 + +b1) / 2));
+      const g = t.match(/(?:Gain|gain|grants?|\+)\s*([\d.]+)%\s*(?:\[\+\])?\s*Deadly Strike Chance/); if (g) { dsCh += +g[1]; dsSrc.push(q.name + ' ' + g[1] + '%'); }
+      const x = t.match(/Deadly Strikes? deal ([\d.]+)%\s*\[x\]/); if (x) dsX += +x[1]; }); } catch (e) { /* none */ }
+    dsCh = Math.min(100, dsCh); const dsHit = 2 * (1 + dsX / 100); const dsF = 1 + dsCh / 100 * (dsHit - 1);
     const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100) * xOnly('vuln');
     const monDR = 1 - ((data().scaling && (data().scaling.levels.find(l => l.l === MON_LEVEL) || {}).dr) || 0);
     const vu = spFx.vulnAlways ? 1 : Math.max(0, Math.min(100, +T.vuln || 0)) / 100;
@@ -2113,6 +2123,11 @@
     const cdOf = (c, Pw) => { try { if (!(c.cd() > 0)) return 0; const chg = Pw.charges ? +c.ev(Pw.charges) || 0 : 0; const rc = chg > 0 && Pw.recharge ? +c.ev(Pw.recharge) || 0 : 0; return rc > 0 ? rc * c.SB.cdrKeep : c.cdEff(); } catch (e) { return 0; } };
     const cdBase = cdOf(sk, P);
     const cutter = pays.find(x => x.proc && x.cut); const tg = Math.max(1, +T.tg || 1);
+    // hits each cast lands for Lucky Hits: echoes repeat the whole cast ("Purify echoes 2 additional times"), and a skill that breaks into
+    // projectiles lands one more hit per projectile ("breaks into 5 projectiles"). Echoes also hit the main target again; projectiles spread over the enemies in range.
+    let echoN = 0, projN = 0; try { const txs = [powerText(P, null, sk.lvl, C.powers)].concat((P.mods || []).filter(md => sk.mods.has(md.key)).map(md => powerText(P, md.desc, sk.lvl, C.powers))).map(t => strip(t));
+      txs.forEach(t => { let m; if ((m = t.match(/echoes (\d+) additional times?/i))) echoN = Math.max(echoN, +m[1]); if ((m = t.match(/breaks into (\d+) projectiles/i))) projN = Math.max(projN, +m[1]); }); } catch (e) { echoN = projN = 0; }
+    const lhMult = ((1 + echoN) * tg + projN) / tg;
     // powers that take time off cooldowns, as seconds removed for every second of fighting. The cooldown then runs at 1 + that rate.
     const cuts = []; let cdFlat = 0, extraCast = 0, extraTrig = 0, hostLh = 0; const blk = blocksIn();
     if (cdBase) { const mid = (m, a, b) => (parseFloat(m[a]) + parseFloat(m[b] || m[a])) / 2; let unl = []; try { unl = unlockedSkills().map(id => C.powers[id]).filter(Boolean); } catch (e) { unl = []; }
@@ -2137,20 +2152,26 @@
       worn.forEach(it => { const t = strip(it.desc); const m = t.match(/Lucky Hit: ([A-Z][\w' ]+?) has up to an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to trigger ([A-Z][\w' ]+?)\./); if (!m || m[4] !== P.name || theory._nest) return;
         const hid = Object.keys(C.powers).find(id => C.powers[id].name === m[1]); if (!hid || !(S.hotbar || []).includes(hid)) { cuts.push({ n: it.name, v: 0, how: `needs ${m[1]} on your bar` }); return; }
         const s0 = T.skill, p0 = T.pay; let HR = null; theory._nest = 1; try { T.skill = hid; T.pay = ''; HR = theory(); } catch (e) { HR = null; } finally { theory._nest = 0; T.skill = s0; T.pay = p0; }
-        if (!HR) return; const hh = (HR.hps || 0) * tg, hl = HR.lhFrac || 0, ch = mid(m, 2, 3) / 100; const r = hh * hl * ch; extraTrig += r; hostLh = Math.max(hostLh, hh * hl);
+        if (!HR) return; const hh = (HR.hps || 0) * tg * (HR.lhMult || 1), hl = HR.lhFrac || 0, ch = mid(m, 2, 3) / 100; const r = hh * hl * ch; extraTrig += r; hostLh = Math.max(hostLh, hh * hl);
         cuts.push({ n: it.name, v: 0, how: `${D4T.fmtNum(Math.round(r * 100) / 100)} free casts a second: ${m[1]} lands ${D4T.fmtNum(Math.round(hh * 100) / 100)} hits a second, ${D4T.fmtNum(Math.round(hl * 100))}% Lucky Hit chance, ${D4T.fmtNum(ch * 100)}% to trigger` }); });
-      if (cutter) cuts.push({ n: cutter.n, v: Math.max(aps * tg * lhFrac, hostLh) * cutter.ch / 100 * cutter.cut, how: `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of Lucky Hits, ${D4T.fmtNum(tg)} enem${tg === 1 ? 'y' : 'ies'} hit` }); }
+      // Lucky Hit cooldown cuts come from whatever you cast most: the busiest skill on the bar without a cooldown (Shield Charge, Fist of the Heavens, Holy Bolt)
+      let barLh = { v: 0, n: '' }; if (cutter && !theory._nest) { const key = (S.hotbar || []).join(',') + '|' + tg; if (HOSTLH && HOSTLH.key === key) barLh = HOSTLH.v; else {
+        (S.hotbar || []).forEach(id => { if (!id || id === P.id || !C.powers[id]) return; let cdq = 0; try { cdq = skillCtx(id).cd(); } catch (e) { cdq = 0; } if (cdq > 0) return;
+          const s0 = T.skill, p0 = T.pay; let HR = null; theory._nest = 1; try { T.skill = id; T.pay = ''; HR = theory(); } catch (e) { HR = null; } finally { theory._nest = 0; T.skill = s0; T.pay = p0; }
+          if (HR && !HR.isProc && (HR.base || 0) > 0) { const v = (HR.hps || 0) * tg * (HR.lhMult || 1) * (HR.lhFrac || 0); if (v > barLh.v) barLh = { v, n: C.powers[id].name }; } });
+        HOSTLH = { key, v: barLh }; } }
+      if (cutter) cuts.push({ n: cutter.n, v: Math.max(aps * tg * lhMult * lhFrac, hostLh, barLh.v) * cutter.ch / 100 * cutter.cut, how: barLh.v > Math.max(aps * tg * lhMult * lhFrac, hostLh) ? `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of ${barLh.n}'s Lucky Hits (${D4T.fmtNum(Math.round(barLh.v * 100) / 100)} a second)` : `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of Lucky Hits, ${D4T.fmtNum(tg)} enem${tg === 1 ? 'y' : 'ies'} hit` }); }
     const cutRate = cuts.reduce((a, x) => a + x.v, 0); const cdCut = cutRate; const castEvery = cdBase ? 1 / (Math.min(Math.max(aps, 0.01), (1 + cutRate) / Math.max(0.5, cdBase - cdFlat) + extraCast) + extraTrig) : 0;
     const judSpear = isJudge && judge.spear && skillIs(P, 'Judicator') ? (cdBase ? tg / castEvery : aps * tg) * lhFrac * judge.spear : 0;
     const judRate = isJudge ? (+T.jud > 0 ? +T.jud : 1 / judge.timer) * (1 + judge.twice) + judSpear : 0;
     // how often a proc goes off: on Lucky Hits (every enemy hit rolls), on every cast, or on every cast of a skill with a cooldown
     const auraHost = !!dawn || /Holy Light Aura/.test(P.name); const cdCasts = () => (S.hotbar || []).reduce((a, id) => { if (id === P.id) return a + (cdBase ? 1 / castEvery : 0); try { const c = C.powers[id] && skillCtx(id); const cd = c ? cdOf(c, C.powers[id]) : 0; return a + (cd > 0 ? 1 / Math.max(cd, 1 / Math.max(aps, 0.01)) : 0); } catch (e) { return a; } }, 0);
-    const procRate = !isProc ? 0 : payD.per === 'kill' ? Math.max(0, +T.kps || 0) : payD.per === 'hit' ? hitsIn() : payD.per === 'timer' ? 1 / Math.max(0.1, payD.every) : payD.per === 'cdcast' ? cdCasts() : payD.per === 'cast' ? (cdBase ? 1 / castEvery : aps) : (auraHost ? tg : cdBase ? tg / castEvery : aps * tg) * lhFrac * payD.ch / 100;
+    const procRate = !isProc ? 0 : payD.per === 'kill' ? Math.max(0, +T.kps || 0) : payD.per === 'hit' ? hitsIn() : payD.per === 'timer' ? 1 / Math.max(0.1, payD.every) : payD.per === 'cdcast' ? cdCasts() : payD.per === 'cast' ? (cdBase ? 1 / castEvery : aps) : (auraHost ? tg : cdBase ? tg / castEvery : aps * tg) * lhMult * lhFrac * payD.ch / 100;
     const hps0 = isJudge ? judRate : isProc ? procRate : isDawn ? 1 : isThorns ? (payD.onBlock ? Math.max(0, blk) : payD.hit || payD.per || !cdBase ? 1 : 1 / castEvery) : pulse ? 1 / pulseEvery : frames ? (cdBase ? Math.min(60 / frames, 1 / castEvery) : 60 / frames) : cdBase ? Math.min(aps, 1 / castEvery) : aps;
     // what you can afford: with "Resource you generate a second" filled in, a skill with a cost casts no faster than your income pays for
     const resI = (() => { if (isJudge || isProc || isDawn || isThorns || pulse || T.res === '' || T.res == null || !(+T.res >= 0)) return null; let cost = 0; try { cost = sk.costEff(); } catch (e) { cost = 0; } if (!(cost > 0)) return null;
       const mid = (m, a, b) => (parseFloat(String(m[a]).replace(/,/g, '')) + parseFloat(String(m[b] || m[a]).replace(/,/g, ''))) / 2;
-      let gen = 0; try { const Mx = statModel(); gen = Mx.rgen ? Mx.rgen.v : 0; } catch (e) { gen = 0; } const parts = []; let inc = +T.res * (1 + gen / 100); const lhs = hps0 * tg * lhFrac; const RN = '(?:Primary Resource|Faith|Fury|Essence|Mana|Spirit|Energy|Vigor|Wrath)';
+      let gen = 0; try { const Mx = statModel(); gen = Mx.rgen ? Mx.rgen.v : 0; } catch (e) { gen = 0; } const parts = []; let inc = +T.res * (1 + gen / 100); const lhs = hps0 * tg * lhMult * lhFrac; const RN = '(?:Primary Resource|Faith|Fury|Essence|Mana|Spirit|Energy|Vigor|Wrath)';
       worn.forEach(it => { const t = strip(it.desc); let m;
         if ((m = t.match(new RegExp('Gain \\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]? ' + RN + ' per second(?! while you have a Barrier| while Berserking)')))) { const v = mid(m, 1, 2); inc += v; parts.push(it.name + ' ' + D4T.fmtNum(v) + ' a second'); }
         if ((m = t.match(new RegExp('Lucky Hit:[^.]*?up to an? \\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]?% chance to (?:restore|gain|generate) \\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]? ' + RN, 'i'))) && !/Mobility Skill|Zealot Skills|Pyromancy|Corrupting|Core Skill deals direct damage to at least one Bleeding/.test(t)) { const v = lhs * mid(m, 1, 2) / 100 * mid(m, 3, 4); inc += v; parts.push(it.name + ' ' + D4T.fmtNum(Math.round(v * 10) / 10) + ' a second from Lucky Hits'); }
@@ -2159,7 +2180,10 @@
     // "Blocking has a 15% chance to retaliate with a Shield Bash": free casts of this skill from blocks, outside the resource limit
     let blkCasts = 0; const blkSrc = []; try { sheetData().powers.forEach(q => { const m = strip(q.desc || '').match(/Blocking has an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to retaliate with an? ([A-Z][\w' ]+?)\./); if (m && m[3] === P.name && !isProc && !isJudge && !isDawn && !isThorns) { const r = blk * (+m[1] + +(m[2] || m[1])) / 200; blkCasts += r; blkSrc.push(q.name); } }); } catch (e) { blkCasts = 0; }
     // more than one projectile or wave of one cast can land on the same big target (Brandish with Supplication, shotgunning a boss)
-    const pph = !isProc && !isJudge && !isThorns && !isDawn && +T.pph > 1 ? +T.pph : 1;
+    const pph0 = !isProc && !isJudge && !isThorns && !isDawn && +T.pph > 1 ? +T.pph : 1;
+    const ownHit = !isProc && !isJudge && !isThorns && !isDawn && !isGrief;
+    const projLine = ownHit && projN > 0 && /PROJ/i.test(payD.k || '');
+    const pph = pph0 * (ownHit ? 1 + echoN : 1) * (projLine ? Math.max(1, projN / tg) : 1);
     const hps = ((resI && resI.capped ? resI.lim : hps0) + blkCasts) * pph;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
@@ -2167,8 +2191,8 @@
       const A0 = addAlways + (eliteOn ? addElite : 0) + (dot ? dotAdd : 0); const p = dot ? 0 : cc / 100; const cm = dot ? 1 : critMult; const roll = dot || isDawn || isThorns ? 0 : 0.1;
       const min = base * (1 - roll) * (isDawn ? dawn.lo / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + A0 / 100) * xLo;
       const hit = (c, v) => (1 + (A0 + addCondOn + (c ? csdAdd : 0) + (v ? vulnAdd : 0)) / 100) * (c ? cm : 1) * (v ? vulnMult : 1);
-      const exp = base * xMid * ((1 - p) * (1 - vu) * hit(0, 0) + p * (1 - vu) * hit(1, 0) + (1 - p) * vu * hit(0, 1) + p * vu * hit(1, 1));
-      const max = base * (1 + roll) * (isDawn ? dawn.hi / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + (A0 + addCondAll + (dot ? 0 : csdAdd) + vulnAdd) / 100) * xHi * cm * vulnMult;
+      const exp = base * xMid * ((1 - p) * (1 - vu) * hit(0, 0) * dsF + p * (1 - vu) * hit(1, 0) + (1 - p) * vu * hit(0, 1) * dsF + p * vu * hit(1, 1));
+      const max = base * (1 + roll) * (isDawn ? dawn.hi / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + (A0 + addCondAll + (dot ? 0 : csdAdd) + vulnAdd) / 100) * xHi * (dsCh > 0 ? Math.max(cm, dsHit) : cm) * vulnMult;
       return { min, exp, max };
     };
     // one exact hit with the states ticked across the top, against the same hit with none of them
@@ -2181,7 +2205,7 @@
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
     const potI = S.cls === 'Paladin' && /_Aura$/.test(P.id || '') ? auraPotency(P.id) : null; const wornSN = worn.some(it => /Aura Potency while standing in Consecration/.test(strip(it.desc || '')));
-    return { pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { dsCh, dsX, dsHit, dsF, dsSrc, lhMult, echoN, projN, pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -2257,6 +2281,7 @@
             <p class="note">Attack Speed counts up to 100% and Cast Speed up to another 100%. Untick a buff you will not have up.</p></details>
           ${R.dot ? `<div class="bucket"><b>Damage over time</b><span>+${f(R.dotAdd, 1)}% in the pool, x${R.dotX.toFixed(2)}</span></div>` : ''}
           <div class="bucket"><b>Critical strike</b><span>${f(R.cc, 1)}% chance, x${f(R.critMult, 2)} on crit${R.csdAdd ? `, plus +${f(R.csdAdd, 1)}% in the additive pool` : ''}</span></div>
+          ${R.dsCh ? `<div class="bucket"><b>Deadly Strike</b><span>${f(R.dsCh, 1)}% chance on hits that do not crit (damage over time included), x${f(R.dsHit, 2)} when it lands. Worth x${f(R.dsF, 3)} on those hits. <small>${esc(R.dsSrc.join(', '))}</small></span></div>` : ''}
           <div class="bucket"><b>Vulnerable</b><span>x${f(R.vulnMult, 2)} while vulnerable${R.vulnAdd ? `, plus +${f(R.vulnAdd, 1)}% in the additive pool` : ''}</span></div>
           ${R.pulse ? `<div class="bucket"><b>Attack speed on pulse damage</b><span>x${R.asDmg.toFixed(2)}</span></div>` : ''}
           <div class="bucket"><b>Monster damage reduction</b><span>x${f(R.monDR, 2)} at level ${MON_LEVEL}</span></div>
