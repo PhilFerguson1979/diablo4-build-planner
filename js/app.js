@@ -737,9 +737,13 @@
   // ---------- gear ----------
   function classUsable(it) { return !it.classes || !it.classes.length || it.classes.includes(S.cls); }
   function dedupe(list) { const seen = new Set(); return list.filter(x => { const k = x.name + '|' + strip(x.desc).slice(0, 80) + '|' + (x.kind || ''); if (seen.has(k)) return false; seen.add(k); return true; }); }
+  // Season 10 Chaos copies (ids S10_..._Boots, _Chest, _Gloves, _Helm, _Legs) put a unique in a slot it does not drop in now, such as X'Fal's
+  // Corroded Signet on gloves or Locran's Talisman on boots. A copy is dropped wherever the same name exists in its own slot.
+  let OFFSLOT = null;
+  function offSlot(u) { if (!OFFSLOT || OFFSLOT.D !== data()) { const D = data(); const home = new Set(D.uniques.filter(x => !/^S10_/.test(x.id)).map(x => x.name)); OFFSLOT = new Set(D.uniques.filter(x => /^S10_/.test(x.id) && home.has(x.name)).map(x => x.id)); OFFSLOT.D = D; } return OFFSLOT.has(u.id); }
   function slotItems(slot) {
     const D = data();
-    const uniq = dedupe(D.uniques.filter(u => (u.kind === 'unique' || u.kind === 'runeword') && classUsable(u) && slot.re.test(u.type) && !(slot.notRe && slot.notRe.test(u.type))));
+    const uniq = dedupe(D.uniques.filter(u => (u.kind === 'unique' || u.kind === 'runeword') && !offSlot(u) && classUsable(u) && slot.re.test(u.type) && !(slot.notRe && slot.notRe.test(u.type))));
     const asp = dedupe(D.aspects.filter(classUsable));
     return { uniq, asp };
   }
@@ -1443,7 +1447,7 @@
     let list;
     if (codexKind === 'aspect') list = dedupe(D.aspects.filter(classUsable));
     else if (codexKind === 'set') list = classSets().map(s => ({ name: s.name, desc: s.tiers.map(t => `<b>${t.n}-piece:</b> ${t.desc}`).join('<br>'), kind: 'charm', type: 'Set', classes: [] }));
-    else list = dedupe(D.uniques.filter(u => u.kind === codexKind && classUsable(u)));
+    else list = dedupe(D.uniques.filter(u => u.kind === codexKind && !offSlot(u) && classUsable(u)));
     const q = codexQ.toLowerCase();
     const shown = list.filter(it => !q || (it.name + ' ' + strip(it.desc) + ' ' + (it.affixes || []).join(' ')).toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
     $('#panel-codex').innerHTML = `<div class="codex-bar"><input type="search" id="codexQ" value="${esc(codexQ)}" placeholder="Search names and effects, for example Lucky Hit or Judgement" aria-label="Search the codex">${kinds.map(([k, n]) => `<button class="chip${k === codexKind ? ' on' : ''}" data-k="${k}">${n}</button>`).join('')}</div>
@@ -1812,6 +1816,8 @@
   function gearMultipliers(probe) {
     const out = []; const SK = Object.values(cdata().powers).map(q => q.name).filter(Boolean);
     const scan = (name, html, role) => {
+      // 3.2.1 patch notes: Watkins' Law only works while using the Judicator Oath (the tooltip in the files does not say so)
+      if (/Watkins?'? Law/.test(name || '') && S.cls === 'Paladin' && !mechLines().some(l => /Judicator/.test(l.name))) return;
       const t = strip(String(html || '')).replace(/\s+/g, ' ');
       let i = 0; const NUM = '\\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]?';
       // every N%[x] in the text, each read inside its own sentence (a full stop inside a number is not a sentence end)
@@ -1998,7 +2004,10 @@
       try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); if (/Judg/.test(q.desc || '') || (q.mods || []).some(md => c2.mods.has(md.key) && /Judg/.test(md.name + ' ' + md.desc))) src.push(q.name); }); } catch (e) { /* skip */ }
       D.powers.forEach(q => { if (q.kind !== 'Passive' && q.kind !== 'Class mechanic' && /Judg/.test(strip(q.desc || ''))) src.push(q.name); });
       if (src.length) { const tw = oath ? D.powers.map(q => strip(q.desc || '').match(/([\d.]+)% chance to explode twice/)).find(Boolean) : null;
-        judge = { pct: 80, timer: 3, oath, src: [...new Set(src)], twice: tw ? +tw[1] / 100 : 0 }; pays.push({ k: 'JUDGEMENT', v: judge.pct, judge: 1 }); } }
+        // 3.2.1: Judgement's damage scales with the Rank of the Skill that applied it. Counted on the same rank curve Paladin skill damage uses
+        // (Table 34: 1 at rank 1, 2 at rank 10, 2.95 at rank 19), from the highest-ranked skill that applies it (with the Oath, any Basic Skill).
+        let rk = { n: '', lvl: 1, m: 1 }; try { unlockedSkills().forEach(id => { const q = C.powers[id]; if (!(src.includes(q.name) || (oath && q.tag === 'Basic'))) return; const c2 = skillCtx(id); const lv = +c2.ev('sLevel') || 1; const m = +c2.ev('Table(34,sLevel)') || 1; if (m > rk.m) rk = { n: q.name, lvl: lv, m }; }); } catch (e) { rk = { n: '', lvl: 1, m: 1 }; }
+        judge = { pct: 80 * rk.m, base: 80, rk, timer: 3, oath, src: [...new Set(src)], twice: tw ? +tw[1] / 100 : 0 }; pays.push({ k: 'JUDGEMENT', v: judge.pct, judge: 1 }); } }
     // Grief: every direct hit also poisons for a share of it. The line is the picked skill's hit times that share, as Poison.
     const worn = SLOTS.map(sl => findItem((S.gear[sl.id] || {}).item)).filter(Boolean);
     // Judicant's Glaivehelm: Lucky Hits from Judicator Skills call down a spear that deals Judgement's damage again
@@ -2068,6 +2077,8 @@
     try { GM.filter(x => x.add).forEach(x => { if (x.scope && x.scope.thorns ? !isThorns : !!scopeMiss(x.scope, isJudge || isProc ? Pd : P, Pd.dmg)) return; always.push({ v: (x.lo + x.hi) / 2, src: x.n, what: x.what }); }); } catch (e) { /* skip */ }
     let fanCc = 0; try { const fa = 'Paladin_Offensive_Aura'; if (S.cls === 'Paladin' && C.powers[fa] && skillRank(fa) > 0) { const fc = skillCtx(fa); fanCc = (fc.ev(C.powers[fa].sf[4]) || 0) * (fc.ev(C.powers[fa].sf[8]) || 0) * 100; } } catch (e) { fanCc = 0; }
     const pwCcx = pwStat('ccx').reduce((a, x) => a * (1 + (x.lo + x.hi) / 200), 1); const pwCc = pwStat('cc').reduce((a, x) => a + (x.lo + x.hi) / 2, 0), pwCsd = pwStat('csd').reduce((a, x) => a + (x.lo + x.hi) / 2, 0), pwLhx = pwStat('lhx').reduce((a, x) => a * (1 + (x.lo + x.hi) / 200), 1);
+    // "You are always Berserking" (Blood-Mad Idol): Berserking's 25% joins the always-on pool
+    try { const bz = sheetData().powers.find(q => /You are always Berserking/i.test(strip(q.desc || ''))); if (bz && !(T.st || {}).berserk) always.push({ v: 25, src: bz.name, what: 'Berserking, always on' }); } catch (e) { /* none */ }
     const addAlways = sum(always), addCondAll = Object.values(cond).reduce((a, l) => a + sum(l), 0), addCondOn = condOn.reduce((a, k) => a + sum(cond[k]), 0), addElite = sum(elite);
     // [x] multipliers: stat lines marked [x] that fit this skill, plus aspect and unique powers
     // "x% ... Damage Multiplier" affixes of one kind add together first (All Damage joins the element); "[x]" lines each multiply on their own
@@ -2084,7 +2095,7 @@
     // Retribution, the Thorns pulse, is a Juggernaut Skill, so Juggernaut bonuses reach that line
     const Pm = isJudge || isProc ? Pd : isThorns && payD.hit ? { id: '__retribution', name: 'Retribution', dmg: 'Physical', tag: '', tags: ['Juggernaut'], mods: [], desc: '' } : P;
     const xLeft = [];
-    const xGear = GM.filter(x => !x.add && !x.stat && (!x.boss || (T.st || {}).boss)).filter(x => { if (isJudge ? x.skill : isProc ? (x.skill || x.jud) : x.jud) return false; const why = isJudge && x.jud ? '' : isJudge && x.scope && x.scope.cat && x.scope.strict ? 'raises ' + x.scope.cat + ' Skills, not Judgement itself' : x.scope && x.scope.thorns && !isThorns ? 'only raises Thorns' : scopeMiss(x.scope, Pm, Pd.dmg, !!(dot || isGrief)); if (why) xLeft.push({ n: x.n, why }); return !why; }).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
+    const xGear = GM.filter(x => !x.add && !x.stat && (!x.boss || (T.st || {}).boss)).filter(x => { if (isJudge ? x.skill : isProc ? (x.skill || x.jud) : x.jud) return false; if (x.what === 'when Judgement hits only one enemy' && Math.max(1, +T.tg || 1) > 1) { xLeft.push({ n: x.n, why: 'only when Judgement hits one enemy; the setting has ' + Math.max(1, +T.tg || 1) + ' targets' }); return false; } const why = isJudge && x.jud ? '' : isJudge && x.scope && x.scope.cat && x.scope.strict ? 'raises ' + x.scope.cat + ' Skills, not Judgement itself' : x.scope && x.scope.thorns && !isThorns ? 'only raises Thorns' : scopeMiss(x.scope, Pm, Pd.dmg, !!(dot || isGrief)); if (why) xLeft.push({ n: x.n, why }); return !why; }).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) }));
     if (isJudge) { try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => { const mm = strip(powerText(q, md.desc, c2.lvl, C.powers)).match(/Judgement damage by ([\d.]+)%\s*\[x\]/); if (mm) { const xid = 'jud:' + id + ':' + md.key; xGear.push({ id: xid, n: q.name + ': ' + md.name, lo: +mm[1], hi: +mm[1], what: 'Judgement damage for a few seconds after a detonation', on: !T.off[xid] }); } }); }); } catch (e) { /* skip */ } }
     xGear.forEach((x, i) => { if (x.ccNeed && ccUp < 1) xGear[i] = Object.assign({}, x, { lo: x.lo * ccUp, hi: x.hi * ccUp, what: (x.what || '') + ', counted ' + Math.round(ccUp * 100) + '%: ' + ccHow }); });
     const prod = (l, f) => l.reduce((a, x) => a * (1 + f(x) / 100), 1);
@@ -2245,7 +2256,7 @@
           </div>
         </section>
         <section class="tc-box tc-out"><h3>${esc(R.lineName)}: damage per hit and per second</h3>
-          ${R.isJudge ? `<p class="note"><b>Judgement.</b> A mark that explodes for ${f(R.judge.pct)}% of weapon damage as Holy, ${R.judge.timer} seconds after it lands. It scales like any weapon hit: ${esc(MAINSTAT[S.cls][0])}, the additive pool, crit, Vulnerable and every [x] multiplier that fits. ${R.judge.oath ? 'With the Judicator Oath your Core Judicator Skills set it off early and the blast counts as a Judicator Skill, so Judicator Skill bonuses are included.' : 'Without the Judicator Oath it only goes off on its timer and Judicator Skill bonuses are left out.'} Powers that only raise Judgement are listed under [x] below and count on this line alone. On this build it comes from: ${esc(R.judge.src.slice(0, 6).join(', '))}.</p>` : ''}
+          ${R.isJudge ? `<p class="note"><b>Judgement.</b> A mark that explodes for ${f(R.judge.pct)}% of weapon damage as Holy, ${R.judge.timer} seconds after it lands${R.judge.rk && R.judge.rk.m > 1 ? ` (${f(R.judge.base)}% scaled by the rank of ${esc(R.judge.rk.n)}, rank ${f(R.judge.rk.lvl)}: x${f(R.judge.rk.m, 2)}, per the 3.2.1 change that Judgement scales with the rank of the skill that applied it)` : ''}. It scales like any weapon hit: ${esc(MAINSTAT[S.cls][0])}, the additive pool, crit, Vulnerable and every [x] multiplier that fits. ${R.judge.oath ? 'With the Judicator Oath your Core Judicator Skills set it off early and the blast counts as a Judicator Skill, so Judicator Skill bonuses are included.' : 'Without the Judicator Oath it only goes off on its timer and Judicator Skill bonuses are left out.'} Powers that only raise Judgement are listed under [x] below and count on this line alone. On this build it comes from: ${esc(R.judge.src.slice(0, 6).join(', '))}.</p>` : ''}
           ${R.isThorns ? `<p class="note"><b>Thorns.</b> This line scales from your Thorns stat (${f(R.thornsStat)}), not your weapon${R.thSrc.length ? ' (' + esc(R.thSrc.slice(0, 5).join(', ')) + ')' : ''}. ${esc(MAINSTAT[S.cls][0])}, the additive pool and every [x] multiplier still apply. It can crit like any other hit and has no high or low roll. DPS assumes one hit a second.</p>` : ''}
           ${R.wd || R.isThorns ? '' : '<p class="warn">Type your weapon damage to see real numbers. Everything else is already filled in from your build.</p>'}
           <table class="tc-table"><thead><tr><th>Monster</th><th>${R.dot ? 'Lowest total' : 'Min hit'}</th><th>${R.dot ? 'Expected total' : 'Expected hit'}</th><th>${R.dot ? 'Highest total' : 'Max hit'}</th><th>Selected</th><th>Expected DPS</th></tr></thead>
@@ -3321,7 +3332,9 @@
     // A tenth-of-a-second step: healing a second, Fortify draining at 9% of the stored amount plus 1% of Maximum Life a second (Maxroll's
     // Season 11 measurement), Life Regeneration paused for 4 seconds after each hit, and a potion whenever one fits without overhealing.
     const inHits = hitsIn();
-    const surv = !ut ? [] : cards.map(c => { const avg = c.attacks.length ? c.attacks.reduce((a, r) => a + r.exp, 0) / c.attacks.length : 0; const inc = avg * inHits;
+    // "take 200%[x] increased damage as Burning over 8 seconds" (Blood-Mad Idol): every hit lands three times over as a burn, so the time you last counts it in full
+    let burnX = 1, burnSrc = ''; try { sheetData().powers.forEach(q => { const m = strip(q.desc || '').match(/take ([\d.]+)%\s*\[x\] increased damage as Burning/i); if (m) { burnX *= 1 + +m[1] / 100; burnSrc = q.name; } }); } catch (e) { burnX = 1; }
+    const surv = !ut ? [] : cards.map(c => { const avg = c.attacks.length ? c.attacks.reduce((a, r) => a + r.exp, 0) / c.attacks.length : 0; const inc = avg * inHits * burnX;
       const healNoRegen = ut.healPs - ut.regenPs; const regenOn = inHits <= 0.25; const dt = 0.1; let L = life, F = 0, pots = ut.pots, potT = 0, t = 0, used = 0;
       for (; t < 120 && L > 0; t += dt) { L -= inc * dt; L += (healNoRegen + (regenOn ? ut.regenPs : 0)) * dt; F = Math.min(life, F + ut.fortPs * dt);
         if (L < life && F > 0) { const h = Math.min(F, (0.09 * F + 0.01 * life) * dt, life - L); F -= h; L += h; }
@@ -3331,7 +3344,7 @@
       const net = ut.healPs - (regenOn ? 0 : ut.regenPs) + ut.fortPs - inc;
       return { name: c.m.name, cat: c.cat, inc, avg, net, ttd: L > 0 ? 0 : t, used }; });
     let stag = { up: 0, has: false, dur: 4 }; try { stag = staggerShare(); } catch (e) { /* none */ }
-    return { stag, ut, surv, inHits, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
+    return { burnX, burnSrc, stag, ut, surv, inHits, defA, pwDef, spFx, spOn, mercInfo, mercDR, T, SC, D, MON, tier, tierNo, L, baseLife, lifeFlat, life, armor, armorDR, drParts, drMul, block, blockR, dodge, cards, eb, kind, nAff, affs, affRows, overCap, ehp, whatIf, resDR, now };
   }
   // ---------- healing, potions, Fortify, movement and crowd control ----------
   // Read from every equipped power, passive and skill on the bar. Rates come from the damage line loaded on Damage Theory Craft:
@@ -3534,6 +3547,7 @@
           ${U.forts.filter(h => h.on).map(h => `<div class="bucket"><b>${esc(h.src)}</b><span>${lf(h.ps)} <small>${f(h.pct, 1)}% of Maximum Life ${esc(h.how)}</small></span></div>`).join('')}
           <div class="tc-row"><span>Potions</span><b class="num">${U.pots} x ${f(U.potOne)}</b><small>${f(U.potHealPct, 1)}% of Maximum Life each, at once. One charge comes back every ${POTION.every} seconds in combat, worth ${f(U.potPs)} a second. A full bar heals ${f(U.pots * U.potOne)} (${f(U.pots * U.potOne / R.life * 100)}% of Life)</small></div>
           <div class="ut-in"><label for="dfInHits">Hits you take a second</label><input id="dfInHits" type="number" min="0.05" step="0.05" value="${esc(R.inHits)}"><small>The monster files do not say how fast monsters attack, so set this to match the fight. 1 is a steady stream of hits.</small></div>
+          ${R.burnX > 1 ? `<p class="note warnc">${esc(R.burnSrc)}: every hit you take comes back as Burning for ${f((R.burnX - 1) * 100)}% more, so damage taken below is x${f(R.burnX, 2)}. Effective Life above does not include it.</p>` : ''}
           ${R.surv.map(v => `<div class="bucket${v.net >= 0 ? ' best' : ''}"><b>${esc(v.name)}</b><span>${f(v.inc)} damage a second taken, ${v.net >= 0 ? `you heal ${f(v.net)} a second more than that` : `${f(-v.net)} a second more than you heal`}. <small>${v.ttd ? `You last ${f(v.ttd, 1)} seconds${v.used ? `, using ${v.used} potion${v.used === 1 ? '' : 's'}` : ''}` : `You last the full 2 minutes${v.used ? `, using ${v.used} potion${v.used === 1 ? '' : 's'}` : ''}`}</small></span></div>`).join('')}
           ${U.heals.length + U.forts.length ? `<div class="chips">${U.heals.concat(U.forts).map(h => tog(h, h.src, h.can ? h.how : 'not counted: ' + h.how)).join('')}</div>` : ''}
           <p class="note">Hits a second come from the line loaded on Damage Theory Craft${U.line ? ` (${esc(U.line)}: ${f(U.hps, 2)} a second, on ${U.tg} enem${U.tg === 1 ? 'y' : 'ies'})` : ''}, and kills from its Kills a second box. Life Regeneration is Life a second but stops for 4 seconds after you take damage, so it only counts in a fight when you take a hit less than every 4 seconds. Life On Hit has a short internal cooldown in the game that is not in the files, so it may read a little high on fast hits. Healing Received is applied to every heal and to potions. Fortify drains into Life at 9% of what you have stored plus 1% of Maximum Life a second, as Maxroll measured. The time you last starts from full Life with no Fortify, drinks a potion when below half Life, and stops at 2 minutes. Potions follow the Season 11 rules: 4 charges, 35% of Maximum Life each, one back every 30 seconds.</p></section>
