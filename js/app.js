@@ -1088,7 +1088,8 @@
   function classSets() { return data().sets.filter(s => s.cls === S.cls || s.cls === 'All'); }
   const sealList = () => (GD().seals || []);
   function sealOf() { const ch = S.charms; if (OLD_SEAL[ch.seal]) ch.seal = OLD_SEAL[ch.seal]; return sealList().find(x => x.id === ch.seal) || sealList().find(x => x.id === 'Talisman_Seal_Legendary') || sealList()[0] || { id: '', name: 'Seal', slots: 3, forced: [], rarity: 'legendary', legendary: true }; }
-  const sealAff = id => (GD().sealAffixes || []).find(a => a.id === id);
+  // seal lines read from a screenshot that the game data does not list yet are kept on the build itself (sealCustom)
+  const sealAff = id => (GD().sealAffixes || []).find(a => a.id === id) || ((S.charms || {}).sealCustom || []).find(a => a.id === id);
   // the range a seal line can roll, and the line with the player's own roll put in
   function sealRange(a) { if (!a) return null; if (a.html) { const m = strip(a.html).match(/\[([\d.]+)\s*[–-]\s*([\d.]+)\]/); return m ? { lo: +m[1], hi: +m[2] } : null; } return a.lo != null && a.v != null && +a.lo !== +a.v ? { lo: +a.lo, hi: +a.v } : null; }
   function sealLineHtml(i) { const ch = S.charms; const a = sealAff((ch.sealAff || [])[i]); if (!a) return ''; const rg = sealRange(a); const r = (ch.sealRoll || [])[i];
@@ -1174,6 +1175,73 @@
       ${it.lines.length ? `<div class="affix-lines">${it.lines.map(a => `<p class="ln"><i class="dot"></i><span>${a}</span></p>`).join('')}</div>` : ''}
       ${it.desc ? `<div class="power">${it.desc}</div>` : ''}${sets}</div></div>`;
   }
+  // ---------- read a charm or seal from an in-game screenshot ----------
+  let CSCAN = null;   // { state: 'reading' | 'done' | 'error', to: 'charm' | 'seal', msg, missed }
+  const ckey = t => String(t || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\[[^\]]*\]/g, ' ').replace(/[\d.,]+/g, ' ').toLowerCase().replace(/§|%|\+/g, ' ').replace(/[^a-z' ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const cnorm = t => String(t || '').toLowerCase().replace(/[^a-z]/g, '');
+  function lev(a, b) { const m = a.length, n = b.length; if (!m || !n) return Math.max(m, n); let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; }
+  function bestName(title, list) { const t = cnorm(title); if (t.length < 3) return null; let best = null; list.forEach(x => { const n = cnorm(x.name); const d = n === t ? 0 : t.includes(n) || n.includes(t) ? 0.5 : lev(n, t); const r = 1 - d / Math.max(n.length, t.length, 1); if (!best || r > best.r) best = { x, r }; }); return best && best.r >= 0.72 ? best.x : null; }
+  // one affix line read off the tooltip, matched against a pool of affix definitions; the set name on the line before narrows a seal line to that set
+  function matchAffLine(line, pool, setId) { const k = ckey(line); if (k.length < 4) return null;
+    const cand = pool.filter(a => (setId === undefined || (a.set || '') === setId)).map(a => { let t = a.html || a.t || ''; t = t.replace(/^\s*<span class="c-set">[^<]*<\/span>:\s*(?:<br>)?/, ''); return { a, k: ckey(t) }; }).filter(c => c.k.length >= 4);
+    let hit = cand.find(c => c.k === k); if (!hit) hit = cand.filter(c => k.endsWith(c.k) || k.includes(c.k)).sort((p, q) => q.k.length - p.k.length)[0];
+    if (!hit) { const sc = cand.map(c => ({ c, r: 1 - lev(c.k, k) / Math.max(c.k.length, k.length) })).sort((p, q) => q.r - p.r)[0]; if (sc && sc.r >= 0.8) hit = sc.c; }
+    if (!hit) return null; const n = String(line).match(/(\d+(?:[.,]\d+)?)/); return { a: hit.a, v: n ? parseFloat(n[1].replace(',', '.')) : null }; }
+  function readCharmText(text, to) {
+    const lines = String(text || '').replace(/\r/g, '').split('\n').map(l => l.replace(/[|¦•◆♦·]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const ti = lines.findIndex(l => /\b(Charm|Seal)\b/i.test(l) && /\b(Magic|Rare|Legendary|Unique|Mythic|Ancestral|Set|Horadric)\b/i.test(l));
+    if (ti < 0) return { err: 'No charm or seal was found. Snip just the tooltip, from the name down to the last affix.' };
+    const type = lines[ti]; const title = lines.slice(Math.max(0, ti - 2), ti).join(' ');
+    let raw = lines.slice(ti + 1); const cut = raw.findIndex(l => /Properties lost|Requires Level|Sell Value|^"/i.test(l)); if (cut >= 0) raw = raw.slice(0, cut);
+    raw = raw.filter(l => !/Item Power|Unique Equipped|Account Bound|Lord of Hatred|Durability|^-[A-Z]|Unlocks \d+ Charm/i.test(l));
+    // a tooltip line that wraps: a short word or a lower-case start with no number joins the line above
+    const body = []; raw.forEach(l => { const prev = body[body.length - 1]; if (prev && !/\d/.test(l) && !/:\s*$/.test(l) && !/:\s*$/.test(prev) && (/^[a-z(]/.test(l) || l.split(' ').length <= 3)) body[body.length - 1] = prev + ' ' + l; else body.push(l); });
+    const isSeal = /\bSeal\b/i.test(type) || to === 'seal';
+    if (isSeal) { const seal = bestName(title, sealList()); if (!seal) return { err: `Seal not recognised: "${title}".` };
+      const pool = GD().sealAffixes || []; const out = []; const missed = []; let setId;
+      body.forEach(l => { const sm = l.match(/^(.+?):\s*(.*)$/); const st = sm && bestName(sm[1], (data().sets || []));
+        if (st) { setId = st.id; if (!sm[2]) return; l = sm[2]; }
+        let m = matchAffLine(l, pool.concat(S.charms.sealCustom || []), setId !== undefined ? setId : (/^\+?[\d.]/.test(l) ? '' : undefined));
+        if (!m && setId) { const st = (data().sets || []).find(z => z.id === setId); const rg = l.match(/\[(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)\]\s*(%)?/); const v = (l.match(/(\d+(?:\.\d+)?)/) || [])[1]; const x = /\[x\]/i.test(l);
+          const words = l.replace(/^[^A-Za-z]*(?:\[[^\]]*\]\s*%?\s*)*/, '').replace(/\[[^\]]*\]%?/g, '').trim();
+          if (rg && words) { const a = { id: 'Custom_Seal_' + setId + '_' + cnorm(words), kind: 'set', set: setId, custom: 1, html: `<span class="c-set">${esc(st ? st.name : '')}</span>:<br>+<span class="c-random"><b class="num">[${rg[1]} – ${rg[2]}]${rg[3] ? '%' : ''}${x ? '[x]' : ''}</b></span> ${esc(words)}` };
+            S.charms.sealCustom = (S.charms.sealCustom || []).filter(z => z.id !== a.id).concat(a); m = { a, v: v ? +v : null }; } }
+        setId = undefined;
+        if (m && !out.some(o => o.a.id === m.a.id)) out.push(m); else if (!m && !/can equip|reduces the number|cannot have more|needed for set|minimum of \d/i.test(l)) missed.push(l); });
+      return { kind: 'seal', seal, affs: out.slice(0, seal.slots || 3), missed };
+    }
+    const rar = /Mythic/i.test(type) ? 'my' : /Unique/i.test(type) ? 'u' : /Set|Legendary/i.test(type) ? 'set' : /Rare/i.test(type) ? 'r' : /Magic/i.test(type) ? 'm' : '';
+    const uniq = bestName(title, data().uniques.filter(u => u.kind === 'charm' && classUsable(u)));
+    const pieces = [].concat(...classSets().map(st => ((GD().setPieces || {})[st.id] || []).map(pc => ({ name: pc.name, id: pc.id, set: st.id }))));
+    const piece = !uniq ? bestName(title, pieces) : null;
+    const pool = (GD().charmAffixes || []).filter(a => !a.cls || !a.cls.length || a.cls.includes(S.cls)); const affs = []; const missed = []; let torch = null;
+    body.forEach(l => { const tm = l.match(/Set count to (.+?)\.?$/i); if (tm) { const st = bestName(tm[1], classSets()); torch = Object.assign(torch || {}, { set: st ? st.id : '' }); return; }
+      if (uniq && uniq.id === TORCH_ID) { const n = (l.match(/(\d+(?:\.\d+)?)/) || [])[1]; if (/All Stats/i.test(l)) { torch = Object.assign(torch || {}, { st: n }); return; } if (/Resistance to All/i.test(l)) { torch = Object.assign(torch || {}, { res: n }); return; } if (/to All Skills/i.test(l)) { torch = Object.assign(torch || {}, { sk: n }); return; } if (/more Unique Charm/i.test(l)) return; }
+      const m = matchAffLine(l, pool); if (m && !affs.some(o => o.a.id === m.a.id)) affs.push(m); else if (!m && uniq && ckey(strip(uniq.desc)).includes(ckey(l))) return; else if (!m) missed.push(l); });
+    if (uniq) return { kind: 'u', id: uniq.id, name: uniq.name, affs: affs.slice(0, 2), torch, missed };
+    if (piece) return { kind: 'set', id: piece.set, piece: piece.id, name: piece.name, affs: affs.slice(0, 2), missed };
+    if (rar === 'r' || rar === 'm') return { kind: rar, name: rar === 'r' ? 'Rare charm' : 'Magic charm', affs: affs.slice(0, rar === 'm' ? 1 : 2), missed };
+    return { err: `Charm not recognised: "${title}".` };
+  }
+  async function charmScan(blob, to) {
+    const at = socketSel; CSCAN = { state: 'reading', to, msg: 'Reading the screenshot. The first one takes a few seconds while the text reader loads.' }; if (tab !== 'charms') showTab('charms'); else renderCharms();
+    let R; try { R = readCharmText(await ocrText(blob), to); } catch (e) { R = { err: e && e.message === 'offline' ? 'The text reader could not be downloaded. It needs an internet connection the first time.' : 'The screenshot could not be read. Try a tighter crop of just the tooltip.' }; }
+    applyCharmRead(R, to, at);
+  }
+  function applyCharmRead(R, to, at) {
+    if (R.err) { CSCAN = { state: 'error', to, msg: R.err }; if (tab === 'charms') renderCharms(); return; }
+    const ch = S.charms; let msg = '';
+    if (R.kind === 'seal') { ch.seal = R.seal.id; ch.sealAff = R.affs.map(m => m.a.id); ch.sealRoll = R.affs.map(m => m.v != null ? String(m.v) : ''); msg = `${R.seal.name} set as your seal, with ${R.affs.length} affix${R.affs.length === 1 ? '' : 'es'} and their rolls.`; }
+    else { if (!Array.isArray(ch.sockets)) ch.sockets = []; const affIds = R.affs.map(m => m.a.id);
+      ch.sockets[at] = R.kind === 'set' ? { t: 'set', id: R.id, piece: R.piece, aff: affIds } : R.kind === 'u' ? { t: 'u', id: R.id, aff: affIds } : { t: R.kind, aff: affIds };
+      if (R.torch) { if (R.torch.set) ch.torch = R.torch.set; ch.torchRoll = Object.assign({}, ch.torchRoll || {}, ...['st', 'res', 'sk'].filter(k => R.torch[k] != null).map(k => ({ [k]: R.torch[k] }))); }
+      const rules = sealRules(); const nu = sockets().filter(y => y && y.t === 'u').length;
+      msg = `${R.name} placed in socket ${at + 1}${affIds.length ? ` with ${affIds.length} affix${affIds.length === 1 ? '' : 'es'}` : ''}.${nu > rules.uniques ? ` That is ${nu} unique charms, more than this seal allows (${rules.uniques}).` : ''}`; }
+    CSCAN = { state: 'done', to, msg, missed: R.missed || [] }; if (tab === 'charms') renderCharms(); commit();
+  }
+  function cscanHtml(to) { if (!CSCAN || CSCAN.to !== to) return ''; const c = CSCAN;
+    return `<div class="scan ${c.state === 'reading' ? 'busy' : c.state === 'error' ? 'err' : ''}" aria-live="polite"><p>${esc(c.msg)}</p>${c.missed && c.missed.length ? `<p class="cmp-warn">Read but not matched, set these by hand: ${c.missed.slice(0, 6).map(esc).join('; ')}</p>` : ''}${c.state !== 'reading' ? '<div class="cmp-act"><button class="btn ghost" data-cscan-close>Close</button></div>' : ''}</div>`; }
   function renderCharms() {
     invalidate();
     const ch = S.charms; const sets = classSets(); const sk = sockets(); const rules = sealRules(); const seal = sealOf();
@@ -1210,7 +1278,7 @@
     // seal affix rows
     const sPool = (GD().sealAffixes || []);
     const normal = sPool.filter(a => a.kind === 'normal' || a.kind === 'virtue' || a.kind === 'special');
-    const legend = sPool.filter(a => a.kind === 'legendary' || (a.kind === 'set' && sets.some(s => s.id === a.set)));
+    const legend = sPool.filter(a => a.kind === 'legendary' || (a.kind === 'set' && sets.some(s => s.id === a.set))).concat((ch.sealCustom || []).filter(a => sets.some(s => s.id === a.set)));
     const nRows = seal.slots || 3;
     if (!Array.isArray(ch.sealRoll)) ch.sealRoll = [];
     const myth = seal.rarity === 'mythic';
@@ -1255,11 +1323,15 @@
             ${cur ? '<button class="btn ghost danger" id="sockClear">Empty socket</button>' : ''}
           </div>
           ${editor ? `<section class="forge">${editor}</section>` : ''}
+          <div class="pastebox" tabindex="0" data-paste="charm"><b>Paste a charm into socket ${socketSel + 1}</b><span>Click this box, then press Ctrl+V to paste a snip of a charm tooltip, or drop an image on it. It reads the charm and its affixes into this socket.</span></div>
+          ${cscanHtml('charm')}
         </div>
       </div>
       <div class="seal-side">
         <div class="box">
           <h3>Seal</h3>
+          <div class="pastebox" tabindex="0" data-paste="seal"><b>Paste your seal here</b><span>Click, then Ctrl+V a snip of the seal tooltip. It picks the seal and fills its affixes and rolls.</span></div>
+          ${cscanHtml('seal')}
           <div class="field"><label for="seal">Seal</label><select id="seal">${sealList().map(s => `<option value="${s.id}" ${s.id === seal.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
           ${seal.forced.map(f => `<p class="seal-power">${f.html}</p>`).join('')}
           <p class="note">${rules.sockets} charm sockets, up to ${rules.uniques} unique charm${rules.uniques > 1 ? 's' : ''}${uniqCount > rules.uniques ? `. You have ${uniqCount} socketed, which is more than this seal allows` : ''}.</p>
@@ -1280,6 +1352,7 @@
         </article>`; }).join('')}
       </div></div>`;
     const redo = () => { renderCharms(); commit(); };
+    $$('#panel-charms [data-cscan-close]').forEach(b => b.onclick = () => { CSCAN = null; renderCharms(); });
     $$('#panel-charms .sock').forEach(g => { const go = () => { socketSel = +g.dataset.s; renderCharms(); }; g.onclick = go; g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }; });
     $('#setPick').onchange = e => { if (!e.target.value) return; const pcs = (GD().setPieces || {})[e.target.value] || []; const used = new Set(ch.sockets.filter(y => y && y.t === 'set').map(y => y.piece)); const pc = pcs.find(p => !used.has(p.id)) || pcs[0]; ch.sockets[socketSel] = { t: 'set', id: e.target.value, piece: pc ? pc.id : null, aff: (x && x.aff) || [] }; if (!x) socketSel = Math.min(sk.length - 1, socketSel + 1); redo(); };
     $('#uniqPick').onclick = () => openPicker('Unique charm', charmItems, it => { if ((!x || x.t !== 'u') && uniqCount >= rules.uniques) toast(`This seal allows ${rules.uniques} unique charm${rules.uniques > 1 ? 's' : ''}`); ch.sockets[socketSel] = { t: 'u', id: it.id, aff: (x && x.aff) || [] }; redo(); });
@@ -3035,14 +3108,14 @@
   // pasted or dropped images go to the box that has focus; with no box picked, to whatever fits the page being viewed
   let PASTE_TO = '';
   function takeImages(files, where) { const list = [...files].filter(f => f && /^image\//.test(f.type)); if (!list.length) return false;
-    const to = where || PASTE_TO || (tab === 'sheet' ? 'sheet' : BAG ? 'bag' : 'scan');
-    if (to === 'sheet') sheetCheck(list[0]); else if (to === 'bag' || list.length > 1) bagScan(list); else scanImage(list[0]); return true; }
+    const to = where || PASTE_TO || (tab === 'sheet' ? 'sheet' : tab === 'charms' ? 'charm' : BAG ? 'bag' : 'scan');
+    if (to === 'charm' || to === 'seal') charmScan(list[0], to); else if (to === 'sheet') sheetCheck(list[0]); else if (to === 'bag' || list.length > 1) bagScan(list); else scanImage(list[0]); return true; }
   document.addEventListener('focusin', e => { const b = e.target.closest && e.target.closest('[data-paste]'); PASTE_TO = b ? b.dataset.paste : ''; });
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-paste]'); if (b) { PASTE_TO = b.dataset.paste; $$('.pastebox.armed').forEach(x => x.classList.remove('armed')); b.classList.add('armed'); } });
   document.addEventListener('paste', e => { const items = (e.clipboardData && e.clipboardData.items) || []; const fs = []; for (const it of items) if (it.type && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) fs.push(f); } if (fs.length) { e.preventDefault(); takeImages(fs); } });
   document.addEventListener('dragover', e => { if (e.target.closest && e.target.closest('[data-paste]')) e.preventDefault(); });
   document.addEventListener('drop', e => { const b = e.target.closest && e.target.closest('[data-paste]'); if (!b || !e.dataTransfer) return; e.preventDefault(); takeImages(e.dataTransfer.files, b.dataset.paste); });
-  window.__D4SCANUI = { scanText };
+  window.__D4SCANUI = { scanText, readCharmText, charmText: (text, to, at) => applyCharmRead(readCharmText(text, to), to, at == null ? socketSel : at) };
 
 
   // ---------- site navigation: the sidebar switches between the planner, the build library and reference pages ----------

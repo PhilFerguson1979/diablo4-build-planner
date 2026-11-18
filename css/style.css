@@ -1493,3 +1493,8 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 #tabs { margin-top: 14px; flex-wrap: wrap; row-gap: 2px; overflow-x: visible; }
 .tabs button { font-size: 18px; padding: 12px 16px 14px; }
 @media (max-width: 700px) { #tabs { flex-wrap: nowrap; overflow-x: auto; } .tabs button { font-size: 16.5px; padding: 11px 13px 13px; } .class-strip .sigil { width: 80px; height: 70px; } .class-strip .sigil .rail-crest { width: 40px; height: 40px; } }
+.forge .frow:has(.flab) { grid-template-columns: minmax(0, 1fr) 60px; grid-template-areas: "lab roll" "pick pick"; row-gap: 6px; }
+.forge .frow:has(.flab) .flab { grid-area: lab; margin: 0; align-self: center; white-space: nowrap; }
+.forge .frow:has(.flab) select { grid-area: pick; min-width: 0; width: 100%; }
+.forge .frow:has(.flab) input.roll { grid-area: roll; }
+.forge .frow input.roll { width: 60px; }
