@@ -1085,6 +1085,11 @@
   const sealList = () => (GD().seals || []);
   function sealOf() { const ch = S.charms; if (OLD_SEAL[ch.seal]) ch.seal = OLD_SEAL[ch.seal]; return sealList().find(x => x.id === ch.seal) || sealList().find(x => x.id === 'Talisman_Seal_Legendary') || sealList()[0] || { id: '', name: 'Seal', slots: 3, forced: [], rarity: 'legendary', legendary: true }; }
   const sealAff = id => (GD().sealAffixes || []).find(a => a.id === id);
+  // the range a seal line can roll, and the line with the player's own roll put in
+  function sealRange(a) { if (!a) return null; if (a.html) { const m = strip(a.html).match(/\[([\d.]+)\s*[–-]\s*([\d.]+)\]/); return m ? { lo: +m[1], hi: +m[2] } : null; } return a.lo != null && a.v != null && +a.lo !== +a.v ? { lo: +a.lo, hi: +a.v } : null; }
+  function sealLineHtml(i) { const ch = S.charms; const a = sealAff((ch.sealAff || [])[i]); if (!a) return ''; const rg = sealRange(a); const r = (ch.sealRoll || [])[i];
+    if (!rg || r == null || r === '' || !isFinite(+r)) return affHtml(a); const v = Math.max(rg.lo, Math.min(rg.hi, +r));
+    return a.html ? a.html.replace(/\[([\d.]+)\s*[–-]\s*([\d.]+)\]/, D4T.fmtNum(v)) : `<span>${esc(a.t).replace('§', `<b class="num">${D4T.fmtNum(v)}</b>`)}</span>`; }
   const charmAff = id => (GD().charmAffixes || []).find(a => a.id === id);
   function sealRules() {
     const sl = sealOf(); const ch = S.charms; const extra = (ch.sealAff || []).some(id => id && /AdditionalCharmSlot/.test(id));
@@ -1203,10 +1208,15 @@
     const normal = sPool.filter(a => a.kind === 'normal' || a.kind === 'virtue' || a.kind === 'special');
     const legend = sPool.filter(a => a.kind === 'legendary' || (a.kind === 'set' && sets.some(s => s.id === a.set)));
     const nRows = seal.slots || 3;
-    const sealRows = Array.from({ length: nRows }, (_, i) => `<div class="frow"><select data-saff="${i}" aria-label="Seal affix ${i + 1}"><option value="">Seal affix ${i + 1}: choose...</option>
-      <optgroup label="Seal affixes">${normal.map(a => `<option value="${a.id}" ${a.id === ch.sealAff[i] ? 'selected' : ''}>${esc(a.html ? strip(a.html) : a.t.replace('§', a.v)).slice(0, 95)}</option>`).join('')}</optgroup>
-      ${seal.legendary ? `<optgroup label="Legendary and set seal powers">${legend.map(a => `<option value="${a.id}" ${a.id === ch.sealAff[i] ? 'selected' : ''}>${esc(a.html ? strip(a.html) : a.t.replace('§', a.v)).slice(0, 95)}</option>`).join('')}</optgroup>` : ''}</select></div>`).join('');
-    const sealLines = ch.sealAff.slice(0, nRows).map(sealAff).filter(Boolean);
+    if (!Array.isArray(ch.sealRoll)) ch.sealRoll = [];
+    const myth = seal.rarity === 'mythic';
+    const rowLabel = i => myth ? (i === 0 ? 'Seal stat' : 'Set power ' + i) : 'Seal affix ' + (i + 1);
+    const optL = (list, i) => list.map(a => `<option value="${a.id}" ${a.id === ch.sealAff[i] ? 'selected' : ''}>${esc(a.html ? strip(a.html) : a.t.replace('§', a.v)).slice(0, 95)}</option>`).join('');
+    const sealRows = Array.from({ length: myth ? Math.min(nRows, 3) : nRows }, (_, i) => { const a = sealAff(ch.sealAff[i]); const rg = sealRange(a);
+      const pick = myth ? (i === 0 ? `<optgroup label="Seal stats">${optL(normal, i)}</optgroup>` : `<optgroup label="Set seal powers">${optL(legend, i)}</optgroup>`)
+        : `<optgroup label="Seal affixes">${optL(normal, i)}</optgroup>${seal.legendary ? `<optgroup label="Legendary and set seal powers">${optL(legend, i)}</optgroup>` : ''}`;
+      return `<div class="frow"><label class="flab">${rowLabel(i)}</label><select data-saff="${i}" aria-label="${rowLabel(i)}"><option value="">${rowLabel(i)}: choose...</option>${pick}</select>${rg ? `<input type="number" class="roll" data-sroll="${i}" step="0.1" min="${rg.lo}" max="${rg.hi}" value="${esc(ch.sealRoll[i] != null && ch.sealRoll[i] !== '' ? ch.sealRoll[i] : '')}" placeholder="${D4T.fmtNum(rg.lo)}-${D4T.fmtNum(rg.hi)}" aria-label="${rowLabel(i)} roll" title="Your roll, ${D4T.fmtNum(rg.lo)} to ${D4T.fmtNum(rg.hi)}. Empty uses the middle.">` : ''}</div>`; }).join('');
+    const sealLines = ch.sealAff.slice(0, myth ? Math.min(nRows, 3) : nRows).map((id, i) => id && sealAff(id) ? sealLineHtml(i) : '').filter(Boolean);
     $('#panel-charms').innerHTML = `<div class="seal-layout">
       <div class="seal-wrap">
         <svg class="seal" viewBox="-240 -240 480 480" aria-label="Seal">
@@ -1250,7 +1260,7 @@
           ${seal.forced.map(f => `<p class="seal-power">${f.html}</p>`).join('')}
           <p class="note">${rules.sockets} charm sockets, up to ${rules.uniques} unique charm${rules.uniques > 1 ? 's' : ''}${uniqCount > rules.uniques ? `. You have ${uniqCount} socketed, which is more than this seal allows` : ''}.</p>
           <section class="forge">${sealRows}</section>
-          ${sealLines.length ? `<div class="affix-lines seal-lines">${sealLines.map(a => `<p class="ln"><i class="dot"></i><span>${affHtml(a)}</span></p>`).join('')}</div>` : ''}
+          ${sealLines.length ? `<div class="affix-lines seal-lines">${sealLines.map(h => `<p class="ln"><i class="dot"></i><span>${h}</span></p>`).join('')}</div>` : ''}
         </div>
         <div class="box">
           <h3>Extras</h3>
@@ -1274,7 +1284,8 @@
     const sc = $('#sockClear'); if (sc) sc.onclick = () => { ch.sockets[socketSel] = null; redo(); };
     const pp = $('#piecePick'); if (pp) pp.onchange = () => { ch.sockets[socketSel].piece = pp.value; redo(); };
     $$('#panel-charms [data-caff]').forEach(s => s.onchange = () => { const y = ch.sockets[socketSel]; if (!y) return; y.aff = y.aff || []; y.aff[+s.dataset.caff] = s.value || null; redo(); });
-    $$('#panel-charms [data-saff]').forEach(s => s.onchange = () => { ch.sealAff[+s.dataset.saff] = s.value || null; redo(); });
+    $$('#panel-charms [data-saff]').forEach(s => s.onchange = () => { ch.sealAff[+s.dataset.saff] = s.value || null; if (ch.sealRoll) ch.sealRoll[+s.dataset.saff] = ''; redo(); });
+    $$('#panel-charms [data-sroll]').forEach(s => s.onchange = () => { ch.sealRoll[+s.dataset.sroll] = s.value; redo(); });
     $('#seal').onchange = e => { ch.seal = e.target.value; redo(); };
     $('#torch').onchange = e => { ch.torch = e.target.value; redo(); };
     [['trSt', 'st'], ['trRes', 'res'], ['trSk', 'sk']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = () => { ch.torchRoll = Object.assign({}, ch.torchRoll || {}, { [k]: el.value }); redo(); }; });
@@ -1544,7 +1555,10 @@
       (x.aff || []).forEach(id => { const a = charmAff(id); if (!a) return; if (a.virtue) { if (seenVirtue.has(id)) return; seenVirtue.add(id); } add(affHtml(a), it.name); });
       if (it.desc) powers.push({ name: it.name, kind: 'Unique charm', src: 'Seal socket ' + (i + 1), desc: it.desc });
     });
-    (S.charms.sealAff || []).forEach(id => { const a = id && sealAff(id); if (a) add(affHtml(a), 'Seal'); });
+    // a seal's set line ("Cathan's Dauntless Faith: +7%[x] Physical Damage") works only while at least the 2-piece of that set is active
+    (S.charms.sealAff || []).slice(0, (sealOf().slots || 3)).forEach((id, i) => { const a = id && sealAff(id); if (!a) return; let h = sealLineHtml(i);
+      if (a.kind === 'set' && a.set) { const st = classSets().find(z => z.id === a.set); if (st && !st.tiers.some(t => tierActive(st, t))) { effects.push({ txt: strip(h) + ' (off: needs the 2-piece of ' + st.name + ')', src: 'Seal' }); return; } h = h.replace(/^\s*<span class="c-set">[^<]*<\/span>:\s*(?:<br>)?/, ''); }
+      add(h, 'Seal'); });
     classSets().forEach(st => st.tiers.forEach(t => { if (tierActive(st, t)) powers.push({ name: st.name + ', ' + t.n + '-piece', kind: 'Set bonus', src: 'Charms', desc: t.desc }); }));
     const P = PARA && PARA.stats && PARA.stats();
     if (P) {
@@ -1806,7 +1820,9 @@
     let cats = qCats.slice(); let strict = cats.length > 0;
     if (!cats.length && !/not on your Action Bar/.test(preC)) { const all = [...preC.matchAll(/\b((?:[A-Z][a-z]+(?:, (?:or |and )?| or | and | )){0,3}[A-Z][a-z]+) [Ss]kills?\b/g)].map(x => x[1]); let ph = all.length ? all[all.length - 1] : ((what.match(/\b((?:[A-Z][a-z]+ ){0,2}[A-Z][a-z]+) [Ss]kills?\b/) || [])[1] || '');
       if (ph) { ph = ph.replace(/^(?:Your|All|Other|Non|Casting|Cast|Using|When|While|After|Each|Every|The|Those|These|Their|Imbued|Imbueable) /, ''); if (X.cats.has(ph)) cats = [ph]; else { if (/,| or | and /.test(ph)) any = true; ph.split(/,? (?:or |and )?/).forEach(w => { if (X.cats.has(w)) cats.push(w); else if (ELEMS.includes(w) && !elems.includes(w)) elems.push(w); }); } }
-      strict = cats.length > 0 && !general; }
+      strict = cats.length > 0 && !general;
+      // "Gain 500%[x] increased damage with Disciple Skills": the bonus is for those skills only
+      if (cats.length && /^(?:increased |bonus )?damage (?:with|to|for) (?:your )?(?:[A-Z][a-z]+(?:,? (?:or |and )?| )){0,3}[Ss]kills?\b/.test(what.trim())) strict = true; }
     const cat = cats.join(' ');
     const thorns = /\bThorns (?:has|have|deals?|damage (?:is|are))\b/i.test(preC);
     const cond = named.some(nm => new RegExp('\\b(?:While|When|After|Casting|Using|hit by|affected by|marked by|damaged by|during|Arbiter)\\b[^.]{0,60}' + reEsc(nm)).test(sent)) || /\bArbiter\b/.test(sent);
@@ -1929,6 +1945,10 @@
     sockets().forEach(x => { const it = socketItem(x); if (it && it.desc) scan(it.name, it.desc); });
     const n0 = out.length; mechLines().forEach(m => scan(m.name, m.html));
     sheetData().powers.filter(q => /^(Passive|Legendary node|Set bonus|Mercenary)$/.test(q.kind)).forEach(q => scan(q.merc ? q.name + ' (' + q.merc + ')' : q.name, q.desc, q.role));
+    // a higher set tier that raises a lower tier's stacking bonus: "Judgement Day's damage bonus is increased to 25%[x] and its maximum number of stacks is increased to 20"
+    try { classSets().forEach(st => st.tiers.forEach(t => { if (!tierActive(st, t)) return; const m = strip(t.desc || '').match(/damage bonus is increased to ([\d.]+)%\s*\[x\] and its maximum number of stacks is increased to (\d+)/); if (!m) return;
+      const low = out.find(x => x.n.startsWith(st.name + ', ') && x.n !== st.name + ', ' + t.n + '-piece' && /up to \d+ times/.test(x.what || '')); if (!low) return;
+      low.lo = +m[1]; low.hi = +m[1] * +m[2]; low.what = String(low.what).replace(/up to \d+ times, at \d+ stacks/, 'up to ' + m[2] + ' times at ' + m[1] + '% each with the ' + t.n + '-piece, at ' + m[2] + ' stacks'); })); } catch (e) { /* skip */ }
     return out.filter((x, i) => i < n0 || x.add || x.stat || (x.lo > 0 && !/^(Vulnerable|Critical Strike|Overpower) Damage|^Damage Over Time|^Lucky Hit/i.test(x.what)));
   }
   // every Attack Speed (first cap) and Cast Speed (second cap) bonus written into a power's text, so nothing has to be typed in

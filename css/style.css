@@ -1484,3 +1484,4 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .ut-box .chip { white-space: nowrap; }
 .ut-in { display: grid; grid-template-columns: auto 90px; gap: 4px 10px; align-items: center; margin: 10px 0; }
 .ut-in small { grid-column: 1 / -1; opacity: .75; }
+.forge .frow .flab { grid-column: 1 / -1; font-size: 12px; color: #b9a98c; letter-spacing: .04em; text-transform: uppercase; margin-bottom: -4px; }
