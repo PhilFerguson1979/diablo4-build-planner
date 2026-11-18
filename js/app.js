@@ -130,6 +130,8 @@
   function skillIs(P, cat) {
     if (!cat) return true; if (cat === 'All') return true;
     const tags = [P.tag, ...(P.tags || [])]; const al = CAT_ALIAS[cat];
+    // "Clash becomes a Zealot Skill" swaps the school: it stops being a Juggernaut Skill. "is also" keeps both.
+    const sw = schoolSwap(P); if (sw && SCHOOL_WORD[cat] && SCHOOL_WORD[cat] !== sw) return false;
     if (tags.includes(cat) || (al && tags.includes(al))) return true;
     const k = effSchool(P); return !!(k && (k === cat || k === al || (SCHOOL_COL[k] && SCHOOL_COL[k][0] === cat)));
   }
@@ -342,6 +344,11 @@
     return m && SCHOOL_WORD[m[1]] ? SCHOOL_WORD[m[1]] : null;
   }
   // the skill's school after its chosen upgrades
+  function schoolSwap(P) {
+    if (!P || !P.id || !S || !S.alloc) return null; let C; try { C = cdata(); } catch (e) { return null; } if (!C || !C.nodes) return null;
+    for (const [i, r] of Object.entries(S.alloc)) { const n = C.nodes[i]; if (r > 0 && n && n.kind === 'mod' && n.power === P.id) { const md = (P.mods || []).find(x => x.id === n.mod); const d = String((md && md.desc) || '').replace(/\{[^}]*\}/g, '').replace(/<[^>]+>/g, ''); const m = d.match(/\bbecomes\s+an?\s+([A-Z][a-z]+)\s+[Ss]kill/); if (m && SCHOOL_WORD[m[1]]) return SCHOOL_WORD[m[1]]; } }
+    return null;
+  }
   function effSchool(P) {
     if (!P) return null; const C = cdata();
     for (const [i, r] of Object.entries(S.alloc)) { const n = C.nodes[i]; if (r > 0 && n && n.kind === 'mod' && n.power === P.id) { const k = modSchool(P.mods.find(x => x.id === n.mod)); if (k) return k; } }
@@ -1721,7 +1728,9 @@
     scan(P.desc); P.mods.filter(md => sk.mods.has(md.key)).forEach(md => scan(md.desc));
     // a payload named only by an upgrade you have not taken (Storm Bolt's hurled bolt without Storm Bolt) is not yours to use
     const off = []; const re2 = /\{payload:([A-Z0-9_]+)\}/g; P.mods.filter(md => !sk.mods.has(md.key)).forEach(md => { let q; re2.lastIndex = 0; while ((q = re2.exec(md.desc || ''))) off.push(q[1]); });
-    Object.keys(P.payloads).forEach(k => { if (!order.includes(k) && !off.includes(k)) order.push(k); });
+    // a hidden payload with the same formula as one of those (Purify's P2 is Absolution's burst) goes with it
+    const offF = new Set(off.map(k => JSON.stringify(P.payloads[k])));
+    Object.keys(P.payloads).forEach(k => { if (!order.includes(k) && !off.includes(k) && !offF.has(JSON.stringify(P.payloads[k]))) order.push(k); });
     return order.map((k, i) => ({ k, v: (sk.ev(P.payloads[k]) || 0) * 100, inTip: i < order.length })).filter(x => x.v > 0);
   }
   // [x] powers on equipped aspects, uniques and charms: "[20 – 60]%[x]" gives a low and high roll
@@ -2105,7 +2114,7 @@
     const cdBase = cdOf(sk, P);
     const cutter = pays.find(x => x.proc && x.cut); const tg = Math.max(1, +T.tg || 1);
     // powers that take time off cooldowns, as seconds removed for every second of fighting. The cooldown then runs at 1 + that rate.
-    const cuts = []; let cdFlat = 0, extraCast = 0; const blk = blocksIn();
+    const cuts = []; let cdFlat = 0, extraCast = 0, extraTrig = 0, hostLh = 0; const blk = blocksIn();
     if (cdBase) { const mid = (m, a, b) => (parseFloat(m[a]) + parseFloat(m[b] || m[a])) / 2; let unl = []; try { unl = unlockedSkills().map(id => C.powers[id]).filter(Boolean); } catch (e) { unl = []; }
       const nCd = +T.ncd > 0 ? +T.ncd : Math.max(1, (S.hotbar || []).filter(id => { try { return C.powers[id] && skillCtx(id).cd() > 0; } catch (e) { return false; } }).length);
       worn.forEach(it => { const t = strip(it.desc); let m;
@@ -2123,8 +2132,15 @@
         // Yen's Blessing: casting sets off a skill that is on cooldown, at most once every 8 seconds
         if ((m = t.match(/Casting a Skill has a \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to trigger a Non-Mobility, Non-Ultimate Skill that is currently on Cooldown\. Can only occur once every (\d+) seconds/)) && !skillIs(P, 'Mobility') && !skillIs(P, 'Ultimate')) { const r = 1 / +m[3] / nCd; extraCast += r; cuts.push({ n: it.name, v: 0, how: `an extra cast every ${D4T.fmtNum(Math.round(+m[3] * nCd))} seconds, shared by ${nCd} cooldown skill${nCd > 1 ? 's' : ''}` }); }
         if ((m = t.match(/Blocks have a \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to reduce all Cooldowns by ([\d.]+) second/)) && blk > 0) cuts.push({ n: it.name, v: blk * mid(m, 1, 2) / 100 * +m[3], how: `${D4T.fmtNum(Math.round(mid(m, 1, 2) * 10) / 10)}% of ${D4T.fmtNum(blk)} block${blk === 1 ? '' : 's'} a second`, blk: 1 }); });
-      if (cutter) cuts.push({ n: cutter.n, v: aps * tg * lhFrac * cutter.ch / 100 * cutter.cut, how: `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of Lucky Hits, ${D4T.fmtNum(tg)} enem${tg === 1 ? 'y' : 'ies'} hit` }); }
-    const cutRate = cuts.reduce((a, x) => a + x.v, 0); const cdCut = cutRate; const castEvery = cdBase ? Math.max(1 / Math.max(aps, 0.01), 1 / ((1 + cutRate) / Math.max(0.5, cdBase - cdFlat) + extraCast)) : 0;
+      // "Lucky Hit: Holy Bolt has up to a 40% chance to trigger Purify" (Wreath of Auric Laurel): free casts of this skill from the host skill's Lucky Hits.
+      // The host's hits a second and Lucky Hit chance come from running its own line once, so the host's Lucky Hits also drive Lucky Hit cooldown cuts.
+      worn.forEach(it => { const t = strip(it.desc); const m = t.match(/Lucky Hit: ([A-Z][\w' ]+?) has up to an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to trigger ([A-Z][\w' ]+?)\./); if (!m || m[4] !== P.name || theory._nest) return;
+        const hid = Object.keys(C.powers).find(id => C.powers[id].name === m[1]); if (!hid || !(S.hotbar || []).includes(hid)) { cuts.push({ n: it.name, v: 0, how: `needs ${m[1]} on your bar` }); return; }
+        const s0 = T.skill, p0 = T.pay; let HR = null; theory._nest = 1; try { T.skill = hid; T.pay = ''; HR = theory(); } catch (e) { HR = null; } finally { theory._nest = 0; T.skill = s0; T.pay = p0; }
+        if (!HR) return; const hh = (HR.hps || 0) * tg, hl = HR.lhFrac || 0, ch = mid(m, 2, 3) / 100; const r = hh * hl * ch; extraTrig += r; hostLh = Math.max(hostLh, hh * hl);
+        cuts.push({ n: it.name, v: 0, how: `${D4T.fmtNum(Math.round(r * 100) / 100)} free casts a second: ${m[1]} lands ${D4T.fmtNum(Math.round(hh * 100) / 100)} hits a second, ${D4T.fmtNum(Math.round(hl * 100))}% Lucky Hit chance, ${D4T.fmtNum(ch * 100)}% to trigger` }); });
+      if (cutter) cuts.push({ n: cutter.n, v: Math.max(aps * tg * lhFrac, hostLh) * cutter.ch / 100 * cutter.cut, how: `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of Lucky Hits, ${D4T.fmtNum(tg)} enem${tg === 1 ? 'y' : 'ies'} hit` }); }
+    const cutRate = cuts.reduce((a, x) => a + x.v, 0); const cdCut = cutRate; const castEvery = cdBase ? 1 / (Math.min(Math.max(aps, 0.01), (1 + cutRate) / Math.max(0.5, cdBase - cdFlat) + extraCast) + extraTrig) : 0;
     const judSpear = isJudge && judge.spear && skillIs(P, 'Judicator') ? (cdBase ? tg / castEvery : aps * tg) * lhFrac * judge.spear : 0;
     const judRate = isJudge ? (+T.jud > 0 ? +T.jud : 1 / judge.timer) * (1 + judge.twice) + judSpear : 0;
     // how often a proc goes off: on Lucky Hits (every enemy hit rolls), on every cast, or on every cast of a skill with a cooldown
