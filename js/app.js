@@ -2142,7 +2142,9 @@
       const lim = inc / cost; return { cost, inc, lim, gen, parts, capped: lim < hps0 }; })();
     // "Blocking has a 15% chance to retaliate with a Shield Bash": free casts of this skill from blocks, outside the resource limit
     let blkCasts = 0; const blkSrc = []; try { sheetData().powers.forEach(q => { const m = strip(q.desc || '').match(/Blocking has an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to retaliate with an? ([A-Z][\w' ]+?)\./); if (m && m[3] === P.name && !isProc && !isJudge && !isDawn && !isThorns) { const r = blk * (+m[1] + +(m[2] || m[1])) / 200; blkCasts += r; blkSrc.push(q.name); } }); } catch (e) { blkCasts = 0; }
-    const hps = (resI && resI.capped ? resI.lim : hps0) + blkCasts;
+    // more than one projectile or wave of one cast can land on the same big target (Brandish with Supplication, shotgunning a boss)
+    const pph = !isProc && !isJudge && !isThorns && !isDawn && +T.pph > 1 ? +T.pph : 1;
+    const hps = ((resI && resI.capped ? resI.lim : hps0) + blkCasts) * pph;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
@@ -2163,7 +2165,7 @@
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
     const potI = S.cls === 'Paladin' && /_Aura$/.test(P.id || '') ? auraPotency(P.id) : null; const wornSN = worn.some(it => /Aura Potency while standing in Consecration/.test(strip(it.desc || '')));
-    return { blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   function renderTheory() {
     invalidate();
@@ -2198,6 +2200,7 @@
             ${R.cuts.some(x => /shared by/.test(x.how)) ? `<label for="tcNcd">Skills you keep on cooldown, for powers that cut one of them</label><input id="tcNcd" type="number" min="1" step="1" value="${esc(R.T.ncd != null && R.T.ncd !== '' ? R.T.ncd : '')}" placeholder="every cooldown skill on your bar">` : ''}
             ${R.isProc && R.payD.per === 'kill' ? `<label for="tcKps">Kills a second</label><input id="tcKps" type="number" min="0" step="0.1" value="${esc(R.T.kps != null && R.T.kps !== '' ? R.T.kps : 0)}">` : ''}${R.isProc && R.payD.per === 'hit' ? `<label for="tcHin">Hits you take a second</label><input id="tcHin" type="number" min="0" step="0.1" value="${f(hitsIn(), 2)}">` : ''}
             ${R.cutter || R.isProc ? `<label for="tcTg">Enemies hit by each cast</label><input id="tcTg" type="number" min="1" step="1" value="${f(R.tg)}">` : ''}
+            ${!R.isProc && !R.isJudge && !R.isThorns && !R.isDawn ? `<label for="tcPph">Hits on one target from each cast (projectiles or waves that all land)</label><input id="tcPph" type="number" min="1" step="1" value="${esc(R.pph)}">` : ''}
             <label for="tcVuln">Vulnerable uptime for expected (%)</label><input id="tcVuln" type="number" value="${esc(T.vuln)}">
           </div>
         </section>
@@ -2249,7 +2252,7 @@
     const set = (k, v) => { T[k] = v; commit(); renderTheory(); };
     $('#tcSkill').onchange = e => { T.pay = ''; set('skill', e.target.value); };
     $('#tcPay').onchange = e => set('pay', e.target.value);
-    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns'], ['tcJud', 'jud'], ['tcTg', 'tg'], ['tcBlk', 'blk'], ['tcNcd', 'ncd'], ['tcKps', 'kps'], ['tcHin', 'hin'], ['tcRes', 'res']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
+    [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns'], ['tcJud', 'jud'], ['tcTg', 'tg'], ['tcBlk', 'blk'], ['tcNcd', 'ncd'], ['tcKps', 'kps'], ['tcHin', 'hin'], ['tcRes', 'res'], ['tcPph', 'pph']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
     const ops = $('#opStacks'); if (ops) ops.onchange = () => { T.st.opStacks = Math.max(1, Math.min(12, Math.round(+ops.value || 4))); commit(); renderTheory(); };
     $$('#panel-theory [data-st]').forEach(c => c.onchange = () => { const k = c.dataset.st; T.st[k] = c.checked; if (TC_COND.some(([x]) => x === k)) T.cond[k] = c.checked; commit(); renderTheory(); });
     $$('#panel-theory [data-xoff]').forEach(c => c.onchange = () => { T.off[c.dataset.xoff] = !c.checked; commit(); renderTheory(); });
