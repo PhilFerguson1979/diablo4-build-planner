@@ -85,7 +85,13 @@
   }
   // Charm affixes missing from the data file: Lucky Hit flat damage, one per element (item power 900 rolls 2,800 to 3,500)
   function patchCharms(D) { const G = D.gear; if (!G || !Array.isArray(G.charmAffixes)) return; ['Physical', 'Fire', 'Cold', 'Lightning', 'Holy', 'Poison', 'Shadow'].forEach(el => { const id = 'Talisman_Charm_LuckyHit_FlatDamage_ElementalSurge_' + el; if (!G.charmAffixes.some(a => a.id === id)) G.charmAffixes.push({ id, cls: [], virtue: false, t: 'Lucky Hit: Up to a 40% Chance to Deal +§ ' + el + ' Damage', v: 3500, lo: 2800 }); }); }
-  Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); });
+  // The Hellfire Torch (Season 15, Echo of Tristram) is not in the game files the planner reads, so it is added by hand.
+  // Its rolls: 10-20% All Stats, 10-20% Resistance to All Elements, +1-4 to All Skills, room for 1 more Unique Charm, and +1 set count to one random class set.
+  const TORCH_ID = 'S15_HELLFIRE_TORCH';
+  function addTorch(D) { if (!D || !Array.isArray(D.uniques) || D.uniques.some(u => u.id === TORCH_ID)) return;
+    D.uniques.push({ id: TORCH_ID, name: 'Hellfire Torch', kind: 'charm', type: 'Charm', classes: [], mythic: 1, runes: '', affixes: [], flavor: '', handAdded: 1,
+      desc: 'Can equip <span class="c-number"><b class="num">1</b></span> more Unique Charm. <span class="c-set">+1 Set count</span> to the class set the Torch rolled (pick it under Extras).' }); }
+  Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); addTorch(ALL[k]); });
 
   // older saves carried a typed-in gear CDR row; the build now supplies that itself
   function migrate(st) { try { st.calc.cd.cdr = (st.calc.cd.cdr || []).filter(r => r.n !== 'Gear and paragon CDR'); } catch (e) { /* ignore */ } return st; }
@@ -1086,8 +1092,12 @@
     if (/MythicUnique_01/.test(sl.id)) { sockets = Math.min(sockets, 5); uniques = 2; }
     if (/MythicUnique_02/.test(sl.id)) uniques = 3;
     if (/MythicUnique_03/.test(sl.id)) minus = 1;
-    return { sockets, uniques, minus };
+    // Season 15 interaction Blizzard chose to leave in: socket uniques under the Golden Epiphany, then swap to the Diamond Mind; the extra uniques stay active
+    const swap = !!ch.sealSwap && /MythicUnique_03/.test(sl.id); if (swap) uniques = 3;
+    const torch = hasTorch(); if (torch) uniques += 1;
+    return { sockets, uniques, minus, swap, torch };
   }
+  function hasTorch() { const ch = S.charms; return Array.isArray(ch.sockets) && ch.sockets.slice(0, 7).some(x => x && x.t === 'u' && x.id === TORCH_ID); }
   function sockets() {
     const ch = S.charms; if (!Array.isArray(ch.sockets)) ch.sockets = [];
     const n = sealRules().sockets; while (ch.sockets.length < n) ch.sockets.push(null);
@@ -1095,7 +1105,7 @@
   }
   function setCount(s) {
     const ch = S.charms; const charms = sockets().filter(x => x && x.t === 'set' && x.id === s.id).length;
-    const hor = +ch.horadric[s.id] || 0; const torch = ch.torch === s.id ? 1 : 0;
+    const hor = +ch.horadric[s.id] || 0; const torch = ch.torch === s.id && hasTorch() ? 1 : 0;
     return { charms, hor, torch, total: charms + hor + torch, minus: sealRules().minus };
   }
   function tierActive(s, t) { const c = setCount(s); if (!c.charms) return false; const need = Math.max(2, t.n - c.minus); return c.total >= need; }
@@ -1132,6 +1142,7 @@
   const tokenDefs = () => `<linearGradient id="gTokRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a8c7c"/><stop offset="0.45" stop-color="#3b332c"/><stop offset="1" stop-color="#6e6257"/></linearGradient>
     <radialGradient id="gTokShine" cx="35%" cy="25%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/></radialGradient>
     ${Object.entries(CHARM_RARITY).map(([k, [, c]]) => `<radialGradient id="gTok-${k}" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="${c}"/><stop offset="0.55" stop-color="${c}" stop-opacity="0.55"/><stop offset="1" stop-color="#0a0807"/></radialGradient>`).join('')}`;
+  function torchRoll() { const r = S.charms.torchRoll || {}; const c = (v, lo, hi, d) => Math.max(lo, Math.min(hi, isFinite(+v) && v !== '' && v != null ? +v : d)); return { st: c(r.st, 10, 20, 15), res: c(r.res, 10, 20, 15), sk: Math.round(c(r.sk, 1, 4, 3)) }; }
   function socketItem(x) {
     if (!x) return null;
     const lines = (x.aff || []).map(charmAff).filter(Boolean).map(affHtml);
@@ -1142,6 +1153,8 @@
     }
     if (x.t === 'm' || x.t === 'r') { const nm = x.t === 'm' ? 'Magic charm' : 'Rare charm'; return { name: nm, lines, kind: 'charm', type: nm, affixes: [], classes: [S.cls] }; }
     const u = data().uniques.find(u => u.id === x.id); if (!u) return null;
+    if (u.id === TORCH_ID) { const r = torchRoll(); const st = classSets().find(z => z.id === S.charms.torch);
+      return Object.assign({}, u, { lines, type: 'Mythic unique charm', affixes: [`+${r.st}% All Stats`, `+${r.res}% Resistance to All Elements`, `+${r.sk} to All Skills`], desc: u.desc.replace('the class set the Torch rolled (pick it under Extras)', st ? esc(st.name) : 'the class set the Torch rolled (pick it under Extras)') }); }
     return Object.assign({}, u, { lines, type: u.mythic ? 'Mythic unique charm' : 'Unique charm' });
   }
   function charmCard(it, x) {
@@ -1241,7 +1254,10 @@
         </div>
         <div class="box">
           <h3>Extras</h3>
-          <div class="field"><label for="torch">Hellfire Torch set line (+1 to one set)</label><select id="torch"><option value="">No Torch line</option>${sets.map(s => `<option value="${s.id}" ${s.id === ch.torch ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
+          <div class="field"><label for="torch">Hellfire Torch: the set its +1 line names</label><select id="torch"><option value="">Not picked</option>${sets.map(s => `<option value="${s.id}" ${s.id === ch.torch ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
+          ${(() => { const r = torchRoll(); return `<div class="field-row"><div class="field"><label for="trSt">Torch All Stats %</label><input id="trSt" type="number" min="10" max="20" step="0.5" value="${r.st}"></div><div class="field"><label for="trRes">Torch Resistance %</label><input id="trRes" type="number" min="10" max="20" step="0.5" value="${r.res}"></div><div class="field"><label for="trSk">Torch All Skills</label><input id="trSk" type="number" min="1" max="4" step="1" value="${r.sk}"></div></div>`; })()}
+          <p class="note">${rules.torch ? 'Hellfire Torch socketed: it takes a unique spot and adds one more, so this seal allows ' + rules.uniques + ' unique charms counting the Torch.' : 'Socket the Hellfire Torch through Unique charm to use it. Its set line and rolls only count while it is socketed.'}</p>
+          <label class="chip${ch.sealSwap ? ' on' : ''}"><input type="checkbox" id="sealSwap" ${ch.sealSwap ? 'checked' : ''}><span>Seal swap: uniques socketed under the Golden Epiphany stay active after swapping to the Diamond Mind (Season 15, left in by Blizzard)</span></label>
           <p class="note">${horUsed} of 3 Horadric jewelry pieces assigned below.${horUsed > 3 ? ' That is more than your 3 jewelry slots.' : ''} Horadric jewelry and the Torch only count when at least one charm from that set is socketed.</p>
         </div>
         ${sets.map(s => { const c = setCount(s); const act = s.tiers.some(t => tierActive(s, t)); return `<article class="set-card${act ? ' active' : ''}">
@@ -1261,6 +1277,8 @@
     $$('#panel-charms [data-saff]').forEach(s => s.onchange = () => { ch.sealAff[+s.dataset.saff] = s.value || null; redo(); });
     $('#seal').onchange = e => { ch.seal = e.target.value; redo(); };
     $('#torch').onchange = e => { ch.torch = e.target.value; redo(); };
+    [['trSt', 'st'], ['trRes', 'res'], ['trSk', 'sk']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = () => { ch.torchRoll = Object.assign({}, ch.torchRoll || {}, { [k]: el.value }); redo(); }; });
+    const sw = $('#sealSwap'); if (sw) sw.onchange = () => { ch.sealSwap = sw.checked; redo(); };
     $$('#panel-charms input[data-set]').forEach(i => i.onchange = () => { ch.horadric[i.dataset.set] = Math.max(0, +i.value || 0); redo(); });
   }
 
@@ -2056,7 +2074,7 @@
     const skillPct = payD ? payD.v : 0; const dot = payD && !isDawn && !isThorns && !isJudge && !isGrief && !isProc ? dotInfo(sk, payD.k) : null;
     const [msName, msScal] = MAINSTAT[S.cls]; const msKey = { Strength: 'str', Intelligence: 'int', Willpower: 'wil', Dexterity: 'dex' }[msName];
     const GM0 = (() => { try { return gearMultipliers(); } catch (e) { return []; } })(); const msPw = GM0.filter(x => x.stat === 'main' && x.which === msName).reduce((a, x) => a + (x.lo + x.hi) / 2, 0), msFlat = GM0.filter(x => x.stat === 'mainflat').reduce((a, x) => a + (x.lo + x.hi) / 2, 0);
-    const msTotal = ((M[msKey] ? M[msKey].v : 0) + (+T.base || 0)) * (1 + msPw / 100) + msFlat; const msMult = 1 + msTotal * msScal;
+    const msPct = D.stats.filter(e => e.key === '§% All Stats' || e.key === '§% ' + msName).reduce((a, e) => a + e.v, 0); const msTotal = ((M[msKey] ? M[msKey].v : 0) + (+T.base || 0)) * (1 + (msPw + msPct) / 100) + msFlat; const msMult = 1 + msTotal * msScal;
     // additive pool
     const always = [], cond = {}, elite = [];
     for (const e of D.stats) {
