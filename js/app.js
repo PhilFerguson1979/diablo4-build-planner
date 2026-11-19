@@ -1856,7 +1856,9 @@
   let SCOPE_CACHE = { k: '', names: [], cats: null };
   function scopeCtx() { const k = S.cls + S.ver; if (SCOPE_CACHE.k === k) return SCOPE_CACHE; const pw = Object.values(cdata().powers); const cats = new Set(Object.keys(CAT_ALIAS));
     pw.forEach(q => [q.tag, ...(q.tags || [])].forEach(t => { if (t) cats.add(t); })); ['Basic', 'Core', 'Ultimate'].forEach(t => cats.add(t));
-    return (SCOPE_CACHE = { k, names: pw.map(q => q.name).filter(nm => nm && nm.length > 3), cats }); }
+    const names = pw.map(q => q.name).filter(nm => nm && nm.length > 3); const mine = new Set(names); const foreign = [];
+    Object.entries(data().classes || {}).forEach(([c, cd]) => { if (c === S.cls || !cd || !cd.powers) return; Object.values(cd.powers).forEach(q => { if (q && q.name && q.name.length > 5 && !q.passive && !mine.has(q.name) && !foreign.includes(q.name)) foreign.push(q.name); }); });
+    return (SCOPE_CACHE = { k, names, cats, foreign }); }
   // things that deal their own damage and are not a skill line: a bonus to them does not raise your skill's hit
   const ENT_SUBJ = /^(?:[Yy]our |[Tt]he |[Tt]heir |[Tt]hese |[Ee]ach active |[Ee]ach |that |[Aa]ctive )?(Summons?|Minions?|Minion type|Companions?|Ancients?|Skeleton(?:al)? (?:Warriors?|Mages?)|Arch-Mages|Familiars?|Wolf Companions|Dust Devils?|Earthquakes?|Desecrated Ground|Ice Spikes?|Arrow Storms?|Stun Grenades|Grenades|Crackling Energy|Shadow Clones?|Conjurations?|Spirit Wolves|Volatile Skeletons?|Mirages?|Decoys?|Meteorites?|Spirit Storms?|Storm Feathers?|Tectonic Spikes|Raheir|Varyana|Subo|Aldkin|Mercenar(?:y|ies))(?:'s?|’s?)?(?= |,|$)(?! [Ss]kills?\b)/;
   const ENT_ANY = /\b(Summons?|Minions?|Companions?|Ancients|Skeleton(?:al)? (?:Warriors?|Mages?)|Arch-Mages|Familiars?|Dust Devils?|Earthquakes?|Ice Spikes?|Arrow Storms?|Stun Grenades|Crackling Energy|Conjurations?|Meteorites?|Spirit Storms?|Storm Feathers?|Tectonic Spikes|Desecrated Ground)\b/;
@@ -1865,7 +1867,7 @@
     const X = scopeCtx(); const preC = String(pre || '').replace(/\bnon-[\w-]+ /g, ''); what = String(what || ''); const sent = preC + ' ' + what;
     const clause = preC.split(/, | and | but |: /).pop();
     // the bonus is yours in general ("you deal", "enemies take ... from you"), whatever started it
-    const debuff = /\b(?:enem\w+|they|them|targets?)\b[^,]*\btakes?$/i.test(clause) || /^[\w' -]{0,40}\bdamage from you\b/.test(what);
+    const debuff = /\b(?:enem\w+|they|them|targets?)\b[^,]*\btakes?(?: from all sources)?(?: by)?$/i.test(clause) || /^[\w' -]{0,40}\bdamage from you\b/.test(what);
     const general = debuff || /\byou (?:deal|gain|inflict|have|are|also)\b|\bgrants? you\b|\byour (?:damage|Critical|Vulnerable|attacks)\b|\ball damage\b/i.test(clause) || /^(?:Gain|Deal|Skills deal)\b/.test(clause) || /\bSkills? grants?\b/.test(clause);
     const nameRe = nm => new RegExp('(?<!\\b(?:an additional|a|an|the|another|each|per) )\\b' + reEsc(nm) + '(?:es|s)?\\b(?! Oath)');
     const named = X.names.filter(nm => nameRe(nm).test(sent)); if (/\bArbiter\b/.test(sent) && !named.includes('Arbiter of Justice') && X.names.includes('Arbiter of Justice')) named.push('Arbiter of Justice');
@@ -1880,6 +1882,7 @@
     qs.forEach(Q => { if (/^(Critical Strike|Vulnerable|Weapon|Total|All|Maximum)\b/.test(Q)) return; if (ELEMS.includes(Q)) { elems.push(Q); return; } if (DOT_WORD[Q]) { elems.push(DOT_WORD[Q]); dot = true; return; }
       if (Q === 'Non-Physical') { ELEMS.filter(e => e !== 'Physical').forEach(e => elems.push(e)); return; } if (/^(Summon|Minion|Companion)s?$/.test(Q)) { entity = Q; return; }
       const nm = X.names.find(n => n === Q || n + 's' === Q || n + 'es' === Q); if (nm) { own = nm; return; } if (X.cats.has(Q)) { qCats.push(Q); return; } if (/,| (?:or|and) /.test(Q)) any = true; Q.split(/,? (?:or |and )?/).forEach(w => { if (X.cats.has(w)) qCats.push(w); else if (ELEMS.includes(w)) elems.push(w); }); });
+    { const mm = preC.match(/\b((?:[A-Z][a-z]+, )*[A-Z][a-z]+,? (?:and|or) [A-Z][a-z]+) damage\b[^.,]{0,40}\b(?:is|are)\b/); if (mm) mm[1].split(/,? (?:and |or )?/).forEach(w => { if (ELEMS.includes(w) && !elems.includes(w)) elems.push(w); }); }
     if (!/\ball damage\b/i.test(preC)) ELEMS.forEach(e => { if (!elems.includes(e) && new RegExp('\\b' + e + ' damage\\b[^.,]{0,40}\\b(?:is|are|has|have|deals?|gains?)\\b', 'i').test(preC)) elems.push(e); });
     // a thing that hits on its own is the subject: "Your Summons deal", "Dust Devils ... deal", "their damage is increased" after naming one
     if (!entity && !general) { const lead = preC.replace(/^(?:In addition, |Additionally, |Also, )/, ''); const startsSkill = named.some(nm => new RegExp('^(?:Your |Casting )?' + reEsc(nm) + '\\b').test(lead)); const em = clause.match(ENT_SUBJ) || (!startsSkill && lead.match(ENT_SUBJ)) || (!startsSkill && (/^(?:each|they|their|that|which|dealing|deals?|gaining|gains?)\b/i.test(clause) || /\b(?:their|its|it's) damage\b/.test(clause)) ? preC.match(ENT_ANY) : null); if (em) entity = em[1]; }
@@ -1888,13 +1891,19 @@
     if (!own && !entity && !general) {
       const subj = named.find(nm => new RegExp('^(?:In addition, |Additionally, |Also, )?(?:Your |Casting |Explosions from |Each Cast of |Every consecutive Cast of |Spending life to Cast )?' + reEsc(nm) + "(?:es|s)?(?:'s|’s)?(?= |,|$)").test(preC));
       const yours = named.find(nm => new RegExp('\\byour ' + reEsc(nm) + "(?:'s|’s)? (?:to )?(?:deals?|damage)\\b").test(preC)) || named.find(nm => new RegExp('(?<!damage )\\bfrom ' + reEsc(nm) + '\\b').test(preC)) || named.find(nm => new RegExp('\\b(?:hits of|dealt by) (?:[\\w ]{0,20} )?' + reEsc(nm) + '\\b').test(what));
-      own = subj || yours || '';
+      const poss = named.find(nm => new RegExp('\\b' + reEsc(nm) + "(?:'s|’s) damage(?: by)?$").test(preC)) || (named.length === 1 && new RegExp('\\b' + reEsc(named[0]) + 's? deals?$').test(preC) ? named[0] : '');
+      const itDeals = named.length && /\bit deals?$/.test(preC) ? named[named.length - 1] : '';
+      const nextCast = named.length && /\bof the next Cast\b/.test(what) ? named[named.length - 1] : '';
+      own = subj || yours || poss || itDeals || nextCast || '';
       if (!own) { const lm = preC.match(/\byour ((?:[A-Z][\w']*(?: [A-Z][\w']*)*, )+(?:or |and )?[A-Z][\w']*(?: [A-Z][\w']*)*) (?:deals?|to deal)$/); if (lm) { const l = named.filter(nm => lm[1].includes(nm)); if (l.length > 1) owns = l; else if (l.length) own = l[0]; } }
       if (!own && !owns && /\b(?:its|their) (?:[A-Z][\w ]{0,30}by [^,]{0,20} and )?(?:damage|Critical)/.test(preC) && named.length) own = named[named.length - 1];
     }
     if (!own && !owns && !entity && !general && !named.length && /\b(?:its|their|it's) (?:own )?damage\b/.test(preC)) entity = 'this effect';
+    // a skill from another class ("After channeling Incinerate" on a Paladin) never matches one of your lines
+    if (!own && !owns && !entity && !general) { let bare = sent; X.names.forEach(nm => { bare = bare.split(nm).join(' '); }); const fn = (X.foreign || []).find(nm => new RegExp('\\b' + reEsc(nm) + '(?:es|s)?\\b').test(bare)); if (fn) own = fn; }
     // the kind of skill named, taken from the last "X Skills" before the number: "Casting a Storm Skill grants your Earth Skills" is about Earth
     let cats = qCats.slice(); let strict = cats.length > 0;
+    if (!cats.length && /\bReload Skills?\b/.test(sent)) { cats = ['Basic', 'Core']; strict = true; any = true; }
     if (!cats.length && !/not on your Action Bar/.test(preC)) { const all = [...preC.matchAll(/\b((?:[A-Z][a-z]+(?:, (?:or |and )?| or | and | )){0,3}[A-Z][a-z]+) [Ss]kills?\b/g)].map(x => x[1]); let ph = all.length ? all[all.length - 1] : ((what.match(/\b((?:[A-Z][a-z]+ ){0,2}[A-Z][a-z]+) [Ss]kills?\b/) || [])[1] || '');
       if (ph) { ph = ph.replace(/^(?:Your|All|Other|Non|Casting|Cast|Using|When|While|After|Each|Every|The|Those|These|Their|Imbued|Imbueable) /, ''); if (X.cats.has(ph)) cats = [ph]; else { if (/,| or | and /.test(ph)) any = true; ph.split(/,? (?:or |and )?/).forEach(w => { if (X.cats.has(w)) cats.push(w); else if (ELEMS.includes(w) && !elems.includes(w)) elems.push(w); }); } }
       strict = cats.length > 0 && !general;
@@ -1980,6 +1989,8 @@
         // Dark Dance: only the one Core cast every 5 seconds spends Life, about one cast in seven
         if (/Skills that consume Life deal$/.test(pre) && /Every 5 seconds, your next Core Skill costs/.test(t)) { out.push({ id, n: name, lo: lo / 7.5, hi: hi / 7.5, what: 'on the one Core cast every 5 seconds that spends Life, averaged over all casts', role, jud: false, skill: '', scope: powerScope('Your Core Skills deal', 'increased damage'), only: '' }); return; }
         if (chm) { lo *= chm[1] / 100; hi *= chm[1] / 100; what += ', counted at its ' + chm[1] + '% chance'; }
+        // "10% chance to Rupture them for 200%[x] increased damage": a free Rupture hit, not a bonus to every skill
+        { const ru = pre.match(/([\d.]+)% chance to ([A-Z][\w ]+?) them for$/); if (ru && scope && scopeCtx().names.includes(ru[2])) { scope.own = ru[2]; scope.general = false; lo *= ru[1] / 100; hi *= ru[1] / 100; what += ', only on ' + ru[2] + ', at its ' + ru[1] + '% chance'; } }
         // a short stacking buff built by casting one kind of skill only holds on that kind of skill's own lines
         { const sent = t.slice(s0, s1); const cs = sent.match(/Casting (\w+) Skills grants .*? for ([\d.]+) seconds?, stacking up to \d+ times/); if (cs && +cs[2] <= 4 && scope) { scope.cats = [cs[1]]; scope.cat = cs[1]; scope.strict = true; scope.general = false; what += ', only on ' + cs[1] + ' Skill lines'; } }
         // a mercenary bonus tied to one of its skills counts for the share of time that skill is active
@@ -2008,8 +2019,8 @@
       if (role) return; const N2 = '\\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]?'; const sentOf = ix => t.slice(0, ix).split(/\.(?=\s|[A-Z])/).pop().trim(); let q;
       // "40%  increased damage" written without [x]: it joins the additive pool
       const reA = new RegExp(N2 + '%(?!\\s*\\[)\\s*(?:increased|more) ((?:[A-Z][\\w-]+ ){0,3})[Dd]amage\\b(?! Reduction| Resist)([^.]{0,90})', 'g');
-      while ((q = reA.exec(t))) { const pre = sentOf(q.index); if (/souls|Minion|Companion|\byou take$/i.test(pre + q[3] + q[4]) || /Critical Strike|Vulnerable/.test(q[3]) || (/\btake$/.test(pre) && !/\b(enem|they|them|target)/i.test(pre))) continue; const st = q[4].match(/stack(?:ing|s)? up to (\d+) times/); const k = st ? +st[1] : 1; out.push({ id: name + '#a' + (i++), n: name, lo: +q[1] * k, hi: +(q[2] || q[1]) * k, what: 'additive ' + q[3] + 'damage ' + q[4].trim(), add: 1, scope: powerScope(pre, 'increased ' + q[3] + 'damage ' + q[4]), skill: '' }); }
-      { const reB = new RegExp('\\b((?:[A-Z][\\w-]+ ){1,3})[Dd]amage is increased by ' + N2 + '%(?!\\s*\\[)([^.]{0,60})', 'g'); while ((q = reB.exec(t))) { if (/Thorns|Critical|Vulnerable|Minion|Summon/.test(q[1])) continue; const pre = sentOf(q.index); out.push({ id: name + '#a' + (i++), n: name, lo: +q[2], hi: +(q[3] || q[2]), what: 'additive ' + q[1] + 'damage ' + q[4].trim(), add: 1, scope: powerScope(pre, 'increased ' + q[1] + 'damage ' + q[4]), skill: '' }); } }
+      while ((q = reA.exec(t))) { const pre = sentOf(q.index); if (/souls|Minion|Companion|\byou take(?: up to)?$/i.test(pre + q[3] + q[4]) || (/\btakes?(?: up to)?$/.test(pre) && !/\b(enem|they|them|target)/i.test(pre)) || /Critical Strike|Vulnerable/.test(q[3]) || (/\btake$/.test(pre) && !/\b(enem|they|them|target)/i.test(pre))) continue; const st = q[4].match(/stack(?:ing|s)? up to (\d+) times/); const k = st ? +st[1] : 1; out.push({ id: name + '#a' + (i++), n: name, lo: +q[1] * k, hi: +(q[2] || q[1]) * k, what: 'additive ' + q[3] + 'damage ' + q[4].trim(), add: 1, scope: powerScope(pre, 'increased ' + q[3] + 'damage ' + q[4]), skill: '' }); }
+      { const reB = new RegExp('\\b((?:[A-Z][\\w-]+ ){1,3})[Dd]amage is increased by ' + N2 + '%(?!\\s*\\[)([^.]{0,60})', 'g'); while ((q = reB.exec(t))) { if (/Thorns|Critical|Vulnerable|Minion|Summon|^(?:This|That|Its|Their) /.test(q[1])) continue; const pre = sentOf(q.index); out.push({ id: name + '#a' + (i++), n: name, lo: +q[2], hi: +(q[3] || q[2]), what: 'additive ' + q[1] + 'damage ' + q[4].trim(), add: 1, scope: powerScope(pre, 'increased ' + q[1] + 'damage ' + q[4]), skill: '' }); } }
       if ((q = t.match(new RegExp('Thorns damage is increased by up to ' + N2 + '%')))) out.push({ id: name + '#a' + (i++), n: name, lo: +q[1] / 2, hi: +(q[2] || q[1]) / 2, what: 'Thorns damage, grows as you get Injured, counted at half', add: 1, scope: powerScope('Thorns damage is', 'increased'), skill: '' });
       // attacks deal from 1% to a rolled maximum of their damage: the average is what counts
       if ((q = t.match(new RegExp('randomly deal 1% to ' + N2 + '% of their normal damage')))) out.push({ id: name + '#r', n: name, lo: (1 + +q[1]) / 2 - 100, hi: (1 + +(q[2] || q[1])) / 2 - 100, what: 'average of a random 1% to ' + (q[2] || q[1]) + '% of normal damage', scope: null, skill: '' });
@@ -2181,7 +2192,7 @@
       const c = TC_COND.find(([, , re]) => re.test(e.key)); if (c) { (cond[c[0]] = cond[c[0]] || []).push(...e.parts.map(pt => ({ v: pt.v, src: pt.src, what: c[1] }))); continue; }
       if (/^§% Damage to Elites$/.test(e.key)) { elite.push(...e.parts.map(pt => ({ v: pt.v, src: pt.src, what: 'Damage vs Elites' }))); continue; }
       const m = e.key.match(/^§% (.*?)\s*Damage$/); if (!m) continue; const pre = m[1].trim();
-      let ok = pre === '' || pre === 'All' || (Pd.dmg && (pre === Pd.dmg || (pre === 'Fire and Holy' && /Fire|Holy/.test(Pd.dmg)))) || pre === Pf.name || skillIs(Pf, pre.replace(/ Skills?$/, ''));
+      let ok = pre === '' || pre === 'All' || (Pd.dmg && (pre === Pd.dmg || (pre === 'Fire and Holy' && /Fire|Holy/.test(Pd.dmg)) || (pre === 'Non-Physical' && Pd.dmg !== 'Physical'))) || pre === Pf.name || skillIs(Pf, pre.replace(/ Skills?$/, ''));
       if (/Critical|Vulnerable|Overpower|Thorns|Per |Bleed|Burn|Poison(ing)? Damage over/.test(pre)) ok = false;
       if (ok) always.push(...e.parts.map(pt => ({ v: pt.v, src: pt.src, what: (pre || 'All') + ' damage' })));
     }
@@ -2202,7 +2213,7 @@
     const xStat = []; let xSumEl = 0; const xSumBy = {}; let xOwn = 1;
     for (const e of D.stats) { if (!e.mult) continue; const m = e.key.match(/^§%\s*\[x\]\s*(.*?)\s*Damage$|^x?§% (.*?)\s*Damage(?: Multiplier)?$/); if (!m) continue; const pre = (m[1] || m[2] || '').trim();
       if (/Critical|Vulnerable/.test(pre)) continue;
-      const el = pre === '' || pre === 'All' || (Pd.dmg && (pre === Pd.dmg || (pre === 'Fire and Holy' && /Fire|Holy/.test(Pd.dmg))));
+      const el = pre === '' || pre === 'All' || (Pd.dmg && (pre === Pd.dmg || (pre === 'Fire and Holy' && /Fire|Holy/.test(Pd.dmg)) || (pre === 'Non-Physical' && Pd.dmg !== 'Physical')));
       const ok = el || pre === Pf.name || skillIs(Pf, pre.replace(/ Skills?$/, '')); if (!ok) continue; const summed = /Multiplier$/.test(e.key);
       e.parts.forEach(pt => { xStat.push({ v: pt.v, src: pt.src, what: (pre || 'All') + ' damage [x]' + (summed ? ', summed' : '') }); if (summed && el) xSumEl += pt.v; else if (summed) xSumBy[pre] = (xSumBy[pre] || 0) + pt.v; else xOwn *= 1 + pt.v / 100; }); }
     // damage over time: its own [+] stat joins the pool, its "Multiplier" affixes add together, and it cannot crit or roll high or low
