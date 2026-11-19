@@ -1933,6 +1933,7 @@
     if (sc.elems.length && elem && !sc.elems.includes(elem)) return 'only raises ' + sc.elems.join(' and ') + ' damage';
     return '';
   }
+  let LEG_BUSY = false;
   function gearMultipliers(probe) {
     const out = []; const SK = Object.values(cdata().powers).map(q => q.name).filter(Boolean);
     const scan = (name, html, role) => {
@@ -2039,6 +2040,13 @@
     try { classSets().forEach(st => st.tiers.forEach(t => { if (!tierActive(st, t)) return; const m = strip(t.desc || '').match(/damage bonus is increased to ([\d.]+)%\s*\[x\] and its maximum number of stacks is increased to (\d+)/); if (!m) return;
       const low = out.find(x => x.n.startsWith(st.name + ', ') && x.n !== st.name + ', ' + t.n + '-piece' && /up to \d+ times/.test(x.what || '')); if (!low) return;
       low.lo = low.hi = +m[1] * +m[2]; low.what = String(low.what).replace(/up to \d+ times, at \d+ stacks/, 'up to ' + m[2] + ' times at ' + m[1] + '% each with the ' + t.n + '-piece, at ' + m[2] + ' stacks'); })); } catch (e) { /* skip */ }
+    // Paladin legendary nodes whose bonus is a share of another stat (the text scan can't read "equal to X% of your ...")
+    if (!probe && !LEG_BUSY) { LEG_BUSY = true; try { const PW = sheetData().powers.filter(q => q.kind === 'Legendary node'); const has = nm => PW.some(q => q.name === nm); let M1 = {}; try { M1 = statModel(); } catch (e) { M1 = {}; }
+      if (has('Castle')) { let dr = 0; try { dr = +defense().armorDR || 0; } catch (e) { dr = 0; } if (dr <= 1) dr *= 100; const v = 1.25 * dr; if (v > 0) out.push({ id: 'Castle#leg', n: 'Castle', lo: v, hi: v, add: 1, what: `damage equal to 125% of your Damage Reduction from Armor (${dr.toFixed(1)}%)`, scope: powerScope('You deal', 'increased damage') }); }
+      if (has('Shield Bearer')) { const b = Math.min(100, M1.block ? +M1.block.v || 0 : 0); if (b > 0) out.push({ id: 'ShieldBearer#leg', n: 'Shield Bearer', lo: 1.1 * b, hi: 1.1 * b, add: 1, what: `damage equal to 110% of your Block Chance (${b.toFixed(1)}%)`, scope: powerScope('You deal', 'increased damage') }); }
+      // Preacher: the tooltip reads additive, but tested by the guides it is 65%[x] times (1 + your bonus Attack Speed)
+      if (has('Preacher')) { const as = M1.as ? +M1.as.v || 0 : 0; const v = 65 * (1 + as / 100); out.push({ id: 'Preacher#leg', n: 'Preacher', lo: v, hi: v, what: `65%[x] times (1 + your ${as.toFixed(1)}% bonus Attack Speed), as tested by the guides`, scope: powerScope('You deal', 'increased damage') }); }
+    } catch (e) { /* skip */ } finally { LEG_BUSY = false; } }
     // Stone of Jordan: "more damage of that Element" is the element of your highest Resistance (before it evens them out)
     try { const sj = out.filter(x => x.n === 'Stone of Jordan' && /that Element/.test(x.what || '')); if (sj.length) { const st = sheetData().stats; const v = k => st.filter(e => e.key === '§% ' + k).reduce((a, e) => a + e.v, 0); const all = v('Resistance to All Elements') + v('All Resistance');
       let M0 = {}; try { M0 = statModel(); } catch (e) { M0 = {}; } const rs = ['Fire', 'Cold', 'Lightning', 'Poison', 'Shadow'].map(el => [el, (M0['r' + el.toLowerCase()] ? M0['r' + el.toLowerCase()].v : 0) + v(el + ' Resistance') + all]); const top = Math.max(...rs.map(r => r[1])); const els = rs.filter(r => r[1] === top).map(r => r[0]);
