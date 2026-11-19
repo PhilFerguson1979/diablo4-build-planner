@@ -2038,7 +2038,9 @@
     // a higher set tier that raises a lower tier's stacking bonus: "Judgement Day's damage bonus is increased to 25%[x] and its maximum number of stacks is increased to 20"
     try { classSets().forEach(st => st.tiers.forEach(t => { if (!tierActive(st, t)) return; const m = strip(t.desc || '').match(/damage bonus is increased to ([\d.]+)%\s*\[x\] and its maximum number of stacks is increased to (\d+)/); if (!m) return;
       const low = out.find(x => x.n.startsWith(st.name + ', ') && x.n !== st.name + ', ' + t.n + '-piece' && /up to \d+ times/.test(x.what || '')); if (!low) return;
-      low.lo = +m[1]; low.hi = +m[1] * +m[2]; low.what = String(low.what).replace(/up to \d+ times, at \d+ stacks/, 'up to ' + m[2] + ' times at ' + m[1] + '% each with the ' + t.n + '-piece, at ' + m[2] + ' stacks'); })); } catch (e) { /* skip */ }
+      low.lo = low.hi = +m[1] * +m[2]; low.what = String(low.what).replace(/up to \d+ times, at \d+ stacks/, 'up to ' + m[2] + ' times at ' + m[1] + '% each with the ' + t.n + '-piece, at ' + m[2] + ' stacks'); })); } catch (e) { /* skip */ }
+    // Judgement Day keeps full stacks the whole fight: Judging is constant on a Judgement build
+    out.forEach(x => { if (/^Heaven's Radiant Fire, /.test(x.n) && /Judgement Day/.test(x.what || '') && x.hi > x.lo) { x.lo = x.hi; x.what = String(x.what) + ', full stacks held'; } });
     return out.filter((x, i) => i < n0 || x.add || x.stat || (x.lo > 0 && !/^(Vulnerable|Critical Strike|Overpower) Damage|^Damage Over Time|^Lucky Hit/i.test(x.what)));
   }
   // every Attack Speed (first cap) and Cast Speed (second cap) bonus written into a power's text, so nothing has to be typed in
