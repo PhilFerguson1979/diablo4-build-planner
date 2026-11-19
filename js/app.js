@@ -1961,6 +1961,8 @@
         if (role && /^(?:Raheir|Varyana|Subo|Aldkin)(?:'s|’s)?\b/.test(pre) && !/\byou\b/i.test(pre)) return;
         const scope = role ? null : powerScope(pre, post);
         if (scope) { if (scope.own) lastOwn = scope.own; else if (lastOwn && !scope.owns && !scope.general && !scope.cats.length && !scope.entity && (!scope.named.length || scope.named.includes(lastOwn))) scope.own = lastOwn; }
+        // "Wing Strike damage by 100%[x]", "Wing Strikes ... deal 240%[x]": Arbiter's wing hits only, counted on the Arbiter of Justice line
+        if (scope && /Wing Strikes?\b[^.]{0,60}$/.test(pre)) { scope.own = 'Arbiter of Justice'; scope.owns = null; what += ' (Wing Strikes only)'; }
         const skill = scope ? scope.own : '';
         if (viaBy) what = pre.slice(-70) + (what ? ' ... ' + what : ''); else if (/only hits one enemy/.test(pre)) what = 'when Judgement hits only one enemy';
         if (cap) { lo = +cap[1]; hi = +(cap[2] || cap[1]); }
@@ -2286,6 +2288,12 @@
           const s0 = T.skill, p0 = T.pay; let HR = null; theory._nest = 1; try { T.skill = id; T.pay = ''; HR = theory(); } catch (e) { HR = null; } finally { theory._nest = 0; T.skill = s0; T.pay = p0; }
           if (HR && !HR.isProc && (HR.base || 0) > 0) { const v = (HR.hps || 0) * tg * (HR.lhMult || 1) * (HR.lhFrac || 0); if (v > barLh.v) barLh = { v, n: C.powers[id].name }; } });
         HOSTLH = { key, v: barLh }; } }
+      // the skill's own upgrade: "reduces its cooldown by 1 second for each enemy hit, up to 4 seconds" (Condemn) comes off every cast
+      try { const am = activeMods(P.id); const c0 = skillCtx(P.id); (P.mods || []).forEach(md => { if (!am.has(md.key)) return; const mm = String(md.desc || '').match(/reduces its cooldown by \{c_number\}\{SF_(\d+)\}\{\/c\} seconds? for each enemy hit, up to \{c_number\}\{SF_(\d+)\}/i); if (!mm) return;
+        const per = +c0.ev('SF_' + mm[1]) || 0, cap = +c0.ev('SF_' + mm[2]) || 0, off = Math.min(cap, per * tg); if (off > 0) { cdFlat += off; cuts.push({ n: P.name + ': ' + md.name, v: 0, how: `${D4T.fmtNum(off)} second${off === 1 ? '' : 's'} off each cast, ${D4T.fmtNum(tg)} enem${tg === 1 ? 'y' : 'ies'} hit` }); } }); } catch (e) { /* none */ }
+      // Resplendence glyph: every Aura cast takes 2 seconds off the active cooldown of every non-Aura skill
+      try { const PG = PARA && PARA.stats && PARA.stats(); const rg = PG && (PG.glyphs || []).find(g => g.name === 'Resplendence' && g.met); if (rg && !skillIs(P, 'Aura')) { let auraRate = 0; (S.hotbar || []).forEach(id => { const q = C.powers[id]; if (!q || id === P.id || !skillIs(q, 'Aura')) return; try { const cd = cdOf(skillCtx(id), q); if (cd > 0) auraRate += 1 / cd; } catch (e) { /* none */ } });
+        if (auraRate > 0) cuts.push({ n: 'Resplendence glyph', v: auraRate * 2, how: `${D4T.fmtNum(Math.round(auraRate * 100) / 100)} Aura casts a second, 2 seconds off each` }); } } catch (e) { /* none */ }
       if (cutter) cuts.push({ n: cutter.n, v: Math.max(aps * tg * lhMult * lhFrac, hostLh, barLh.v) * cutter.ch / 100 * cutter.cut, how: barLh.v > Math.max(aps * tg * lhMult * lhFrac, hostLh) ? `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of ${barLh.n}'s Lucky Hits (${D4T.fmtNum(Math.round(barLh.v * 100) / 100)} a second)` : `${D4T.fmtNum(Math.round(cutter.ch * 10) / 10)}% of Lucky Hits, ${D4T.fmtNum(tg)} enem${tg === 1 ? 'y' : 'ies'} hit` }); }
     const cutRate = cuts.reduce((a, x) => a + x.v, 0); const cdCut = cutRate; const castEvery = cdBase ? 1 / (Math.min(Math.max(aps, 0.01), (1 + cutRate) / Math.max(0.5, cdBase - cdFlat) + extraCast) + extraTrig) : 0;
     const judSpear = isJudge && judge.spear && skillIs(P, 'Judicator') ? (cdBase ? tg / castEvery : aps * tg) * lhFrac * judge.spear : 0;
