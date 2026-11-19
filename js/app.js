@@ -1641,7 +1641,7 @@
     if (P) {
       (P.lines || []).forEach(l => add(esc(l.t).replace('§', D4T.fmtNum(Math.round(l.v * 10) / 10)), 'Paragon'));
       ATTRS.forEach(a => { const v = (+(P.base || {})[a] || 0); if (v) add(v + ' ' + a, 'Entered on Paragon'); });
-      (P.glyphs || []).forEach(g => powers.push({ name: g.name, kind: 'Glyph, level ' + g.L, src: 'Paragon', desc: g.met ? 'Bonus threshold met.' : 'Bonus threshold not met yet.' }));
+      (P.glyphs || []).forEach(g => powers.push({ name: g.name + ' glyph', kind: 'Glyph', lv: g.L, src: 'Paragon, level ' + g.L, desc: (g.desc || '') + (g.met ? '' : ' (Bonus threshold not met yet.)') }));
     }
     if (P) (P.legend || []).forEach(l => { proseStats(l.desc).forEach(x => add(x, 'Legendary node: ' + l.name)); powers.push({ name: l.name, kind: 'Legendary node', src: 'Paragon', desc: l.desc }); });
     try { const CP = cdata().powers; Object.keys(CP).forEach(id => { const q = CP[id]; if (!q.passive) return; const r = skillRank(id); if (!(r > 0)) return; const html = powerText(q, null, r, CP); proseStats(html).forEach(x => add(x, 'Passive: ' + q.name)); powers.push({ name: q.name, kind: 'Passive', src: 'Skill tree', desc: html }); }); } catch (e) { /* a passive that fails to render adds nothing */ }
@@ -1882,7 +1882,8 @@
     qs.forEach(Q => { if (/^(Critical Strike|Vulnerable|Weapon|Total|All|Maximum)\b/.test(Q)) return; if (ELEMS.includes(Q)) { elems.push(Q); return; } if (DOT_WORD[Q]) { elems.push(DOT_WORD[Q]); dot = true; return; }
       if (Q === 'Non-Physical') { ELEMS.filter(e => e !== 'Physical').forEach(e => elems.push(e)); return; } if (/^(Summon|Minion|Companion)s?$/.test(Q)) { entity = Q; return; }
       const nm = X.names.find(n => n === Q || n + 's' === Q || n + 'es' === Q); if (nm) { own = nm; return; } if (X.cats.has(Q)) { qCats.push(Q); return; } if (/,| (?:or|and) /.test(Q)) any = true; Q.split(/,? (?:or |and )?/).forEach(w => { if (X.cats.has(w)) qCats.push(w); else if (ELEMS.includes(w)) elems.push(w); }); });
-    { const mm = preC.match(/\b((?:[A-Z][a-z]+, )*[A-Z][a-z]+,? (?:and|or) [A-Z][a-z]+) damage\b[^.,]{0,40}\b(?:is|are)\b/); if (mm) mm[1].split(/,? (?:and |or )?/).forEach(w => { if (ELEMS.includes(w) && !elems.includes(w)) elems.push(w); }); }
+    { const mm = preC.match(/\b((?:[A-Z][a-z]+, )*[A-Z][a-z]+,? (?:and|or) [A-Z][a-z]+) damage\b(?:[^.,]{0,40}\b(?:is|are)\b| by\b)/); if (mm) mm[1].split(/,? (?:and |or )?/).forEach(w => { if (ELEMS.includes(w) && !elems.includes(w)) elems.push(w); }); }
+    if (/\bNon-[Pp]hysical [Dd]amage\b/.test(preC + ' ' + what)) ELEMS.forEach(w => { if (w !== 'Physical' && !elems.includes(w)) elems.push(w); });
     if (!/\ball damage\b/i.test(preC)) ELEMS.forEach(e => { if (!elems.includes(e) && new RegExp('\\b' + e + ' damage\\b[^.,]{0,40}\\b(?:is|are|has|have|deals?|gains?)\\b', 'i').test(preC)) elems.push(e); });
     // a thing that hits on its own is the subject: "Your Summons deal", "Dust Devils ... deal", "their damage is increased" after naming one
     if (!entity && !general) { const lead = preC.replace(/^(?:In addition, |Additionally, |Also, )/, ''); const startsSkill = named.some(nm => new RegExp('^(?:Your |Casting )?' + reEsc(nm) + '\\b').test(lead)); const em = clause.match(ENT_SUBJ) || (!startsSkill && lead.match(ENT_SUBJ)) || (!startsSkill && (/^(?:each|they|their|that|which|dealing|deals?|gaining|gains?)\b/i.test(clause) || /\b(?:their|its|it's) damage\b/.test(clause)) ? preC.match(ENT_ANY) : null); if (em) entity = em[1]; }
@@ -1998,7 +1999,7 @@
         if (role) { const mm = (data().mercs || []).find(m => name.includes('(' + m.name + ')')); if (mm) { const sent = t.slice(s0, s1); let up = 1, via = '';
           Object.values(mm.powers || {}).forEach(q => { if (!q || !q.name || via) return; const qt = strip(powerText(q, null, 1, mm.powers) || ''); const hit = sent.includes(q.name) || (/Taunted by/.test(sent) && /\bTaunts\b/.test(qt)); if (!hit) return; const cd = qt.match(/Cooldown: ([\d.]+) seconds/); const du = qt.match(/for ([\d.]+) seconds/); if (cd && du) { up = Math.min(1, +du[1] / +cd[1]); via = q.name; } });
           if (via) { lo *= up; hi *= up; what += ', counted for the ' + Math.round(up * 100) + '% of the time ' + via + ' is active'; } } }
-        const boss = /worthy enemy|can't be Crowd Controlled|cannot be Crowd Controlled/.test(t.slice(s0, s1)) ? 1 : 0; if (boss) what += ', only against a target that cannot be crowd controlled';
+        const boss = /worthy enemy|can't be Crowd Controlled|cannot be Crowd Controlled|\b(?:to|against|vs\.?) Elites\b|Damage to Elites\b/i.test(t.slice(s0, s1)) ? 1 : 0; if (boss) what += /Elites/i.test(t.slice(s0, s1)) ? ', only against Elites and bosses (on with the boss chip)' : ', only against a target that cannot be crowd controlled';
         const ccSelf = /(?:become|becomes|are|is|be) (?:Feared|Stunned|Frozen|Immobilized|Dazed|Knocked Down|Taunted) for|\b(?:Stun|Freeze|Immobilize|Daze|Fear|Knock Down|Taunt)s? (?:them|enemies|the target|it|Close enemies|Nearby enemies)\b/i.test(t); if (ccSelf && /Crowd Controlled|Stunned|Frozen|Immobilized|Knocked Down|Dazed|Feared/.test(t.slice(s0, s1))) what += ', applies its own crowd control so it counts in full';
         const ccNeed = !boss && !ccSelf && /(?:to|against|deal[^.]{0,40}?) (?:Crowd Controlled|Stunned|Frozen|Immobilized|Knocked Down|Dazed|Feared|Chilled|Slowed) (?:or [A-Z]\w+ )?(?:enemies|targets)|enemies (?:that are|who are) (?:Crowd Controlled|Stunned|Frozen|Immobilized|Knocked Down|Dazed|Feared)/i.test(t.slice(s0, s1)) ? 1 : 0;
         out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '', scope, only, boss, ccNeed }); });
@@ -2035,7 +2036,7 @@
     SLOTS.forEach(sl => { const g = S.gear[sl.id] || {}; const it = findItem(g.item); if (it && !wornNames.has(it.name)) { wornNames.add(it.name); scan(it.name, it.desc); } const a2 = g.aspect2 && data().aspects.find(a => a.id === g.aspect2); if (a2) scan(a2.name, a2.desc); });
     sockets().forEach(x => { const it = socketItem(x); if (it && it.desc) scan(it.name, it.desc); });
     const n0 = out.length; mechLines().forEach(m => scan(m.name, m.html));
-    sheetData().powers.filter(q => /^(Passive|Legendary node|Set bonus|Mercenary)$/.test(q.kind)).forEach(q => scan(q.merc ? q.name + ' (' + q.merc + ')' : q.name, q.desc, q.role));
+    sheetData().powers.filter(q => /^(Passive|Legendary node|Set bonus|Mercenary|Glyph)$/.test(q.kind)).forEach(q => scan(q.merc ? q.name + ' (' + q.merc + ')' : q.name, q.desc, q.role));
     // a higher set tier that raises a lower tier's stacking bonus: "Judgement Day's damage bonus is increased to 25%[x] and its maximum number of stacks is increased to 20"
     try { classSets().forEach(st => st.tiers.forEach(t => { if (!tierActive(st, t)) return; const m = strip(t.desc || '').match(/damage bonus is increased to ([\d.]+)%\s*\[x\] and its maximum number of stacks is increased to (\d+)/); if (!m) return;
       const low = out.find(x => x.n.startsWith(st.name + ', ') && x.n !== st.name + ', ' + t.n + '-piece' && /up to \d+ times/.test(x.what || '')); if (!low) return;

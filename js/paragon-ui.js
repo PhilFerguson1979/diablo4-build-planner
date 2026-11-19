@@ -120,7 +120,9 @@
     const classGlyphs = () => Object.entries(PD().glyphs).filter(([, g]) => !g.classes.length || g.classes.includes(cls())).map(([id, g]) => Object.assign({ id }, g));
     const glyphLv = id => Math.max(1, Math.min(100, +state().glyphLv[id] || 100));
     const radius = L => L >= 46 ? 5 : L >= 15 ? 4 : 3;
-    const scal = (a, L) => a.b * (a.s0 + a.s1 * (L - 1)) * 100;
+    const scal = (a, L) => a.b * (a.s0 + a.s1 * (L - 1)) * 100 / (a.op === 2 ? 3 : 1);
+    // the stat a glyph counts is the one its bonus and threshold name (Honed and Feverous list another stat on the glyph itself)
+    const gStat = g => (g.thr && g.thr[0] && g.thr[0][0]) || ((g.a || []).find(a => a.src) || {}).src || g.stat;
     function glyphLine(a, L, val) {
       const v = val !== undefined ? val : scal(a, L);
       return a.d.replace(/§([^§]*)§/g, (m, f) => `<b class="num">${(f.includes('+') ? '+' : '')}${fmt(v, 1)}${f.includes('%') ? '%' : ''}${f.includes('x') ? '[x]' : ''}</b>`);
@@ -150,7 +152,7 @@
       const purchased = { Strength: 0, Intelligence: 0, Willpower: 0, Dexterity: 0 };
       const cm = new Map(); for (const c of taken) cm.set(c, mult(c));
       for (const c of taken) for (const [a, v] of (c.n.c || [])) if (purchased[a] !== undefined) purchased[a] += v * cm.get(c);
-      for (const G of glyphs) for (const c of taken) if (inR(c, G)) for (const [a, v] of (c.n.c || [])) if (a === G.g.stat) G.count += v * cm.get(c);
+      for (const G of glyphs) for (const c of taken) if (inR(c, G)) for (const [a, v] of (c.n.c || [])) if (a === gStat(G.g)) G.count += v * cm.get(c);
       const total = a => (+P.base[a] || 0) + purchased[a];
       const rareMet = c => {
         if (!c.n.t || !c.n.b) return false;
@@ -332,7 +334,7 @@
         <p class="note">Rare node bonuses check your total attribute, so add what your gear and level give you.</p>
         <div class="kv"><label for="pCap">Paragon points available</label><input id="pCap" type="number" min="1" max="400" value="${P.cap}"></div>
         ${leg.length ? `<h3>Legendary nodes</h3>${leg.map(x => `<div class="pleg"><b>${esc(x.n.n)}</b><div>${x.n.d || ''}</div></div>`).join('')}` : ''}
-        ${R.glyphs.length ? `<h3>Glyphs</h3><ul class="pstat">${R.glyphs.map(G => `<li><b>${esc(G.G.g.name)}</b> level ${G.G.L}: ${fmt(G.G.count)} ${esc(G.G.g.stat)} in range${(() => { const a = G.G.g.a.find(x => x.op === 2); return a ? `, <b class="num">+${fmt(G.per5 * scal(a, G.G.L), 1)}%</b> from its main bonus` : ''; })()}${G.met ? ', threshold bonus active' : `, needs ${fmt(G.thr)} for the threshold bonus`}</li>`).join('')}</ul>` : ''}
+        ${R.glyphs.length ? `<h3>Glyphs</h3><ul class="pstat">${R.glyphs.map(G => `<li><b>${esc(G.G.g.name)}</b> level ${G.G.L}: ${fmt(G.G.count)} ${esc(gStat(G.G.g))} in range${(() => { const a = G.G.g.a.find(x => x.op === 2); return a ? `, <b class="num">+${fmt(G.per5 * scal(a, G.G.L), 1)}%</b> from its main bonus` : ''; })()}${G.met ? ', threshold bonus active' : `, needs ${fmt(G.thr)} for the threshold bonus`}</li>`).join('')}</ul>` : ''}
         ${statLinesHtml(R.lines) || '<p class="empty">No stats yet.</p>'}`;
       $$('[data-base]', box).forEach(i => i.onchange = () => { P.base[i.dataset.base] = +i.value || 0; render(); commit(); });
       $('#pCap').onchange = e => { P.cap = Math.max(1, +e.target.value || 300); render(); commit(); };
@@ -431,12 +433,23 @@
     }
 
     // Totals for the character sheet: attribute points, every stat line, and active glyphs.
+    // a glyph's live damage text, read by the item scan: the per-5 bonus with its total, the threshold bonus once met, the legendary bonus from level 46
+    function glyphPower(G) {
+      const st = gStat(G.G.g); const out = [];
+      for (const a of G.G.g.a) {
+        const raw = String(a.d || '').replace(/<[^>]+>/g, '');
+        if (a.op === 2 && G.per5 > 0) { const v = G.per5 * scal(a, G.G.L); out.push(raw.replace(/^For every 5 \w+ purchased within range, /, '').replace(/^./, c => c.toUpperCase()).replace(/\+?§[^§]*§/, '+' + v.toFixed(1) + '%')); }
+        else if (a.op === 5 && G.met) out.push(raw);
+        else if (a.op === 4 && G.G.L >= 46) out.push(raw.replace(/§[^§]*§/, scal(a, G.G.L).toFixed(1) + '%[x]'));
+      }
+      return out.join(' ');
+    }
     function stats() {
       if (!PD()) return null;
       const P = state(); if (!P.boards.length) return { purchased: {}, base: P.base, lines: [], glyphs: [] };
       const R = compute(); const T = PD().texts;
       return { purchased: R.purchased, base: P.base, lines: Object.keys(R.lines).filter(k => R.lines[k]).map(k => ({ t: T[k], v: R.lines[k] })),
-        glyphs: R.glyphs.map(g => ({ name: g.G.g.name, L: g.G.L, met: g.met })), legend: R.taken.filter(x => x.n.r === 'legendary').map(x => ({ name: x.n.n, desc: x.n.d || '' })) };
+        glyphs: R.glyphs.map(g => ({ name: g.G.g.name, L: g.G.L, met: g.met, desc: glyphPower(g) })), legend: R.taken.filter(x => x.n.r === 'legendary').map(x => ({ name: x.n.n, desc: x.n.d || '' })) };
     }
     return { render, wire, reset: () => { pview = null; psel = null; }, summary, stats };
   };
