@@ -1499,3 +1499,25 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .forge .frow:has(.flab) select { grid-area: pick; min-width: 0; width: 100%; }
 .forge .frow:has(.flab) input.roll { grid-area: roll; }
 .forge .frow input.roll { width: 60px; }
+
+/* ===== Phones only (760px and under): compact header so each tab starts near the top. Desktop is untouched. ===== */
+.m-menu { display: none; }
+@media (max-width: 760px) {
+  .topbar { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 12px 6px; }
+  .title-block { flex: 1 1 0; min-width: 0; }
+  .build-name { font-size: 20px; min-width: 0; }
+  .class-line { font-size: 12.5px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-menu { display: inline-flex; flex: none; padding: 8px 12px; font-size: 14px; }
+  .top-actions { display: none; flex: 1 1 100%; }
+  .topbar.m-open .top-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 4px 0 6px; }
+  .topbar.m-open .season-toggle { grid-column: 1 / -1; display: flex; }
+  .topbar.m-open .season-toggle button { flex: 1; }
+  .topbar.m-open .top-actions .btn { width: 100%; justify-content: center; }
+  .class-strip { gap: 2px; padding: 2px 8px 0; }
+  .class-strip .sigil { width: 62px; height: 52px; }
+  .class-strip .sigil .rail-crest { width: 30px; height: 30px; }
+  .class-strip .sigil span { font-size: 10.5px; }
+  .stage { overflow: visible; }
+  #tabs { margin-top: 4px; position: sticky; top: 0; z-index: 30; background: var(--stone-0, #0d0b09); }
+  .tabs button { font-size: 15px; padding: 9px 11px 11px; }
+}

@@ -3887,6 +3887,9 @@
 
   $$('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
   $('#buildName').onchange = e => { S.name = e.target.value || 'Untitled build'; commit(); };
+  // phones: the build actions sit behind one Build menu button (desktop never shows it)
+  { const mb = $('#mMenu'), tb = document.querySelector('.topbar'); if (mb && tb) { mb.onclick = () => { const on = !tb.classList.contains('m-open'); tb.classList.toggle('m-open', on); mb.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    $$('#topActions .btn').forEach(b => b.addEventListener('click', () => { tb.classList.remove('m-open'); mb.setAttribute('aria-expanded', 'false'); })); } }
   $$('.season-toggle button').forEach(b => b.onclick = () => { if (!ALL[b.dataset.ver]) return; S.ver = b.dataset.ver; renderAll(); commit(); toast(S.ver === 'ptr' ? 'Showing Season 16 PTR data' : 'Showing Season 15 live data'); });
   $('#shareBtn').onclick = () => {
     const url = location.href.split('#')[0] + '#b=' + btoa(unescape(encodeURIComponent(JSON.stringify(S))));
