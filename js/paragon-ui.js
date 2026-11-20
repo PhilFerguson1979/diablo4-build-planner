@@ -118,7 +118,9 @@
 
     // ---------- glyphs ----------
     const classGlyphs = () => Object.entries(PD().glyphs).filter(([, g]) => !g.classes.length || g.classes.includes(cls())).map(([id, g]) => Object.assign({ id }, g));
-    const glyphLv = id => Math.max(1, Math.min(100, +state().glyphLv[id] || 100));
+    // glyph levels default to 75 until you set your own (max 150)
+    const GLV_DEFAULT = 75, GLV_MAX = 150;
+    const glyphLv = id => Math.max(1, Math.min(GLV_MAX, +state().glyphLv[id] || GLV_DEFAULT));
     const radius = L => L >= 46 ? 5 : L >= 15 ? 4 : 3;
     const scal = (a, L) => a.b * (a.s0 + a.s1 * (L - 1)) * 100 / (a.op === 2 ? 3 : 1);
     // the stat a glyph counts is the one its bonus and threshold name (Honed and Feverous list another stat on the glyph itself)
@@ -303,7 +305,7 @@
           if (g) {
             const L = glyphLv(gid); const G = R.glyphs.find(x => x.G.id === gid);
             extra = `<div class="pglyph"><h3>${esc(g.name)}</h3><p class="meta">${esc(g.stat)} glyph, radius ${radius(L)}</p>
-              <div class="kv"><label for="gLv">Glyph level</label><input id="gLv" type="number" min="1" max="100" value="${L}"></div>
+              <div class="kv"><label for="gLv">Glyph level</label><input id="gLv" type="number" min="1" max="150" value="${L}"></div>
               ${g.a.map(a => {
                 if (a.op === 2) { const tot = G ? G.per5 * scal(a, L) : 0; return `<p>${glyphLine(a, L)}<br><small>${fmt(G ? G.G.count : 0)} ${esc(g.stat)} in range: <b class="num">${fmt(tot, 1)}%</b> total</small></p>`; }
                 if (a.op === 4) return `<p class="${L >= 46 ? '' : 'off'}"><b>Legendary (level 46):</b> ${glyphLine(a, L)}</p>`;
@@ -319,7 +321,7 @@
           ${n.s.length ? `<ul class="pstat">${nodeLines(c, R)}</ul>` : ''}
           ${n.d ? `<div class="desc">${n.d}</div>` : ''}${extra}
           <p class="empty" style="margin-top:18px"><a href="#" id="pBack">Back to totals</a></p>`;
-        const lv = $('#gLv'); if (lv) lv.onchange = () => { P.glyphLv[P.glyphs[c.b.id]] = Math.max(1, Math.min(100, +lv.value || 1)); render(); commit(); };
+        const lv = $('#gLv'); if (lv) lv.onchange = () => { P.glyphLv[P.glyphs[c.b.id]] = Math.max(1, Math.min(GLV_MAX, +lv.value || 1)); render(); commit(); };
         const gc = $('#gChange'); if (gc) gc.onclick = () => pickGlyph(c.b.id);
         const gx = $('#gClear'); if (gx) gx.onclick = () => { delete P.glyphs[c.b.id]; render(); commit(); };
         $('#pBack').onclick = e => { e.preventDefault(); psel = null; inspector(compute()); };
@@ -334,9 +336,11 @@
         <p class="note">Rare node bonuses check your total attribute, so add what your gear and level give you.</p>
         <div class="kv"><label for="pCap">Paragon points available</label><input id="pCap" type="number" min="1" max="400" value="${P.cap}"></div>
         ${leg.length ? `<h3>Legendary nodes</h3>${leg.map(x => `<div class="pleg"><b>${esc(x.n.n)}</b><div>${x.n.d || ''}</div></div>`).join('')}` : ''}
-        ${R.glyphs.length ? `<h3>Glyphs</h3><ul class="pstat">${R.glyphs.map(G => `<li><b>${esc(G.G.g.name)}</b> level ${G.G.L}: ${fmt(G.G.count)} ${esc(gStat(G.G.g))} in range${(() => { const a = G.G.g.a.find(x => x.op === 2); return a ? `, <b class="num">+${fmt(G.per5 * scal(a, G.G.L), 1)}%</b> from its main bonus` : ''; })()}${G.met ? ', threshold bonus active' : `, needs ${fmt(G.thr)} for the threshold bonus`}</li>`).join('')}</ul>` : ''}
+        ${R.glyphs.length ? `<h3>Glyphs</h3><div class="kv"><label for="glvAll">Set every glyph to level</label><input id="glvAll" type="number" min="1" max="150" placeholder="75"></div><ul class="pstat">${R.glyphs.map(G => `<li><b>${esc(G.G.g.name)}</b> level <input class="glv" type="number" min="1" max="150" data-glv="${G.G.id}" value="${G.G.L}" aria-label="${esc(G.G.g.name)} glyph level">: ${fmt(G.G.count)} ${esc(gStat(G.G.g))} in range${(() => { const a = G.G.g.a.find(x => x.op === 2); return a ? `, <b class="num">+${fmt(G.per5 * scal(a, G.G.L), 1)}%</b> from its main bonus` : ''; })()}${G.met ? ', threshold bonus active' : `, needs ${fmt(G.thr)} for the threshold bonus`}</li>`).join('')}</ul>` : ''}
         ${statLinesHtml(R.lines) || '<p class="empty">No stats yet.</p>'}`;
       $$('[data-base]', box).forEach(i => i.onchange = () => { P.base[i.dataset.base] = +i.value || 0; render(); commit(); });
+      $$('[data-glv]', box).forEach(i => i.onchange = () => { P.glyphLv[i.dataset.glv] = Math.max(1, Math.min(GLV_MAX, +i.value || GLV_DEFAULT)); render(); commit(); });
+      const ga = $('#glvAll', box); if (ga) ga.onchange = () => { const v = Math.max(1, Math.min(GLV_MAX, +ga.value || GLV_DEFAULT)); Object.values(P.glyphs).forEach(id => { P.glyphLv[id] = v; }); render(); commit(); };
       $('#pCap').onchange = e => { P.cap = Math.max(1, +e.target.value || 300); render(); commit(); };
     }
 

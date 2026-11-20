@@ -2954,7 +2954,7 @@
     // Paragon, already laid out by the converter
     const P = V.para;
     if (P && P.b) { const alloc = {}; Object.keys(P.a).forEach(id => P.a[id].split(' ').filter(Boolean).forEach(k => { alloc[id + ':' + k] = 1; }));
-      st.paragon = { boards: P.b.map(x => x.length > 4 ? { id: x[0], ox: x[1], oy: x[2], r: x[3], at: { gx: x[4], gy: x[5], dx: x[6], dy: x[7] } } : { id: x[0], ox: x[1], oy: x[2], r: x[3] }), alloc, glyphs: Object.assign({}, P.g), glyphLv: Object.assign({}, P.lv), cap: Math.max(300, Object.keys(alloc).length), base: { Strength: 0, Intelligence: 0, Willpower: 0, Dexterity: 0 } }; }
+      st.paragon = { boards: P.b.map(x => x.length > 4 ? { id: x[0], ox: x[1], oy: x[2], r: x[3], at: { gx: x[4], gy: x[5], dx: x[6], dy: x[7] } } : { id: x[0], ox: x[1], oy: x[2], r: x[3] }), alloc, glyphs: Object.assign({}, P.g), glyphLv: {}, cap: Math.max(300, Object.keys(alloc).length), base: { Strength: 0, Intelligence: 0, Willpower: 0, Dexterity: 0 } }; }
     else if (P && P.note) miss.push('Paragon: ' + P.note);
     // mercenaries
     const mer = n => n && (D.mercs || []).find(m => lnorm(n).startsWith(lnorm(m.name))); const m0 = mer((V.mercs || [])[0]), m1 = mer((V.mercs || [])[1]);
