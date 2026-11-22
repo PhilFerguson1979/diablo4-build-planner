@@ -2052,6 +2052,10 @@
     try { const sj = out.filter(x => x.n === 'Stone of Jordan' && /that Element/.test(x.what || '')); if (sj.length) { const st = sheetData().stats; const v = k => st.filter(e => e.key === '§% ' + k).reduce((a, e) => a + e.v, 0); const all = v('Resistance to All Elements') + v('All Resistance');
       let M0 = {}; try { M0 = statModel(); } catch (e) { M0 = {}; } const rs = ['Fire', 'Cold', 'Lightning', 'Poison', 'Shadow'].map(el => [el, (M0['r' + el.toLowerCase()] ? M0['r' + el.toLowerCase()].v : 0) + v(el + ' Resistance') + all]); const top = Math.max(...rs.map(r => r[1])); const els = rs.filter(r => r[1] === top).map(r => r[0]);
       if (top > 0 && els.length < 5) sj.forEach(x => { x.scope = Object.assign({ named: [], cats: [], elems: [] }, x.scope || {}, { elems: els, general: false }); x.what = String(x.what) + ' (' + els.join(' or ') + ', your highest Resistance)'; }); } } catch (e) { /* skip */ }
+    // "to the first enemy hit" / "first 3 enemies hit": only that many targets get the bonus (theory spreads it over the target count)
+    out.forEach(x => { const m = String(x.what || '').match(/\bfirst (?:(\d+) )?enem(?:y|ies) hit\b/); if (m) x.firstN = +(m[1] || 1); });
+    // Ward of the White Dove: casting another skill doubles the bonus for the next 3 Blessed Shields; a Shield of Retribution rotation weaves other skills, so it is counted doubled
+    out.forEach(x => { if (x.n === 'Ward of the White Dove' && /^damage$/.test(String(x.what || '').trim())) { x.lo *= 2; x.hi *= 2; x.what = 'damage, doubled by casting another skill between Blessed Shields'; } });
     // Judgement Day keeps full stacks the whole fight: Judging is constant on a Judgement build
     out.forEach(x => { if (/^Heaven's Radiant Fire, /.test(x.n) && /Judgement Day/.test(x.what || '') && x.hi > x.lo) { x.lo = x.hi; x.what = String(x.what) + ', full stacks held'; } });
     return out.filter((x, i) => i < n0 || x.add || x.stat || (x.lo > 0 && !/^(Vulnerable|Critical Strike|Overpower) Damage|^Damage Over Time|^Lucky Hit/i.test(x.what)));
@@ -2251,6 +2255,7 @@
     xGear.forEach((x, i) => { if (x.ccNeed && ccUp < 1) xGear[i] = Object.assign({}, x, { lo: x.lo * ccUp, hi: x.hi * ccUp, what: (x.what || '') + ', counted ' + Math.round(ccUp * 100) + '%: ' + ccHow }); });
     const prod = (l, f) => l.reduce((a, x) => a * (1 + f(x) / 100), 1);
     const xS = (1 + xSumEl / 100) * Object.values(xSumBy).reduce((a, v) => a * (1 + v / 100), 1) * xOwn;
+    { const tgN = Math.max(1, +T.tg || 1); xGear.forEach((x, i) => { if (x.firstN && x.firstN < tgN) { const f = x.firstN / tgN; xGear[i] = Object.assign({}, x, { lo: x.lo * f, hi: x.hi * f, what: String(x.what || '') + `, spread over ${tgN} targets` }); } }); }
     const xAll = xGear.filter(x => x.on && !x.only); const xOnly = k => prod(xGear.filter(x => x.on && x.only === k), x => (x.lo + x.hi) / 2);
     const xLo = xS * prod(xAll, x => x.lo), xHi = xS * prod(xAll, x => x.hi), xMid = xS * prod(xAll, x => (x.lo + x.hi) / 2);
     // crit and vulnerable
