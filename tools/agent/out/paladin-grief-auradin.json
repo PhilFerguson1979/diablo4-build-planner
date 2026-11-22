@@ -21,31 +21,31 @@
   "Defiance Aura"
  ],
  "dmg": {
-  "start": 469569855,
-  "main": 538146657,
+  "start": 831372591,
+  "main": 793111388,
   "procs": [
    {
     "n": "Rakanoth's Wake",
-    "dps": 451019699
+    "dps": 741426005
    },
    {
     "n": "Lucky Hit Fire damage",
-    "dps": 771903672
+    "dps": 1167409540
    },
    {
     "n": "Lucky Hit Holy damage",
-    "dps": 1018678427
+    "dps": 1540601054
    }
   ],
-  "total": 2779748455,
-  "pack": 1018678427,
-  "boss": 335649662,
+  "total": 4242547986,
+  "pack": 1540601054,
+  "boss": 507544248,
   "bestSkill": "Holy Light Aura"
  },
  "def": {
   "start": 54646,
-  "ehp": 1388927,
-  "life": 26287,
+  "ehp": 1237232,
+  "life": 23416,
   "armor": 18819,
   "armorDR": 70.8,
   "block": 13,
@@ -54,43 +54,43 @@
    {
     "el": "Physical",
     "dr": 95.4,
-    "ehp": 565769
+    "ehp": 503977
    },
    {
     "el": "Fire",
     "dr": 98.9,
-    "ehp": 2287727
+    "ehp": 2037868
    },
    {
     "el": "Lightning",
     "dr": 95.4,
-    "ehp": 565769
+    "ehp": 503977
    },
    {
     "el": "Cold",
     "dr": 95.4,
-    "ehp": 565769
+    "ehp": 503977
    },
    {
     "el": "Poison",
     "dr": 95.4,
-    "ehp": 565769
+    "ehp": 503977
    },
    {
     "el": "Shadow",
     "dr": 99.2,
-    "ehp": 3139361
+    "ehp": 2796489
    }
   ],
   "overCap": [],
   "whatIf": [
    {
-    "affix": "Damage Reduction",
-    "gain": 17.6
+    "affix": "Maximum Life",
+    "gain": 18.6
    },
    {
-    "affix": "Maximum Life",
-    "gain": 16.6
+    "affix": "Damage Reduction",
+    "gain": 17.6
    },
    {
     "affix": "All Resistance",
@@ -162,7 +162,7 @@
   {
    "id": "cdr",
    "stat": "Cooldown Reduction",
-   "v": 14,
+   "v": 20.9,
    "cap": 75,
    "at": false
   },
@@ -178,89 +178,89 @@
   {
    "tier": 60,
    "eliteTTK": 0.1,
-   "eliteKillsYouIn": 79.7,
+   "eliteKillsYouIn": 57.5,
    "biggestHit": 1357,
-   "life": 26287,
+   "life": 23416,
    "ok": true
   },
   {
    "tier": 70,
-   "eliteTTK": 0.5,
-   "eliteKillsYouIn": 28.2,
+   "eliteTTK": 0.3,
+   "eliteKillsYouIn": 24.2,
    "biggestHit": 2156,
-   "life": 26287,
+   "life": 23416,
    "ok": true
   },
   {
    "tier": 80,
-   "eliteTTK": 2.2,
-   "eliteKillsYouIn": 15.3,
+   "eliteTTK": 1.4,
+   "eliteKillsYouIn": 13.4,
    "biggestHit": 3427,
-   "life": 26287,
+   "life": 23416,
    "ok": true
   },
   {
    "tier": 90,
-   "eliteTTK": 10.4,
-   "eliteKillsYouIn": 8.9,
+   "eliteTTK": 6.8,
+   "eliteKillsYouIn": 7.8,
    "biggestHit": 5446,
-   "life": 26287,
-   "ok": false
+   "life": 23416,
+   "ok": true
   },
   {
    "tier": 100,
-   "eliteTTK": 50.2,
-   "eliteKillsYouIn": 5.3,
+   "eliteTTK": 32.9,
+   "eliteKillsYouIn": 4.7,
    "biggestHit": 8655,
-   "life": 26287,
+   "life": 23416,
    "ok": false
   },
   {
    "tier": 110,
-   "eliteTTK": 241.3,
-   "eliteKillsYouIn": 3.3,
+   "eliteTTK": 158.1,
+   "eliteKillsYouIn": 2.9,
    "biggestHit": 13754,
-   "life": 26287,
+   "life": 23416,
    "ok": false
   },
   {
    "tier": 120,
-   "eliteTTK": 3875.5,
-   "eliteKillsYouIn": 2.6,
+   "eliteTTK": 2539.3,
+   "eliteKillsYouIn": 2.3,
    "biggestHit": 17385,
-   "life": 26287,
+   "life": 23416,
    "ok": false
   },
   {
    "tier": 130,
-   "eliteTTK": 62239.7,
-   "eliteKillsYouIn": 2,
+   "eliteTTK": 40779.9,
+   "eliteKillsYouIn": 1.8,
    "biggestHit": 21976,
-   "life": 26287,
+   "life": 23416,
    "ok": false
   },
   {
    "tier": 140,
-   "eliteTTK": 999554.9,
-   "eliteKillsYouIn": 1.6,
+   "eliteTTK": 654915.6,
+   "eliteKillsYouIn": 1.4,
    "biggestHit": 27778,
-   "life": 26287,
+   "life": 23416,
    "ok": false
   },
   {
    "tier": 150,
-   "eliteTTK": 16052620.8,
-   "eliteKillsYouIn": 1.3,
+   "eliteTTK": 10517794.5,
+   "eliteKillsYouIn": 1.1,
    "biggestHit": 35112,
-   "life": 26287,
+   "life": 23416,
    "ok": false
   }
  ],
- "pitHold": 80,
+ "pitHold": 90,
  "pitHoldStart": 60,
  "startScore": {
-  "pack": 453903518,
-  "boss": 544992589
+  "pack": 803862797,
+  "boss": 965176117
  },
  "rot": [
   {
@@ -269,7 +269,7 @@
    "tag": "Justice",
    "basic": false,
    "main": false,
-   "cd": 6.88,
+   "cd": 6.33,
    "cost": false,
    "dmg": ""
   },
@@ -279,7 +279,7 @@
    "tag": "Aura",
    "basic": false,
    "main": true,
-   "cd": 13.22,
+   "cd": 12.16,
    "cost": false,
    "dmg": "Holy"
   },
@@ -289,7 +289,7 @@
    "tag": "Aura",
    "basic": false,
    "main": false,
-   "cd": 12.9,
+   "cd": 11.87,
    "cost": true,
    "dmg": ""
   },
@@ -299,7 +299,7 @@
    "tag": "Aura",
    "basic": true,
    "main": false,
-   "cd": 17.2,
+   "cd": 15.82,
    "cost": true,
    "dmg": ""
   },
@@ -309,7 +309,7 @@
    "tag": "Justice",
    "basic": false,
    "main": false,
-   "cd": 12.04,
+   "cd": 11.08,
    "cost": true,
    "dmg": "Holy"
   },
@@ -319,7 +319,7 @@
    "tag": "Ultimate",
    "basic": false,
    "main": false,
-   "cd": 51.6,
+   "cd": 47.47,
    "cost": false,
    "dmg": "Physical"
   }
@@ -333,11 +333,12 @@
    "mythic": true,
    "fixed": [],
    "affixes": [
+    "+121 Strength (guaranteed)",
+    "+2,800 Shadow Resistance",
     "+1,450 Maximum Life",
-    "+121 Strength",
-    "+100 All Stats",
-    "+2,800 Fire Resistance"
+    "8% Cooldown Reduction"
    ],
+   "enchant": "",
    "tempers": [
     "+2,000 Armor"
    ],
@@ -356,8 +357,9 @@
     "40% Maximum Life"
    ],
    "affixes": [],
+   "enchant": "",
    "tempers": [
-    "+1,500 Maximum Life"
+    "+2,000 Armor"
    ],
    "gems": []
   },
@@ -369,11 +371,12 @@
    "mythic": true,
    "fixed": [],
    "affixes": [
+    "+180 Strength (guaranteed)",
     "x50% Critical Strike Damage Multiplier",
-    "+8.5% Critical Strike Chance",
-    "x20% All Damage Multiplier",
-    "x28% Vulnerable Damage Multiplier"
+    "x28% Vulnerable Damage Multiplier",
+    "+8.5% Critical Strike Chance"
    ],
+   "enchant": "+9% Lucky Hit Chance",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -384,14 +387,15 @@
    "slotName": "Pants",
    "item": "Aspect of Disobedience",
    "kind": "aspect",
-   "mythic": true,
+   "mythic": false,
    "fixed": [],
    "affixes": [
+    "+2,800 Fire Resistance",
     "+2,500 Armor",
     "+1,450 Maximum Life",
-    "+2,800 Shadow Resistance",
     "+121 Strength"
    ],
+   "enchant": "",
    "tempers": [
     "+1,500 Maximum Life"
    ],
@@ -405,13 +409,14 @@
    "mythic": false,
    "fixed": [],
    "affixes": [
+    "+121 Strength (guaranteed)",
+    "x20% All Damage Multiplier (guaranteed)",
     "+2,800 Shadow Resistance",
-    "+1,450 Maximum Life",
-    "+121 Strength",
-    "+100 All Stats"
+    "+1,450 Maximum Life"
    ],
+   "enchant": "",
    "tempers": [
-    "+10% Holy Light Aura Potency"
+    "+10% Fanaticism Aura Potency"
    ],
    "gems": []
   },
@@ -423,11 +428,12 @@
    "mythic": true,
    "fixed": [],
    "affixes": [
+    "+180 Strength (guaranteed)",
     "x50% Critical Strike Damage Multiplier",
-    "+8.5% Critical Strike Chance",
     "x20% All Damage Multiplier",
-    "x28% Vulnerable Damage Multiplier"
+    "+8.5% Critical Strike Chance"
    ],
+   "enchant": "+10% Attack Speed",
    "tempers": [
     "+1,500 Maximum Life"
    ],
@@ -443,9 +449,10 @@
    "affixes": [
     "x25% Critical Strike Damage Multiplier",
     "+5% Critical Strike Chance",
-    "+1,450 Maximum Life",
-    "x10% All Damage Multiplier"
+    "x10% All Damage Multiplier",
+    "x14% Vulnerable Damage Multiplier"
    ],
+   "enchant": "",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -461,9 +468,10 @@
    "affixes": [
     "x25% Critical Strike Damage Multiplier",
     "+5% Critical Strike Chance",
-    "x10% All Damage Multiplier",
-    "+1,450 Maximum Life"
+    "+1,450 Maximum Life",
+    "x10% All Damage Multiplier"
    ],
+   "enchant": "",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -474,7 +482,7 @@
    "slotName": "Weapon",
    "item": "Grief",
    "kind": "runeword",
-   "mythic": true,
+   "mythic": false,
    "fixed": [
     "+750 Weapon Damage",
     "+20% Deadly Strike Chance",
@@ -482,6 +490,7 @@
     "+2 Primary Resource On Kill"
    ],
    "affixes": [],
+   "enchant": "",
    "tempers": [
     "Lucky Hit: Up to a 40% Chance to Deal +2,400 Fire Damage"
    ],
@@ -501,12 +510,13 @@
    "fixed": [],
    "affixes": [
     "+8.5% Critical Strike Chance",
-    "+180 Strength",
     "+2,500 Armor",
+    "+180 Strength",
     "15% Damage Reduction"
    ],
+   "enchant": "",
    "tempers": [
-    "+2,000 Armor"
+    "+1,500 Maximum Life"
    ],
    "gems": [
     {
@@ -550,7 +560,7 @@
   "Castle",
   "Endure"
  ],
- "paraFrom": "kept from Auradin, Holy Light Aura",
+ "paraFrom": "Grief Auradin, Disobedience (Agent search)",
  "charms": [
   {
    "kind": "rare",
@@ -653,17 +663,14 @@
   "starting point holds Pit 60",
   "engine: Movement, Lucky Hit, Resolve (Juggernaut), Attack speed, Crowd control, Critical Strikes, Thorns, Vulnerable, Cooldowns, Evade and Dodge, Block, Damage over time, Judgement, Aura cast / Aura Potency; 2 payoffs left out for lack of a trigger",
   "gear searched (2 passes)",
-  "paragon boards from kept from Auradin, Holy Light Aura",
+  "paragon boards from Grief Auradin, Disobedience (Agent search)",
   "gear searched again with the new boards",
-  "Paragon_Paladin_00: Resplendence -> Imbiber",
-  "Paragon_Paladin_06: Judicator -> Law",
-  "Paragon_Paladin_09: Honed -> Revenge",
   "hired Raheir -> Aldkin",
   "reinforcement Aldkin -> Raheir (NPC_Mercenary_ShieldBearer_Provoke)",
   "charms: Heaven's Radiant Fire 5-piece",
   "glyphs, mercenaries and charms searched"
  ],
- "secs": 5,
+ "secs": 7,
  "st": {
   "v": 1,
   "cls": "Paladin",
@@ -705,16 +712,17 @@
     },
     "affixes": [
      {
-      "id": "X2_CritDamage_Greater"
+      "id": "X2_CoreStat_Strength_Greater",
+      "g": 1
      },
      {
-      "id": "S04_CritChance"
+      "id": "X2_CritDamage_Greater"
      },
      {
       "id": "X2_Damage_All_Greater"
      },
      {
-      "id": "X2_Damage_to_Vulnerable_Greater"
+      "id": "S04_CritChance"
      }
     ],
     "tempers": [
@@ -727,7 +735,8 @@
     "mythic": true,
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "ring1": {
     "item": {
@@ -742,10 +751,10 @@
       "id": "S04_CritChanceJewelry"
      },
      {
-      "id": "S04_Life"
+      "id": "S04_Damage_All"
      },
      {
-      "id": "S04_Damage_All"
+      "id": "S04_Damage_to_Vulnerable"
      }
     ],
     "tempers": [
@@ -757,7 +766,8 @@
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "helm": {
     "item": {
@@ -766,16 +776,17 @@
     },
     "affixes": [
      {
+      "id": "S04_CoreStat_Strength",
+      "g": 1
+     },
+     {
+      "id": "S04_Resistance_Single_Shadow"
+     },
+     {
       "id": "S04_Life"
      },
      {
-      "id": "S04_CoreStat_Strength"
-     },
-     {
-      "id": "S04_CoreStats_All"
-     },
-     {
-      "id": "S04_Resistance_Single_Fire"
+      "id": "S04_CooldownReductionCDR"
      }
     ],
     "tempers": [
@@ -788,7 +799,8 @@
     "mythic": true,
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "chest": {
     "item": {
@@ -812,13 +824,14 @@
     "tempers": [
      {
       "rid": "Tempering_Generic_Defensive_Simple_Tier3",
-      "oid": "Tempered_Generic_LifeMax_Tier3"
+      "oid": "Tempered_Generic_Armor_Tier3"
      }
     ],
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "gloves": {
     "item": {
@@ -827,16 +840,17 @@
     },
     "affixes": [
      {
+      "id": "X2_CoreStat_Strength_Greater",
+      "g": 1
+     },
+     {
       "id": "X2_CritDamage_Greater"
      },
      {
-      "id": "S04_CritChance"
-     },
-     {
-      "id": "X2_Damage_All_Greater"
-     },
-     {
       "id": "X2_Damage_to_Vulnerable_Greater"
+     },
+     {
+      "id": "S04_CritChance"
      }
     ],
     "tempers": [
@@ -849,7 +863,8 @@
     "mythic": true,
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "ring2": {
     "item": {
@@ -864,10 +879,10 @@
       "id": "S04_CritChanceJewelry"
      },
      {
-      "id": "S04_Damage_All"
+      "id": "S04_Life"
      },
      {
-      "id": "S04_Life"
+      "id": "S04_Damage_All"
      }
     ],
     "tempers": [
@@ -879,7 +894,8 @@
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "pants": {
     "item": {
@@ -888,13 +904,13 @@
     },
     "affixes": [
      {
+      "id": "S04_Resistance_Single_Fire"
+     },
+     {
       "id": "X2_Armor_Greater"
      },
      {
       "id": "S04_Life"
-     },
-     {
-      "id": "S04_Resistance_Single_Shadow"
      },
      {
       "id": "S04_CoreStat_Strength"
@@ -910,7 +926,8 @@
     "mythic": true,
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "boots": {
     "item": {
@@ -919,28 +936,31 @@
     },
     "affixes": [
      {
+      "id": "S04_CoreStat_Strength",
+      "g": 1
+     },
+     {
+      "id": "X2_Damage_All_Greater",
+      "g": 1
+     },
+     {
       "id": "S04_Resistance_Single_Shadow"
      },
      {
       "id": "S04_Life"
-     },
-     {
-      "id": "S04_CoreStat_Strength"
-     },
-     {
-      "id": "S04_CoreStats_All"
      }
     ],
     "tempers": [
      {
       "rid": "Tempering_Paladin_Utility_Aura_Tier3",
-      "oid": "Tempered_Special_Type_Aura_Paladin_Potency_HolyLight_Tier3"
+      "oid": "Tempered_Special_Type_Aura_Paladin_Potency_Fanaticism_Tier3"
      }
     ],
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "weapon": {
     "item": {
@@ -976,7 +996,8 @@
     "mythic": true,
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "offhand": {
     "item": {
@@ -988,10 +1009,10 @@
       "id": "S04_CritChance"
      },
      {
-      "id": "X2_CoreStat_Strength_Greater"
+      "id": "X2_Armor_Greater"
      },
      {
-      "id": "X2_Armor_Greater"
+      "id": "X2_CoreStat_Strength_Greater"
      },
      {
       "id": "S04_DamageReduction"
@@ -1000,7 +1021,7 @@
     "tempers": [
      {
       "rid": "Tempering_Generic_Defensive_Simple_Tier3",
-      "oid": "Tempered_Generic_Armor_Tier3"
+      "oid": "Tempered_Generic_LifeMax_Tier3"
      }
     ],
     "gems": [
@@ -1011,7 +1032,8 @@
     ],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    }
   },
   "charms": {

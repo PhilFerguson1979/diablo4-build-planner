@@ -20,16 +20,16 @@
  ],
  "dmg": {
   "start": 71707568,
-  "main": 98851782334,
+  "main": 99233649971,
   "procs": [],
-  "total": 98851782334,
-  "pack": 98851782334,
-  "boss": 72017423143,
+  "total": 99233649971,
+  "pack": 99233649971,
+  "boss": 72295628782,
   "bestSkill": "Firewall"
  },
  "def": {
   "start": 161292,
-  "ehp": 484924,
+  "ehp": 524854,
   "life": 20293,
   "armor": 12150,
   "armorDR": 63.4,
@@ -63,8 +63,8 @@
    },
    {
     "el": "Shadow",
-    "dr": 97.8,
-    "ehp": 902208
+    "dr": 98.1,
+    "ehp": 1093874
    }
   ],
   "overCap": [],
@@ -78,11 +78,11 @@
     "gain": 17.6
    },
    {
-    "affix": "All Resistance",
-    "gain": 15.1
+    "affix": "Armor",
+    "gain": 13.5
    },
    {
-    "affix": "Armor",
+    "affix": "All Resistance",
     "gain": 13.5
    }
   ]
@@ -91,7 +91,7 @@
   {
    "id": "as",
    "stat": "Attack Speed Bonus",
-   "v": 63.8,
+   "v": 58.8,
    "cap": 100,
    "at": false
   },
@@ -105,7 +105,7 @@
   {
    "id": "csc",
    "stat": "Critical Strike Chance",
-   "v": 39,
+   "v": 32,
    "cap": 100,
    "at": false
   },
@@ -154,7 +154,7 @@
   {
    "id": "lhc",
    "stat": "Lucky Hit Chance Bonus",
-   "v": 17.5,
+   "v": 5,
    "cap": 100,
    "at": false
   }
@@ -210,7 +210,7 @@
   },
   {
    "tier": 120,
-   "eliteTTK": 109,
+   "eliteTTK": 108.6,
    "eliteKillsYouIn": 0.8,
    "biggestHit": 41643,
    "life": 20293,
@@ -218,7 +218,7 @@
   },
   {
    "tier": 130,
-   "eliteTTK": 1750.2,
+   "eliteTTK": 1743.5,
    "eliteKillsYouIn": 0.6,
    "biggestHit": 52638,
    "life": 20293,
@@ -226,7 +226,7 @@
   },
   {
    "tier": 140,
-   "eliteTTK": 28107.8,
+   "eliteTTK": 27999.7,
    "eliteKillsYouIn": 0.5,
    "biggestHit": 66536,
    "life": 20293,
@@ -234,7 +234,7 @@
   },
   {
    "tier": 150,
-   "eliteTTK": 451405.6,
+   "eliteTTK": 449668.5,
    "eliteKillsYouIn": 0.3,
    "biggestHit": 84103,
    "life": 20293,
@@ -318,11 +318,12 @@
    "mythic": false,
    "fixed": [],
    "affixes": [
+    "+121 Intelligence (guaranteed)",
     "+1,450 Maximum Life",
-    "+121 Intelligence",
     "+100 All Stats",
     "+2,800 Shadow Resistance"
    ],
+   "enchant": "+3 to Firewall",
    "tempers": [
     "+2,000 Armor"
    ],
@@ -331,7 +332,7 @@
   {
    "slot": "chest",
    "slotName": "Chest",
-   "item": "Exploiter's",
+   "item": "Aspect of Retribution",
    "kind": "aspect",
    "mythic": false,
    "fixed": [],
@@ -341,6 +342,7 @@
     "+2,800 Fire Resistance",
     "+121 Intelligence"
    ],
+   "enchant": "",
    "tempers": [
     "+2,000 Armor"
    ],
@@ -354,11 +356,12 @@
    "mythic": false,
    "fixed": [],
    "affixes": [
-    "x50% Critical Strike Damage Multiplier",
     "+8.5% Critical Strike Chance",
+    "x50% Critical Strike Damage Multiplier",
     "x24% Lightning Damage Multiplier",
     "x28% Vulnerable Damage Multiplier"
    ],
+   "enchant": "",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -375,8 +378,9 @@
     "+2,500 Armor",
     "+1,450 Maximum Life",
     "+121 Intelligence",
-    "+100 All Stats"
+    "+2,800 Shadow Resistance"
    ],
+   "enchant": "",
    "tempers": [
     "+1,500 Maximum Life"
    ],
@@ -394,7 +398,7 @@
   {
    "slot": "boots",
    "slotName": "Boots",
-   "item": "Aspect of Retribution",
+   "item": "Exploiter's",
    "kind": "aspect",
    "mythic": false,
    "fixed": [],
@@ -404,6 +408,7 @@
     "+121 Intelligence",
     "+100 All Stats"
    ],
+   "enchant": "",
    "tempers": [
     "+15% Crowd Control Duration"
    ],
@@ -417,11 +422,12 @@
    "mythic": false,
    "fixed": [],
    "affixes": [
-    "x50% Critical Strike Damage Multiplier",
+    "+180 Intelligence (guaranteed)",
     "+8.5% Critical Strike Chance",
-    "x24% Lightning Damage Multiplier",
-    "x28% Vulnerable Damage Multiplier"
+    "x50% Critical Strike Damage Multiplier",
+    "x24% Lightning Damage Multiplier"
    ],
+   "enchant": "+10% Attack Speed",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -441,10 +447,11 @@
    "fixed": [],
    "affixes": [
     "+5% Critical Strike Chance",
-    "x25% Critical Strike Damage Multiplier",
     "+10% Attack Speed",
-    "x10% All Damage Multiplier"
+    "x25% Critical Strike Damage Multiplier",
+    "x14% Vulnerable Damage Multiplier"
    ],
+   "enchant": "+121 Intelligence",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -458,16 +465,17 @@
   {
    "slot": "ring2",
    "slotName": "Ring",
-   "item": "Ring of Starless Skies",
-   "kind": "unique",
+   "item": "Vanquishing",
+   "kind": "aspect",
    "mythic": false,
-   "fixed": [
-    "+15% Attack Speed",
-    "+12% Critical Strike Chance",
-    "+12.5% Lucky Hit Chance",
-    "+2 to 2 Skills"
+   "fixed": [],
+   "affixes": [
+    "+5% Critical Strike Chance",
+    "+10% Attack Speed",
+    "x25% Critical Strike Damage Multiplier",
+    "x10% Lightning Damage Multiplier"
    ],
-   "affixes": [],
+   "enchant": "",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -481,16 +489,17 @@
   {
    "slot": "weapon",
    "slotName": "Weapon",
-   "item": "Vanquishing",
+   "item": "Aspect of the Expectant",
    "kind": "aspect",
    "mythic": false,
    "fixed": [],
    "affixes": [
-    "x25% Critical Strike Damage Multiplier",
     "+2,200 Maximum Life",
+    "x25% Critical Strike Damage Multiplier",
     "+180 Intelligence",
-    "x10% Lightning Damage Multiplier"
+    "x10% All Damage Multiplier"
    ],
+   "enchant": "",
    "tempers": [
     "+5% Critical Strike Chance"
    ],
@@ -511,9 +520,11 @@
     "+5 to All Skills",
     "+25% Attack Speed",
     "x50% All Damage Multiplier",
-    "+20 Maximum Resource"
+    "+20 Maximum Resource",
+    "50% Impairment Reduction"
    ],
    "affixes": [],
+   "enchant": "",
    "tempers": [
     "+1,500 Maximum Life"
    ],
@@ -559,7 +570,7 @@
   "Static Surge",
   "Frigid Fate"
  ],
- "paraFrom": "Chain Lightning (Min/Max Version Paragon +200)",
+ "paraFrom": "Firewall, agent search (Agent search)",
  "charms": [
   {
    "kind": "rare",
@@ -647,9 +658,8 @@
   "starting point holds Pit 0",
   "engine: Movement, Crowd control, Frozen and Chilled, Cooldowns, Lucky Hit, Enchantments and Conjurations, Overpower, Damage over time, Burning, Crackling Energy, Ultimates; 1 payoffs left out for lack of a trigger",
   "gear searched (2 passes)",
-  "paragon boards from Chain Lightning (Min/Max Version Paragon +200)",
+  "paragon boards from Firewall, agent search (Agent search)",
   "gear searched again with the new boards",
-  "Paragon_Sorc_02: Exploit -> Flamefeeder",
   "hired Subo -> Aldkin",
   "reinforcement Aldkin -> Raheir (NPC_Mercenary_ShieldBearer_Provoke)",
   "charms: Banished Lord's Talisman",
@@ -702,10 +712,11 @@
     },
     "affixes": [
      {
-      "id": "S04_Life"
+      "id": "S04_CoreStat_Intelligence",
+      "g": 1
      },
      {
-      "id": "S04_CoreStat_Intelligence"
+      "id": "S04_Life"
      },
      {
       "id": "S04_CoreStats_All"
@@ -723,12 +734,13 @@
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "chest": {
     "item": {
      "t": "aspect",
-     "id": "Legendary_Generic_111"
+     "id": "legendary_generic_038_x2"
     },
     "affixes": [
      {
@@ -753,25 +765,26 @@
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "weapon": {
     "item": {
      "t": "aspect",
-     "id": "legendary_sorc_129"
+     "id": "legendary_generic_067"
     },
     "affixes": [
      {
-      "id": "S04_CritDamage"
+      "id": "X2_Life_Greater"
      },
      {
-      "id": "X2_Life_Greater"
+      "id": "S04_CritDamage"
      },
      {
       "id": "X2_CoreStat_Intelligence_Greater"
      },
      {
-      "id": "X2_DamageType_Lightning"
+      "id": "S04_Damage_All"
      }
     ],
     "tempers": [
@@ -788,7 +801,8 @@
     ],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "gloves": {
     "item": {
@@ -797,10 +811,10 @@
     },
     "affixes": [
      {
-      "id": "X2_CritDamage_Greater"
+      "id": "S04_CritChance"
      },
      {
-      "id": "S04_CritChance"
+      "id": "X2_CritDamage_Greater"
      },
      {
       "id": "X2_DamageType_Lightning_Greater"
@@ -818,7 +832,8 @@
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "pants": {
     "item": {
@@ -836,7 +851,7 @@
       "id": "S04_CoreStat_Intelligence"
      },
      {
-      "id": "S04_CoreStats_All"
+      "id": "S04_Resistance_Single_Shadow"
      }
     ],
     "tempers": [
@@ -857,12 +872,13 @@
     ],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "boots": {
     "item": {
      "t": "aspect",
-     "id": "legendary_generic_038_x2"
+     "id": "Legendary_Generic_111"
     },
     "affixes": [
      {
@@ -887,7 +903,8 @@
     "gems": [],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "amulet": {
     "item": {
@@ -896,16 +913,17 @@
     },
     "affixes": [
      {
-      "id": "X2_CritDamage_Greater"
+      "id": "X2_CoreStat_Intelligence_Greater",
+      "g": 1
      },
      {
       "id": "S04_CritChance"
      },
      {
-      "id": "X2_DamageType_Lightning_Greater"
+      "id": "X2_CritDamage_Greater"
      },
      {
-      "id": "X2_Damage_to_Vulnerable_Greater"
+      "id": "X2_DamageType_Lightning_Greater"
      }
     ],
     "tempers": [
@@ -922,7 +940,8 @@
     ],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "ring1": {
     "item": {
@@ -934,13 +953,49 @@
       "id": "S04_CritChanceJewelry"
      },
      {
+      "id": "S04_AttackSpeed"
+     },
+     {
       "id": "S04_CritDamage"
+     },
+     {
+      "id": "S04_Damage_to_Vulnerable"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Diamond",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "ring2": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_sorc_129"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChanceJewelry"
      },
      {
       "id": "S04_AttackSpeed"
      },
      {
-      "id": "S04_Damage_All"
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "X2_DamageType_Lightning"
      }
     ],
     "tempers": [
@@ -957,42 +1012,8 @@
     ],
     "uga": [],
     "q": 0,
-    "cap": 0
-   },
-   "ring2": {
-    "item": {
-     "t": "u",
-     "id": "Ring_Unique_Generic_101"
-    },
-    "affixes": [
-     {
-      "id": "S04_CooldownReductionCDR"
-     },
-     {
-      "id": "S04_Resource_Cost_Reduction_AllClasses_Lesser"
-     },
-     {
-      "id": "S04_ResourceGain"
-     },
-     {
-      "id": "S04_CoreStats_All"
-     }
-    ],
-    "tempers": [
-     {
-      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
-      "oid": "Tempered_CritDamage_Generic_All_Tier3"
-     }
-    ],
-    "gems": [
-     {
-      "type": "Diamond",
-      "grade": 9
-     }
-    ],
-    "uga": [],
-    "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    },
    "offhand": {
     "item": {
@@ -1027,7 +1048,8 @@
     ],
     "uga": [],
     "q": 0,
-    "cap": 0
+    "cap": 0,
+    "seeded": 1
    }
   },
   "charms": {
@@ -1565,7 +1587,7 @@
      1,
      3,
      5,
-     7,
+     8,
      9,
      11,
      14,

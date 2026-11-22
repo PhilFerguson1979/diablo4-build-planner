@@ -36,7 +36,7 @@ window.LAB = (() => {
       // a unique drops with 2 guaranteed affixes and 2 random ones, and one enchant can reroll any of them:
       // try keeping both guaranteed affixes, or enchanting either one away, then pick the rest one at a time
       const pool = affixPool(slot); const itNow = X.findItem(cur().item); cur().seeded = 1;
-      const G2 = itNow && itNow.kind === 'unique' ? X.fixedDefs0(itNow).map(d => d && pool.find(p => p.id === d.id) ? d : null) : [];
+      const G2 = itNow && itNow.kind === 'unique' ? X.fixedDefs0(itNow) : []; // a guaranteed affix stays even where the slot could not roll it (Rakanoth's Wake: All Damage Multiplier on boots)
       const pickAff = start => { const chosen = start.slice();
         for (let k = chosen.length; k < X.N_AFF; k++) { let top = null; cur().affixes = chosen.slice(); let b0 = -1e99;
           for (const a of pool) { if (chosen.some(c => c.id === a.id || (X.affixDef(c.id) && X.affixDef(c.id).t === a.t) || (a.fam && X.affixDef(c.id) && X.affixDef(c.id).fam === a.fam))) continue; cur().affixes = chosen.concat([{ id: a.id }]); const sc = score(obj, w); if (sc.j > b0) { b0 = sc.j; top = a; } }

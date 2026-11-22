@@ -951,7 +951,7 @@
     if (unique) rows = FX.map((h, i) => `<div class="frow"><span class="fval">${lines[i] ? lines[i].html : h}</span><button class="ga-btn${g.uga[i] ? ' on' : ''}" data-uga="${i}" aria-pressed="${!!g.uga[i]}" title="Greater affix: 50% more">${GA_ICON}GA</button></div>`).join('');
     for (let i = 0; i < N_AFF - nFix; i++) {
       const a = g.affixes[i] || {}; const used = new Set(g.affixes.filter((x, k) => x && k !== i).map(x => x.id));
-      rows += `<div class="frow"><select data-aff="${i}" aria-label="Affix ${nFix + i + 1}"><option value="">Affix ${nFix + i + 1}: choose...</option>${pool.filter(p => !used.has(p.id)).map(p => `<option value="${p.id}" ${p.id === a.id ? 'selected' : ''}>${esc(p.t.replace('§', p.v))}</option>`).join('')}</select>
+      const extra = a.id && !pool.some(p => p.id === a.id) && affixDef(a.id) ? [affixDef(a.id)] : []; rows += `<div class="frow"><select data-aff="${i}" aria-label="Affix ${nFix + i + 1}"><option value="">Affix ${nFix + i + 1}: choose...</option>${extra.concat(pool).filter(p => !used.has(p.id)).map(p => `<option value="${p.id}" ${p.id === a.id ? 'selected' : ''}>${esc(p.t.replace('§', p.v))}</option>`).join('')}</select>
         ${a.id && affixDef(a.id) && !g.mythic ? rollInput('data-av', i, a, affixDef(a.id)) : ''}
         <button class="ga-btn${a.ga ? ' on' : ''}" data-ga="${i}" ${a.id ? '' : 'disabled'} aria-pressed="${!!a.ga}" title="Greater affix: 50% more">${GA_ICON}GA</button></div>`;
     }
