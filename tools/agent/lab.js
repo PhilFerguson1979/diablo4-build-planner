@@ -33,15 +33,19 @@ window.LAB = (() => {
           const sc = score(obj, w); if (off) G.offhand = off; if (sc.j > best.j + 1e-9) { best = sc; bestItem = { t: it.t, id: it.id }; } cur().item = keep; }
         cur().item = bestItem; }
       // affixes: four different ones, picked one at a time
-      // a unique has 2 guaranteed affixes; one enchant can reroll either of them, so try keeping both, or enchanting away the first or the second
-      const pool = affixPool(slot); const itNow = X.findItem(cur().item); const uq = itNow && itNow.kind === 'unique' && X.fixedLines(itNow).length === 2;
-      const pickAff = () => { const chosen = ((opt.aff || {})[slot] || []).filter(id => pool.some(a => a.id === id)).map(id => ({ id }));
+      // a unique drops with 2 guaranteed affixes and 2 random ones, and one enchant can reroll any of them:
+      // try keeping both guaranteed affixes, or enchanting either one away, then pick the rest one at a time
+      const pool = affixPool(slot); const itNow = X.findItem(cur().item); cur().seeded = 1;
+      const G2 = itNow && itNow.kind === 'unique' ? X.fixedDefs0(itNow).map(d => d && pool.find(p => p.id === d.id) ? d : null) : [];
+      const pickAff = start => { const chosen = start.slice();
         for (let k = chosen.length; k < X.N_AFF; k++) { let top = null; cur().affixes = chosen.slice(); let b0 = -1e99;
-          for (const a of pool) { if (chosen.some(c => c.id === a.id || (a.fam && X.affixDef(c.id) && X.affixDef(c.id).fam === a.fam && a.fam))) continue; cur().affixes = chosen.concat([{ id: a.id }]); const sc = score(obj, w); if (sc.j > b0) { b0 = sc.j; top = a; } }
+          for (const a of pool) { if (chosen.some(c => c.id === a.id || (X.affixDef(c.id) && X.affixDef(c.id).t === a.t) || (a.fam && X.affixDef(c.id) && X.affixDef(c.id).fam === a.fam))) continue; cur().affixes = chosen.concat([{ id: a.id }]); const sc = score(obj, w); if (sc.j > b0) { b0 = sc.j; top = a; } }
           if (top) chosen.push({ id: top.id }); }
         cur().affixes = chosen; return chosen; };
-      let chosen; if (uq && opt.enchant !== false) { let bE = null; for (const e of [null, 0, 1]) { cur().ench = e; X.invalidate(); const ch = pickAff(); const sc = score(obj, w); if (!bE || sc.j > bE.j + 1e-9) bE = { j: sc.j, e, ch: ch.slice() }; } cur().ench = bE.e; cur().affixes = bE.ch; chosen = bE.ch; X.invalidate(); }
-      else { if (cur().ench != null) delete cur().ench; chosen = pickAff(); }
+      let chosen;
+      if (G2.some(Boolean)) { let bE = null; const opts = [[0, 1], [1], [0]].map(keep => keep.map(i => G2[i]).filter(Boolean).map(d => ({ id: d.id, g: 1 })));
+        for (const st of opts) { const ch = pickAff(st); const sc = score(obj, w); if (!bE || sc.j > bE.j + 1e-9) bE = { j: sc.j, ch: ch.slice() }; } cur().affixes = bE.ch; chosen = bE.ch; }
+      else chosen = pickAff(((opt.aff || {})[slot] || []).filter(id => pool.some(a => a.id === id)).map(id => ({ id })));
       // temper
       let bt = null, bj = -1e99; for (const t of temperPool(slot)) { cur().tempers = [{ rid: t.rid, oid: t.oid }]; const sc = score(obj, w); if (sc.j > bj) { bj = sc.j; bt = t; } }
       cur().tempers = bt ? [{ rid: bt.rid, oid: bt.oid }] : [];

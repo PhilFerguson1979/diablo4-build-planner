@@ -776,16 +776,20 @@
   let UG_IDX = null; const ugCats = it => { if (!UG_IDX) { UG_IDX = {}; Object.entries(window.D4UG || {}).forEach(([k, v]) => { UG_IDX[ugKey(k)] = v; }); } return UG_IDX[ugKey(it.name)] || null; };
   const UG_TXT = { 'Weapon Damage': '+§ Weapon Damage', 'Maximum Life': '+§ Maximum Life', 'Attack Speed': '+§% Attack Speed', 'All Damage Multiplier': 'x§% All Damage Multiplier', 'Critical Strike Damage Multiplier': 'x§% Critical Strike Damage Multiplier', 'Critical Strike Chance': '+§% Critical Strike Chance', 'Lucky Hit Chance': '+§% Lucky Hit Chance', 'Movement Speed': '+§% Movement Speed', 'Armor': '+§ Armor', 'Cooldown Reduction': '§% Cooldown Reduction', 'Resource Cost Reduction': '§% Resource Cost Reduction', 'Resource Generation': '§% Resource Generation', 'Maximum Resource': '+§ Maximum Resource', 'All Stats': '+§ All Stats', 'All Resistances': '+§ Resistance to All Elements', 'Poison Resistance': '+§ Poison Resistance', 'Damage Over Time Multiplier': 'x§% Damage Over Time Multiplier', 'Vulnerable Damage Multiplier': 'x§% Vulnerable Damage Multiplier', 'Lucky Hit: Resource': 'Lucky Hit: Up to a 15% Chance to Restore +§% Primary Resource', 'Lightning Damage Multiplier': 'x§% Lightning Damage Multiplier', 'Fire Damage Multiplier': 'x§% Fire Damage Multiplier', 'Physical Damage Multiplier': 'x§% Physical Damage Multiplier', 'Poison Damage Multiplier': 'x§% Poison Damage Multiplier', 'Cold Damage Multiplier': 'x§% Cold Damage Multiplier', 'Shadow Damage Multiplier': 'x§% Shadow Damage Multiplier', 'Holy Damage Multiplier': 'x§% Holy Damage Multiplier' };
   function ugDef(txt, slot) { const cls = S.cls; const A = GD().affixes.filter(a => a.t === txt && (!(a.cls || []).length || a.cls.includes(cls))); return A.find(a => (a.slots || []).includes(slot)) || A.slice().sort((a, b) => b.v - a.v)[0] || null; }
-  // an enchant can reroll one affix on an item, a guaranteed one included: g.ench (0 or 1) is the guaranteed affix you enchanted away, which frees a slot
-  function fixedFor(it, g) { const F = fixedLines(it); if (it && it.kind === 'unique' && g && (g.ench === 0 || g.ench === 1) && F.length > 1) return F.filter((x, i) => i !== g.ench); return F; }
+  // a unique drops with 2 guaranteed affixes (patch 3.1) and 2 random ones; an enchant can reroll any one of them.
+  // The planner shows all 4 as normal affix choices and fills the guaranteed 2 in for a unique that has none set yet.
+  function seedUnique(it, g) { if (!it || it.kind !== 'unique' || !g || !Array.isArray(g.affixes) || g.affixes.some(Boolean) || g.seeded) return; const ids = fixedDefs0(it).filter(Boolean).map(d => ({ id: d.id })); if (ids.length) { g.affixes = ids; g.seeded = 1; } }
   // the fixed lines on an item: a runeword's own lines, or a unique's 2 guaranteed affixes at their top roll
   function fixedLines(it) {
     if (!it) return []; if (it.kind !== 'unique') return it.kind === 'charm' ? [] : (it.affixes || []);
     const slot = UG_SLOT(it.type || ''); let cats = ugCats(it); if (!cats) cats = [slot === 'weapon' ? 'Weapon Damage' : 'Primary Core Stat', '?'];
-    return cats.map(c => { if (c === '?') return 'Second guaranteed affix (Blizzard has not listed it yet)';
-      let txt = UG_TXT[c]; if (c === 'Primary Core Stat') txt = '+§ ' + (MAINSTAT[S.cls] || ['Strength'])[0];
-      const m = c.match(/^Skill Ranks to (.+)$/); if (m) { const d = ugDef('+§ to ' + m[1], slot); return d ? fillTpl(d.t, d.v, 1) : '+<b class="num">2</b> to ' + esc(m[1]); }
-      const d = txt && ugDef(txt, slot); return d ? fillTpl(d.t, d.v, 1) : esc(c) + ' (guaranteed, not counted by the planner)'; }); }
+    return fixedDefs0(it).map((d, i) => { const c = cats[i]; if (c === '?') return 'Second guaranteed affix (Blizzard has not listed it yet)';
+      if (d) return fillTpl(d.t, d.v, 1); const m = c.match(/^Skill Ranks to (.+)$/); if (m) return '+<b class="num">2</b> to ' + esc(m[1]);
+      return esc(c) + ' (guaranteed, not counted by the planner)'; }); }
+  // the affix definitions behind a unique's guaranteed lines (null where the pool has no match), so the same affix is not rolled twice
+  function fixedDefs0(it) { if (!it || it.kind !== 'unique') return []; const slot = UG_SLOT(it.type || ''); let cats = ugCats(it); if (!cats) cats = [slot === 'weapon' ? 'Weapon Damage' : 'Primary Core Stat', '?'];
+    return cats.map(c => { if (c === '?') return null; let txt = UG_TXT[c]; if (c === 'Primary Core Stat') txt = '+§ ' + (MAINSTAT[S.cls] || ['Strength'])[0]; const m = c.match(/^Skill Ranks to (.+)$/); if (m) txt = '+§ to ' + m[1]; return (txt && ugDef(txt, slot)) || null; }); }
+
   let gearSel = 'helm';
   function rarityOf(it, g) {
     if (!it) return 'empty';
@@ -869,7 +873,7 @@
   function itemLines(it, g, slotId) {
     g = craft(g || {}); const out = [];
     const unique = it && it.kind && it.kind !== 'charm';
-    const FX = unique ? fixedFor(it, g) : []; const nFix = unique ? Math.min(N_AFF, FX.length) : 0;
+    const FX = unique && it.kind !== 'unique' ? fixedLines(it) : []; const nFix = Math.min(N_AFF, FX.length); seedUnique(it, g);
     if (unique) FX.forEach((h, i) => { const ga = !!g.uga[i]; out.push({ kind: 'base', ga, html: scaleHtml(h, lineScale(g, out.length, ga)), label: strip(h) }); });
     g.affixes.slice(0, N_AFF - nFix).forEach(a => { const d = a && affixDef(a.id); if (!d) return; const ga = !!a.ga; const v = g.mythic ? d.v : rollOf(a, d); out.push({ kind: 'base', ga, html: fillTpl(d.t, v, lineScale(g, out.length, ga)), label: d.t.replace('§', v) }); });
     g.tempers.slice(0, N_TEMP).forEach(t => { const m = t && temperDef(t.rid); const o = m && m.opts.find(x => x.id === t.oid); if (!o) return; const v = rollOf(t, o); out.push({ kind: 'temper', html: fillTpl(o.t, v, lineScale(g, out.length, false)), label: o.t.replace('§', v), from: m.name }); });
@@ -943,9 +947,8 @@
     const manuals = GD().tempers.filter(t => t.slots.includes(kind) && okCls(t)); const manualsOther = GD().tempers.filter(t => !t.slots.includes(kind) && okCls(t));
     const lines = itemLines(it, g).filter(l => l.kind !== 'gem');
     let rows = '';
-    const FX0 = unique ? fixedLines(it) : []; const FX = unique ? fixedFor(it, g) : []; const nFix = unique ? Math.min(N_AFF, FX.length) : 0; const canEnch = it.kind === 'unique' && FX0.length === 2;
-    if (unique) { let j = 0; rows = FX0.map((h, i) => { if (canEnch && g.ench === i) return `<div class="frow"><span class="fval"><s>${h}</s> enchanted away</span><button class="ga-btn on" data-ench="${i}" aria-pressed="true" title="Keep this guaranteed affix instead">Keep</button></div>`; const k = j++;
-      return `<div class="frow"><span class="fval">${lines[k] ? lines[k].html : h}</span><button class="ga-btn${g.uga[k] ? ' on' : ''}" data-uga="${k}" aria-pressed="${!!g.uga[k]}" title="Greater affix: 50% more">${GA_ICON}GA</button>${canEnch ? `<button class="ga-btn" data-ench="${i}" aria-pressed="false" title="Enchant this guaranteed affix into one you choose (one enchant per item)">Enchant</button>` : ''}</div>`; }).join(''); }
+    const FX = unique && it.kind !== 'unique' ? fixedLines(it) : []; const nFix = Math.min(N_AFF, FX.length);
+    if (unique) rows = FX.map((h, i) => `<div class="frow"><span class="fval">${lines[i] ? lines[i].html : h}</span><button class="ga-btn${g.uga[i] ? ' on' : ''}" data-uga="${i}" aria-pressed="${!!g.uga[i]}" title="Greater affix: 50% more">${GA_ICON}GA</button></div>`).join('');
     for (let i = 0; i < N_AFF - nFix; i++) {
       const a = g.affixes[i] || {}; const used = new Set(g.affixes.filter((x, k) => x && k !== i).map(x => x.id));
       rows += `<div class="frow"><select data-aff="${i}" aria-label="Affix ${nFix + i + 1}"><option value="">Affix ${nFix + i + 1}: choose...</option>${pool.filter(p => !used.has(p.id)).map(p => `<option value="${p.id}" ${p.id === a.id ? 'selected' : ''}>${esc(p.t.replace('§', p.v))}</option>`).join('')}</select>
@@ -1083,7 +1086,6 @@
     $$('#panel-gear [data-aff]').forEach(s => s.onchange = () => { const gg = G(); const i = +s.dataset.aff; gg.affixes[i] = s.value ? { id: s.value, ga: (gg.affixes[i] || {}).ga && !!s.value } : null; redo(); });
     $$('#panel-gear [data-ga]').forEach(b => b.onclick = () => { const a = G().affixes[+b.dataset.ga]; if (a) { a.ga = !a.ga; redo(); } });
     $$('#panel-gear [data-uga]').forEach(b => b.onclick = () => { const gg = G(); const i = +b.dataset.uga; gg.uga[i] = !gg.uga[i]; redo(); });
-    $$('#panel-gear [data-ench]').forEach(b => b.onclick = () => { const gg = G(); const i = +b.dataset.ench; gg.ench = gg.ench === i ? null : i; gg.uga = []; redo(); });
     $$('#panel-gear [data-tm]').forEach(s => s.onchange = () => { const gg = G(); const i = +s.dataset.tm; const m = temperDef(s.value); gg.tempers[i] = m ? { rid: m.id, oid: m.opts[0].id } : null; redo(); });
     $$('#panel-gear [data-to]').forEach(s => s.onchange = () => { const t = G().tempers[+s.dataset.to]; if (t) { t.oid = s.value; delete t.val; redo(); } });
     const setQ = v => { G().q = Math.max(0, Math.min(Q_MAX, Math.round(+v || 0))); redo(); };
@@ -2819,7 +2821,7 @@
   // every aspect that fits the slot, tried on this item and ranked for the build as it stands. ref is the build with the item it would replace.
   function bestAspects(slotId, g, ref) {
     const k0 = JSON.stringify(Object.assign({}, S, { gear: Object.assign({}, S.gear, { [slotId]: null }), cmp: null })); if (ASP_CACHE.k !== k0) ASP_CACHE = { k: k0, v: {} };
-    const ck = slotId + '|' + JSON.stringify([g.affixes, g.tempers, g.q, g.gems, g.cap, g.mythic, g.wtype, g.ench]) + '|' + (ref ? Math.round(ref.dmg || 0) + ':' + Math.round(ref.ehp || 0) : ''); if (ASP_CACHE.v[ck]) return ASP_CACHE.v[ck];
+    const ck = slotId + '|' + JSON.stringify([g.affixes, g.tempers, g.q, g.gems, g.cap, g.mythic, g.wtype]) + '|' + (ref ? Math.round(ref.dmg || 0) + ':' + Math.round(ref.ehp || 0) : ''); if (ASP_CACHE.v[ck]) return ASP_CACHE.v[ck];
     const worn = new Set(SLOTS.filter(sl => sl.id !== slotId).map(sl => { const it = findItem((S.gear[sl.id] || {}).item); return it && !it.kind ? it.name : ''; }).filter(Boolean));
     const seen = new Set(); const out = [];
     data().aspects.forEach(a => { if (!(a.classes || []).includes(S.cls) || !aspectFits(a, slotId) || worn.has(a.name) || seen.has(a.name) || !ASPECT_SEEN.test(strip(a.desc))) return; seen.add(a.name);
@@ -3006,7 +3008,7 @@
       if (!uq && !as) { miss.push(`${to}: ${title}`); return; }
       const g = st.gear[to] = { item: { t: uq ? 'u' : 'aspect', id: (uq || as).id }, affixes: [], tempers: [], gems: [] }; const kind = slotKind(to);
       if (uq && mythic) g.mythic = true;
-      (stats || []).slice(0, N_AFF - (uq ? Math.min(N_AFF, fixedLines(uq).length) : 0)).forEach(raw => { const ga = raw.endsWith('!'); let s = raw.replace(/!$/, '').replace(/-s04-corestat$/, '').replace(/^\d+-\d+-/, ''); s = LIB_ALIAS[s] || s;
+      (stats || []).slice(0, N_AFF - (uq && uq.kind !== 'unique' ? Math.min(N_AFF, fixedLines(uq).length) : 0)).forEach(raw => { const ga = raw.endsWith('!'); let s = raw.replace(/!$/, '').replace(/-s04-corestat$/, '').replace(/^\d+-\d+-/, ''); s = LIB_ALIAS[s] || s;
         if (s === 'primary-core-stat') s = MAINSTAT[b.cls][0].toLowerCase();
         const want = lnorm(s.replace(/^ranks-to-/, 'to-')); const pool = G.affixes.filter(a => a.slots.includes(kind) && okCls(a) && !g.affixes.some(z => z.id === a.id));
         const d = pool.find(a => tkey(a.t) === want) || pool.filter(a => tkey(a.t).includes(want)).sort((x, y) => x.t.length - y.t.length)[0];
@@ -3210,7 +3212,7 @@
     x.fillStyle = '#7d705c'; x.font = '18px Georgia, serif'; x.textAlign = 'right'; x.fillText('Made with D4 Build Planner', W - 56, H - 44); x.textAlign = 'left';
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (S.name || 'build').replace(/[^\w -]+/g, '').trim().replace(/\s+/g, '_') + '_card.png'; a.click(); toast('Build card saved as a picture'); }, 'image/png');
   }
-  window.__D4X = { fixedFor, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
+  window.__D4X = { fixedDefs0, seedUnique, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
   function wireScan() {
     const pick = $('#scanPick'), file = $('#scanFile'); if (pick && file) { pick.onclick = () => file.click(); file.onchange = () => { if (file.files[0]) scanImage(file.files[0]); }; }
     const drop = $('#scanDrop'); if (drop) drop.onclick = () => { SCAN = null; renderGear(); };

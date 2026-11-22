@@ -70,7 +70,7 @@ md.push(`## Rotation\n`); rotLines.forEach(l => md.push(`- ${l}`)); md.push('');
 md.push(`## Skills\n`); R.skills.forEach(s => md.push(`- ${s}`)); md.push('');
 md.push(`## Gear to chase\n\nAffixes are in the order the agent picked them, most valuable first. Get the item, then the first affix, and so on.\n`);
 md.push(`| Slot | Item | Affixes | Temper |\n|---|---|---|---|`);
-R.gear.forEach(g => md.push(`| ${g.slotName} | ${g.item}${g.mythic ? ' (Mythic)' : ''} | ${(g.fixed || []).map(f => f + ' (fixed)').concat(g.affixes).join('; ')}${g.enchanted ? ' (enchant away: ' + g.enchanted + ')' : ''} | ${g.tempers.join('; ')} |`)); md.push('');
+R.gear.forEach(g => md.push(`| ${g.slotName} | ${g.item}${g.mythic ? ' (Mythic)' : ''} | ${(g.fixed || []).map(f => f + ' (fixed)').concat(g.affixes).join('; ')}${g.enchant ? ' (enchant away the guaranteed ' + g.enchant + ')' : ''} | ${g.tempers.join('; ')} |`)); md.push('');
 md.push(`## Caps\n\n| Stat | Now | Cap |\n|---|---|---|`); capRows.forEach(c => md.push(`| ${c.stat} | ${c.v}% | ${c.cap}%${c.at ? ' (at cap)' : ''} |`)); md.push('');
 md.push(`| Element | Damage reduction | Effective Life |\n|---|---|---|`); R.def.elems.forEach(e => md.push(`| ${e.el} | ${e.dr}% | ${big(e.ehp)} |`)); md.push('');
 if (R.def.whatIf.length) { md.push(`Best next defensive affixes: ${R.def.whatIf.map(w => `${w.affix} (+${w.gain}% Effective Life)`).join(', ')}.\n`); }
