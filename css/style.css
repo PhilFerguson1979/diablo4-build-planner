@@ -1521,3 +1521,21 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
   #tabs { margin-top: 4px; position: sticky; top: 0; z-index: 30; background: var(--stone-0, #0d0b09); }
   .tabs button { font-size: 15px; padding: 9px 11px 11px; }
 }
+
+/* Build score card on the Theory Craft tab */
+.tc-score { padding: 12px 16px; margin-bottom: 14px; background: linear-gradient(180deg, #1a140f, #0e0b09); border: 1px solid #4a3a2a; border-left: 3px solid var(--brass, #b08d57); }
+.tc-score .sc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tc-score h3 { margin: 0; font: 700 20px/1.2 var(--display); color: var(--brass-hi); }
+.sc-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 10px 0 6px; }
+.sc-tiles > div { padding: 8px 10px; border: 1px solid #3a2e22; background: #0f0c0a; }
+.sc-tiles span { display: block; font-size: 12.5px; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+.sc-tiles b { display: block; font-size: 22px; color: var(--parch, #e8dcc0); }
+.sc-tiles small { color: var(--mute); font-size: 12px; }
+.sc-rank summary { cursor: pointer; color: var(--brass-hi); margin-top: 6px; }
+.sc-rank ol { margin: 8px 0 0; padding-left: 22px; max-height: 320px; overflow: auto; }
+.sc-rank li { display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; align-items: baseline; padding: 3px 0; border-bottom: 1px solid #241c15; }
+.sc-rank li.now { color: var(--brass-hi); font-weight: 700; }
+.sc-rank li em { color: var(--mute); font-style: normal; font-size: 12.5px; margin-left: 6px; }
+.sc-rank li small { color: var(--mute); }
+.sc-del { background: none; border: 1px solid #4a3a2a; color: var(--mute); font-size: 12px; padding: 1px 6px; cursor: pointer; }
+@media (max-width: 760px) { .sc-tiles { grid-template-columns: 1fr 1fr; } .sc-rank li { grid-template-columns: 1fr auto; } .sc-rank li small, .sc-del { grid-column: 1 / -1; } }

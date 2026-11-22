@@ -2380,6 +2380,43 @@
     const potI = S.cls === 'Paladin' && /_Aura$/.test(P.id || '') ? auraPotency(P.id) : null; const wornSN = worn.some(it => /Aura Potency while standing in Consecration/.test(strip(it.desc || '')));
     return { dsCh, dsX, dsHit, dsF, dsSrc, lhMult, echoN, projN, pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
+  // ===== Build score: the build's best damage line with a fixed 2,000 damage weapon, on packs and on a boss, so any two builds compare =====
+  const RANK_KEY = 'sanctuary-ledger-ranked';
+  let SCORE_CACHE = { k: '', v: null };
+  function buildScore() {
+    const k = JSON.stringify(Object.assign({}, S, { tc: null, df: null })); if (SCORE_CACHE.k === k) return SCORE_CACHE.v;
+    const T = tcState(); const keep = JSON.stringify(T); let best = null;
+    try {
+      T.wd = 2000; T.ws = 1;
+      for (const id of unlockedSkills()) { const P = cdata().powers[id]; if (!P || P.passive) continue;
+        T.skill = id; T.pay = ''; T.tg = 3; T.st = Object.assign({}, T.st || {}, { boss: false }); let pays = []; try { invalidate(); const R0 = theory(); pays = R0 ? R0.pays || [] : []; } catch (e) { pays = []; }
+        for (const p of pays) { T.pay = p.k; let R; try { R = theory(); } catch (e) { continue; } if (!R || !(R.base > 0) || !R.payD || R.payD.k !== p.k || !R.segs) continue;
+          const v = R.segs[1][1].exp * R.hps; if (!best || v > best.pack) best = { pack: v, id, pay: p.k, name: P.name }; } }
+      if (best) { T.skill = best.id; T.pay = best.pay; T.tg = 1; T.st = Object.assign({}, T.st || {}, { boss: true }); try { const R = theory(); best.boss = R && R.segs ? R.segs[2][1].exp * R.hps : 0; } catch (e) { best.boss = 0; } }
+    } finally { Object.keys(T).forEach(x => delete T[x]); Object.assign(T, JSON.parse(keep)); invalidate(); }
+    let ehp = 0; try { const Dd = defense(); ehp = Dd ? Dd.now || 0 : 0; } catch (e) { ehp = 0; }
+    const v = Object.assign(best || { pack: 0, boss: 0 }, { ehp }); SCORE_CACHE = { k, v }; return v;
+  }
+  function rankedMine() { try { const j = JSON.parse(localStorage.getItem(RANK_KEY) || '[]'); return Array.isArray(j) ? j : []; } catch (e) { return []; } }
+  function scoreHtml(sc) {
+    const big = v => v >= 1e9 ? (v / 1e9).toFixed(1) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : Math.round(v).toLocaleString();
+    const lib = ((window.D4SCORES || {}).builds || []).filter(b => b.cls === S.cls).map(b => ({ n: b.name + ' (' + b.v + ')', pack: b.pack, boss: b.boss, src: 'Library' }));
+    const mine = rankedMine().filter(b => b.cls === S.cls).map(b => ({ n: b.name, pack: b.pack, boss: b.boss, src: 'Yours, ' + b.date, mine: 1 }));
+    const all = lib.concat(mine).concat([{ n: (S.name || 'This build') + ' (now)', pack: sc.pack, boss: sc.boss, src: 'Loaded now', now: 1 }]).sort((a, b) => b.boss - a.boss);
+    const pos = all.findIndex(x => x.now) + 1;
+    return `<section class="tc-score" aria-label="Build score">
+      <div class="sc-head"><h3>Build score</h3><button class="btn ghost" id="scSave" type="button">Add to ranking</button></div>
+      <div class="sc-tiles"><div><span>Packs</span><b class="num">${big(sc.pack)}</b><small>a second, 3 enemies</small></div><div><span>Boss</span><b class="num">${big(sc.boss)}</b><small>a second, one boss</small></div><div><span>Toughness</span><b class="num">${big(sc.ehp)}</b><small>effective Life</small></div><div><span>Rank</span><b class="num">${pos} of ${all.length}</b><small>by boss damage</small></div></div>
+      <p class="note">Best line: ${esc(sc.name || 'none yet')}. Every build is scored with the same 2,000 damage weapon and every condition met, so the numbers compare builds; they are not your in-game damage. It updates as you change the build.</p>
+      <details class="sc-rank"><summary>Ranking for ${esc(S.cls)} (${all.length})</summary><ol>${all.map(x => `<li class="${x.now ? 'now' : ''}"><span>${esc(x.n)} <em>${esc(x.src)}</em></span><b>${big(x.boss)}</b><small>${big(x.pack)} packs</small>${x.mine ? `<button class="sc-del" type="button" data-scdel="${esc(x.n)}" aria-label="Remove ${esc(x.n)} from the ranking">Remove</button>` : ''}</li>`).join('')}</ol></details>
+    </section>`;
+  }
+  function fillScore() {
+    const slot = $('#tcScore'); if (!slot) return;
+    const sc = buildScore(); slot.innerHTML = scoreHtml(sc);
+    const sv = $('#scSave'); if (sv) sv.onclick = () => { const list = rankedMine().filter(b => !(b.cls === S.cls && b.name === (S.name || 'Untitled build'))); list.push({ cls: S.cls, name: S.name || 'Untitled build', pack: Math.round(sc.pack), boss: Math.round(sc.boss), date: new Date().toLocaleDateString() }); try { localStorage.setItem(RANK_KEY, JSON.stringify(list)); } catch (e) { /* storage unavailable */ } fillScore(); };
+    $$('[data-scdel]', slot).forEach(b => b.onclick = () => { const list = rankedMine().filter(x => !(x.cls === S.cls && x.name === b.dataset.scdel)); try { localStorage.setItem(RANK_KEY, JSON.stringify(list)); } catch (e) { /* ignore */ } fillScore(); });
+  }
   function renderTheory() {
     invalidate();
     const R = theory(); const box = $('#panel-theory'); const f = (v, d) => D4T.fmtNum(Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0));
@@ -2388,6 +2425,7 @@
     const row = (l, v, sub) => `<div class="tc-row"><span>${l}</span><b class="num">${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
     const list = (arr, unit) => arr.length ? `<ul class="tc-src">${arr.map(x => `<li><span>${esc(x.src)} <em>${esc(x.what || '')}</em></span><b>${f(x.v, 1)}${unit || '%'}</b></li>`).join('')}</ul>` : '<p class="note">Nothing on this build adds to it yet.</p>';
     box.innerHTML = `<div class="tc">
+      <div id="tcScore"><section class="tc-score"><p class="note">Scoring this build…</p></section></div>
       <header class="tc-head"><div><h2>Damage Theory Craft</h2><p>One skill hitting one monster. Min uses the low roll of every ticked power, the lowest damage roll, no crit, no vulnerable and no conditions. Max uses top rolls, a vulnerable crit and every condition. Expected uses your crit chance, your vulnerable uptime and the conditions you tick. Area damage is left out on purpose: judge it from the skill's size and how many enemies you expect to hit.</p></div></header>
       <section class="tc-states" aria-label="Status on the hit">
         <h3>Status on the hit</h3>
@@ -2464,6 +2502,7 @@
         </section>
       </div></div>`;
     const set = (k, v) => { T[k] = v; commit(); renderTheory(); };
+    setTimeout(fillScore, 0);
     $('#tcSkill').onchange = e => { T.pay = ''; set('skill', e.target.value); };
     $('#tcPay').onchange = e => set('pay', e.target.value);
     [['tcWd', 'wd'], ['tcWs', 'ws'], ['tcBase', 'base'], ['tcVuln', 'vuln'], ['tcDawn', 'dawn'], ['tcThorns', 'thorns'], ['tcJud', 'jud'], ['tcTg', 'tg'], ['tcBlk', 'blk'], ['tcNcd', 'ncd'], ['tcKps', 'kps'], ['tcHin', 'hin'], ['tcRes', 'res'], ['tcPph', 'pph']].forEach(([id, k]) => { const el = $('#' + id); if (el) el.onchange = e => set(k, e.target.value); });
