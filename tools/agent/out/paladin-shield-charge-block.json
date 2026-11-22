@@ -1,0 +1,1565 @@
+{
+ "key": "paladin-shield-charge-block",
+ "name": "Shield Charge, block engine",
+ "cls": "Paladin",
+ "base": "Shield Charge",
+ "main": "Shield Charge",
+ "pay": "THORNS:HIT",
+ "mods": [
+  "Relentless Charge",
+  "Resolve",
+  "Hit Count As Blocking"
+ ],
+ "trim": [
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura",
+  "Fanaticism Aura"
+ ],
+ "dmg": {
+  "start": 845563065,
+  "main": 35467475806,
+  "procs": [],
+  "total": 35467475806,
+  "pack": 35467475806,
+  "boss": 26244010515,
+  "bestSkill": "Shield Charge"
+ },
+ "def": {
+  "start": 110615,
+  "ehp": 790262,
+  "life": 29981,
+  "armor": 31164,
+  "armorDR": 77.3,
+  "block": 30,
+  "dodge": 0,
+  "elems": [
+   {
+    "el": "Physical",
+    "dr": 87.7,
+    "ehp": 243246
+   },
+   {
+    "el": "Fire",
+    "dr": 98,
+    "ehp": 1491308
+   },
+   {
+    "el": "Lightning",
+    "dr": 98,
+    "ehp": 1491308
+   },
+   {
+    "el": "Cold",
+    "dr": 87.7,
+    "ehp": 243246
+   },
+   {
+    "el": "Poison",
+    "dr": 98,
+    "ehp": 1491308
+   },
+   {
+    "el": "Shadow",
+    "dr": 98.2,
+    "ehp": 1620861
+   }
+  ],
+  "overCap": [],
+  "whatIf": [
+   {
+    "affix": "Damage Reduction",
+    "gain": 17.6
+   },
+   {
+    "affix": "Maximum Life",
+    "gain": 15.7
+   },
+   {
+    "affix": "All Resistance",
+    "gain": 11.4
+   },
+   {
+    "affix": "Armor",
+    "gain": -16.1
+   }
+  ]
+ },
+ "caps": [
+  {
+   "id": "as",
+   "stat": "Attack Speed Bonus",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "cs",
+   "stat": "Cast Speed Bonus (second attack speed cap)",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "csc",
+   "stat": "Critical Strike Chance",
+   "v": 40.5,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "retri",
+   "stat": "Retribution Chance",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "block",
+   "stat": "Block Chance",
+   "v": 30,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "blockr",
+   "stat": "Block Reduction",
+   "v": 30,
+   "cap": 80,
+   "at": false
+  },
+  {
+   "id": "dr",
+   "stat": "All Damage Reduction",
+   "v": 15,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "dodge",
+   "stat": "Dodge Chance",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "cdr",
+   "stat": "Cooldown Reduction",
+   "v": 5,
+   "cap": 75,
+   "at": false
+  },
+  {
+   "id": "lhc",
+   "stat": "Lucky Hit Chance Bonus",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  }
+ ],
+ "pit": [
+  {
+   "tier": 60,
+   "eliteTTK": 0,
+   "eliteKillsYouIn": 13,
+   "biggestHit": 3599,
+   "life": 29981,
+   "ok": true
+  },
+  {
+   "tier": 70,
+   "eliteTTK": 0,
+   "eliteKillsYouIn": 8.2,
+   "biggestHit": 5720,
+   "life": 29981,
+   "ok": true
+  },
+  {
+   "tier": 80,
+   "eliteTTK": 0.2,
+   "eliteKillsYouIn": 5.2,
+   "biggestHit": 9090,
+   "life": 29981,
+   "ok": true
+  },
+  {
+   "tier": 90,
+   "eliteTTK": 0.8,
+   "eliteKillsYouIn": 3.3,
+   "biggestHit": 14446,
+   "life": 29981,
+   "ok": true
+  },
+  {
+   "tier": 100,
+   "eliteTTK": 3.9,
+   "eliteKillsYouIn": 2.1,
+   "biggestHit": 22959,
+   "life": 29981,
+   "ok": false
+  },
+  {
+   "tier": 110,
+   "eliteTTK": 18.9,
+   "eliteKillsYouIn": 1.3,
+   "biggestHit": 36486,
+   "life": 29981,
+   "ok": false
+  },
+  {
+   "tier": 120,
+   "eliteTTK": 303.7,
+   "eliteKillsYouIn": 1.1,
+   "biggestHit": 46120,
+   "life": 29981,
+   "ok": false
+  },
+  {
+   "tier": 130,
+   "eliteTTK": 4878,
+   "eliteKillsYouIn": 0.9,
+   "biggestHit": 58296,
+   "life": 29981,
+   "ok": false
+  },
+  {
+   "tier": 140,
+   "eliteTTK": 78339.7,
+   "eliteKillsYouIn": 0.7,
+   "biggestHit": 73688,
+   "life": 29981,
+   "ok": false
+  },
+  {
+   "tier": 150,
+   "eliteTTK": 1258117.4,
+   "eliteKillsYouIn": 0.6,
+   "biggestHit": 93144,
+   "life": 29981,
+   "ok": false
+  }
+ ],
+ "pitHold": 90,
+ "pitHoldStart": 70,
+ "startScore": {
+  "pack": 845563065,
+  "boss": 845563065
+ },
+ "rot": [
+  {
+   "id": "Paladin_Fortress",
+   "name": "Fortress",
+   "tag": "Ultimate",
+   "basic": false,
+   "main": false,
+   "cd": 57,
+   "cost": false,
+   "dmg": "Physical"
+  },
+  {
+   "id": "Paladin_Smite_FalconPunch_Recast_1",
+   "name": "Aegis",
+   "tag": "Valor",
+   "basic": false,
+   "main": false,
+   "cd": 15.2,
+   "cost": false,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Defensive_Aura",
+   "name": "Defiance Aura",
+   "tag": "Aura",
+   "basic": true,
+   "main": false,
+   "cd": 19,
+   "cost": true,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Offensive_Aura",
+   "name": "Fanaticism Aura",
+   "tag": "Aura",
+   "basic": false,
+   "main": false,
+   "cd": 14.25,
+   "cost": true,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Punish",
+   "name": "Clash",
+   "tag": "Basic",
+   "basic": false,
+   "main": false,
+   "cd": 0,
+   "cost": true,
+   "dmg": "Physical"
+  },
+  {
+   "id": "Paladin_ShieldCharge_Channel_Short",
+   "name": "Shield Charge",
+   "tag": "Valor",
+   "basic": false,
+   "main": true,
+   "cd": 0,
+   "cost": true,
+   "dmg": "Physical"
+  }
+ ],
+ "gear": [
+  {
+   "slot": "helm",
+   "slotName": "Helm",
+   "item": "Exploiter's",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+121 Strength",
+    "+2,800 Shadow Resistance",
+    "+1,450 Maximum Life",
+    "+100 All Stats"
+   ],
+   "tempers": [
+    "+2,000 Armor"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "chest",
+   "slotName": "Chest",
+   "item": "Mantle of the Grey",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+2,500 Armor",
+    "+3 to Defiance Aura",
+    "+121 Strength",
+    "+1,450 Maximum Life"
+   ],
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "gloves",
+   "slotName": "Gloves",
+   "item": "Vanguard's",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "x50% Critical Strike Damage Multiplier",
+    "+8.5% Critical Strike Chance",
+    "x24% Physical Damage Multiplier",
+    "x28% Vulnerable Damage Multiplier"
+   ],
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "pants",
+   "slotName": "Pants",
+   "item": "Aspect of the Protector",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+2,500 Armor",
+    "+121 Strength",
+    "+1,450 Maximum Life",
+    "+100 All Stats"
+   ],
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "boots",
+   "slotName": "Boots",
+   "item": "Aspect of Retribution",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+121 Strength",
+    "+2,800 Shadow Resistance",
+    "+1,450 Maximum Life",
+    "+100 All Stats"
+   ],
+   "tempers": [
+    "+10% Defiance Aura Potency"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "amulet",
+   "slotName": "Amulet",
+   "item": "Blood-Mad Idol",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "x50% Critical Strike Damage Multiplier",
+    "+8.5% Critical Strike Chance",
+    "x24% Physical Damage Multiplier",
+    "x28% Vulnerable Damage Multiplier"
+   ],
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": [
+    {
+     "type": "Topaz",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "ring1",
+   "slotName": "Ring",
+   "item": "Aspect of the Juggernaut's Covenant",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+5% Critical Strike Chance",
+    "x25% Critical Strike Damage Multiplier",
+    "x10% All Damage Multiplier",
+    "x14% Vulnerable Damage Multiplier"
+   ],
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": [
+    {
+     "type": "Ruby",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "ring2",
+   "slotName": "Ring",
+   "item": "Aspect of Lapa's Scripture",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+5% Critical Strike Chance",
+    "x25% Critical Strike Damage Multiplier",
+    "x10% All Damage Multiplier",
+    "x14% Vulnerable Damage Multiplier"
+   ],
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": [
+    {
+     "type": "Emerald",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "weapon",
+   "slotName": "Weapon",
+   "item": "Vanquishing",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "x25% Critical Strike Damage Multiplier",
+    "+2,200 Maximum Life",
+    "+180 Strength",
+    "x10% All Damage Multiplier"
+   ],
+   "tempers": [
+    "+5% Critical Strike Chance"
+   ],
+   "gems": [
+    {
+     "type": "Skull",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "offhand",
+   "slotName": "Off-hand",
+   "item": "Herald of Zakarum",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+8.5% Critical Strike Chance",
+    "+180 Strength",
+    "+2,500 Armor",
+    "15% Damage Reduction"
+   ],
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": [
+    {
+     "type": "Ruby",
+     "grade": 9
+    }
+   ]
+  }
+ ],
+ "glyphs": [
+  {
+   "board": "Start",
+   "glyph": "Outmatch",
+   "level": 75
+  },
+  {
+   "board": "Relentless",
+   "glyph": "Imbiber",
+   "level": 75
+  },
+  {
+   "board": "Castle",
+   "glyph": "Spirit",
+   "level": 75
+  },
+  {
+   "board": "Shield Bearer",
+   "glyph": "Retribution",
+   "level": 75
+  },
+  {
+   "board": "Beacon",
+   "glyph": "Control",
+   "level": 75
+  }
+ ],
+ "boards": [
+  "Start",
+  "Relentless",
+  "Castle",
+  "Shield Bearer",
+  "Beacon"
+ ],
+ "paraFrom": "kept from Shield Charge",
+ "charms": [
+  {
+   "kind": "rare",
+   "aff": [
+    "15%[x] Critical Strike Damage",
+    "15%[x] Vulnerable Damage"
+   ]
+  },
+  {
+   "kind": "unique",
+   "name": "The Grandfather"
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Aura Skills",
+    "+100 All Stats"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+100 All Stats",
+    "+3 to Aura Skills"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+100 All Stats",
+    "+3 to Aura Skills"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+100 All Stats",
+    "+3 to Aura Skills"
+   ]
+  }
+ ],
+ "seal": "Seal of the Diamond Mind",
+ "mercs": {
+  "main": "Raheir",
+  "sup": "Aldkin",
+  "supSkill": "Field of Languish"
+ },
+ "engine": {
+  "made": [
+   "Movement",
+   "Lucky Hit",
+   "Thorns",
+   "Resolve (Juggernaut)",
+   "Block",
+   "Crowd control",
+   "Retribution",
+   "Critical Strikes",
+   "Attack speed",
+   "Resource spending",
+   "Aura cast / Aura Potency"
+  ],
+  "leftOut": 15
+ },
+ "skills": [
+  "Defiance Aura r19 [Rite of Thorns, Maximum Life, Potency]",
+  "Shield Charge r15 [Relentless Charge, Resolve, Hit Count As Blocking]",
+  "Aegis r15 [Impunity, Duration, Cooldown Reduction]",
+  "Fanaticism Aura r20 [Rite of Vengeance, Extra Passive Stack, Potency]",
+  "Clash r4 [Punishment, Faith Generation, Crusader's March Effectiveness]",
+  "Fortress r15 [Barricade, Unstoppable, Resolve Damage Bonus]"
+ ],
+ "bar": [
+  "Fortress",
+  "Aegis",
+  "Defiance Aura",
+  "Fanaticism Aura",
+  "Clash",
+  "Shield Charge"
+ ],
+ "log": [
+  "started from Shield Charge",
+  "main skill upgrades: Relentless Charge, Resolve, Hit Count As Blocking",
+  "starting point holds Pit 70",
+  "engine: Movement, Lucky Hit, Thorns, Resolve (Juggernaut), Block, Crowd control, Retribution, Critical Strikes, Attack speed, Resource spending, Aura cast / Aura Potency; 15 payoffs left out for lack of a trigger",
+  "gear searched (2 passes)",
+  "paragon boards from kept from Shield Charge",
+  "gear searched again with the new boards",
+  "Paragon_Paladin_00: Resplendence -> Outmatch",
+  "Paragon_Paladin_06: Spirit -> Imbiber",
+  "Paragon_Paladin_01: Sentinel -> Spirit",
+  "Paragon_Paladin_09: Honed -> Control",
+  "reinforcement Aldkin -> Aldkin (Mercenary_CursedChild_Wither)",
+  "charms: The Grandfather",
+  "glyphs, mercenaries and charms searched"
+ ],
+ "secs": 4,
+ "st": {
+  "v": 1,
+  "cls": "Paladin",
+  "ver": "live",
+  "name": "Shield Charge Paladin, Endgame",
+  "alloc": {
+   "11": 1,
+   "13": 1,
+   "16": 1,
+   "31": 1,
+   "43": 3,
+   "47": 3,
+   "49": 3,
+   "53": 15,
+   "55": 1,
+   "56": 1,
+   "58": 1,
+   "103": 1,
+   "107": 1,
+   "108": 1,
+   "145": 1,
+   "146": 1,
+   "149": 1,
+   "169": 4,
+   "172": 5,
+   "176": 15,
+   "193": 1,
+   "195": 1,
+   "249": 15,
+   "252": 1
+  },
+  "bonusRanks": 0,
+  "sel": null,
+  "gear": {
+   "helm": {
+    "item": {
+     "t": "aspect",
+     "id": "Legendary_Generic_111"
+    },
+    "affixes": [
+     {
+      "id": "S04_CoreStat_Strength"
+     },
+     {
+      "id": "S04_Resistance_Single_Shadow"
+     },
+     {
+      "id": "S04_Life"
+     },
+     {
+      "id": "S04_CoreStats_All"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_Armor_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "chest": {
+    "item": {
+     "t": "u",
+     "id": "Chest_Unique_Paladin_001"
+    },
+    "affixes": [
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "X2_SkillRankBonus_Paladin_Aura_DefianceAura"
+     },
+     {
+      "id": "S04_CoreStat_Strength"
+     },
+     {
+      "id": "S04_Life"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "pants": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_generic_011"
+    },
+    "affixes": [
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "S04_CoreStat_Strength"
+     },
+     {
+      "id": "S04_Life"
+     },
+     {
+      "id": "S04_CoreStats_All"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "boots": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_generic_038_x2"
+    },
+    "affixes": [
+     {
+      "id": "S04_CoreStat_Strength"
+     },
+     {
+      "id": "S04_Resistance_Single_Shadow"
+     },
+     {
+      "id": "S04_Life"
+     },
+     {
+      "id": "S04_CoreStats_All"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Paladin_Utility_Aura_Tier3",
+      "oid": "Tempered_Special_Type_Aura_Paladin_Potency_Defiance_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "weapon": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_sorc_129"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "X2_Life_Greater"
+     },
+     {
+      "id": "X2_CoreStat_Strength_Greater"
+     },
+     {
+      "id": "S04_Damage_All"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Weapon_APSCrit_Tier3",
+      "oid": "Tempered_Generic_CritChance_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Skull",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "gloves": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_paladin_011"
+    },
+    "affixes": [
+     {
+      "id": "X2_CritDamage_Greater"
+     },
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_DamageType_Physical_Greater"
+     },
+     {
+      "id": "X2_Damage_to_Vulnerable_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "amulet": {
+    "item": {
+     "t": "u",
+     "id": "Amulet_Unique_Generic_102"
+    },
+    "affixes": [
+     {
+      "id": "X2_CritDamage_Greater"
+     },
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_DamageType_Physical_Greater"
+     },
+     {
+      "id": "X2_Damage_to_Vulnerable_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Topaz",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "ring1": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_paladin_033"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChanceJewelry"
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "S04_Damage_All"
+     },
+     {
+      "id": "S04_Damage_to_Vulnerable"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Ruby",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "ring2": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_paladin_042"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChanceJewelry"
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "S04_Damage_All"
+     },
+     {
+      "id": "S04_Damage_to_Vulnerable"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Emerald",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   },
+   "offhand": {
+    "item": {
+     "t": "u",
+     "id": "1HShield_Unique_Paladin_004"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_CoreStat_Strength_Greater"
+     },
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "S04_DamageReduction"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Ruby",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0
+   }
+  },
+  "charms": {
+   "seal": "Talisman_Seal_MythicUnique_03",
+   "count": {},
+   "horadric": {},
+   "torch": "",
+   "uniques": [],
+   "sockets": [
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_Virtue_Bravery",
+      "Talisman_Charm_Virtue_Wrath"
+     ]
+    },
+    {
+     "t": "u",
+     "id": "Talisman_Charm_Unique_2HSword_Unique_Generic_001",
+     "aff": [
+      "Talisman_Charm_CoreStats_All",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Aura"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Aura",
+      "Talisman_Charm_CoreStats_All"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_CoreStats_All",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Aura"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_CoreStats_All",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Aura"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_CoreStats_All",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Aura"
+     ]
+    }
+   ]
+  },
+  "calc": {
+   "cd": {
+    "skill": "",
+    "base": "",
+    "cdr": [
+     {
+      "n": "Relentless while moving",
+      "v": 0
+     }
+    ],
+    "flat": [
+     {
+      "n": "Rune or proc cuts per second",
+      "v": 0
+     }
+    ],
+    "dur": ""
+   },
+   "lh": {
+    "skill": "",
+    "base": "",
+    "bonus": 0,
+    "hits": 4,
+    "fx": []
+   },
+   "dmg": {
+    "wd": 4000,
+    "ms": 2500,
+    "ranks": 20,
+    "add": 250,
+    "cc": 60,
+    "cd": 200,
+    "vuln": 120,
+    "vulnUp": 80,
+    "mult": [
+     {
+      "n": "Aspect slot",
+      "v": 60
+     },
+     {
+      "n": "Unique power",
+      "v": 100
+     }
+    ]
+   },
+   "ehp": {
+    "life": 12000,
+    "armorDr": 60,
+    "res": 70,
+    "dr": [
+     {
+      "n": "Firm Decree",
+      "v": 30
+     },
+     {
+      "n": "Righteous Will (2 min Resolve)",
+      "v": 20
+     }
+    ]
+   }
+  },
+  "hotbar": [
+   "Paladin_Fortress",
+   "Paladin_Smite_FalconPunch_Recast_1",
+   "Paladin_Defensive_Aura",
+   "Paladin_Offensive_Aura",
+   "Paladin_Punish",
+   "Paladin_ShieldCharge_Channel_Short"
+  ],
+  "mech": {
+   "Paladin": {
+    "picks": {
+     "0": [
+      "Paladin_Oath_Juggernaut"
+     ]
+    },
+    "bond": "",
+    "up": {}
+   }
+  },
+  "paragon": {
+   "boards": [
+    {
+     "id": "Paragon_Paladin_00",
+     "ox": 0,
+     "oy": 0,
+     "r": 0
+    },
+    {
+     "id": "Paragon_Paladin_06",
+     "ox": 0,
+     "oy": -21,
+     "r": 0,
+     "at": {
+      "gx": 10,
+      "gy": 0,
+      "dx": 0,
+      "dy": -1
+     }
+    },
+    {
+     "id": "Paragon_Paladin_01",
+     "ox": 21,
+     "oy": -21,
+     "r": 2,
+     "at": {
+      "gx": 20,
+      "gy": -11,
+      "dx": 1,
+      "dy": 0
+     }
+    },
+    {
+     "id": "Paragon_Paladin_02",
+     "ox": 21,
+     "oy": 0,
+     "r": 0,
+     "at": {
+      "gx": 31,
+      "gy": -1,
+      "dx": 0,
+      "dy": 1
+     }
+    },
+    {
+     "id": "Paragon_Paladin_09",
+     "ox": 42,
+     "oy": 0,
+     "r": 3,
+     "at": {
+      "gx": 41,
+      "gy": 10,
+      "dx": 1,
+      "dy": 0
+     }
+    }
+   ],
+   "alloc": {
+    "Paragon_Paladin_00:10,13": 1,
+    "Paragon_Paladin_00:11,13": 1,
+    "Paragon_Paladin_00:12,13": 1,
+    "Paragon_Paladin_00:12,12": 1,
+    "Paragon_Paladin_00:12,11": 1,
+    "Paragon_Paladin_00:11,11": 1,
+    "Paragon_Paladin_00:12,10": 1,
+    "Paragon_Paladin_00:12,9": 1,
+    "Paragon_Paladin_00:11,9": 1,
+    "Paragon_Paladin_00:11,8": 1,
+    "Paragon_Paladin_00:10,8": 1,
+    "Paragon_Paladin_00:10,7": 1,
+    "Paragon_Paladin_00:9,8": 1,
+    "Paragon_Paladin_00:9,9": 1,
+    "Paragon_Paladin_00:9,10": 1,
+    "Paragon_Paladin_00:8,10": 1,
+    "Paragon_Paladin_00:8,11": 1,
+    "Paragon_Paladin_00:9,11": 1,
+    "Paragon_Paladin_00:9,5": 1,
+    "Paragon_Paladin_00:9,6": 1,
+    "Paragon_Paladin_00:8,5": 1,
+    "Paragon_Paladin_00:8,4": 1,
+    "Paragon_Paladin_00:9,3": 1,
+    "Paragon_Paladin_00:9,4": 1,
+    "Paragon_Paladin_00:8,3": 1,
+    "Paragon_Paladin_00:11,6": 1,
+    "Paragon_Paladin_00:11,5": 1,
+    "Paragon_Paladin_00:12,5": 1,
+    "Paragon_Paladin_00:12,4": 1,
+    "Paragon_Paladin_00:11,4": 1,
+    "Paragon_Paladin_00:11,3": 1,
+    "Paragon_Paladin_00:12,3": 1,
+    "Paragon_Paladin_00:11,2": 1,
+    "Paragon_Paladin_00:11,1": 1,
+    "Paragon_Paladin_00:10,1": 1,
+    "Paragon_Paladin_00:10,6": 1,
+    "Paragon_Paladin_00:10,0": 1,
+    "Paragon_Paladin_06:19,10": 1,
+    "Paragon_Paladin_06:18,10": 1,
+    "Paragon_Paladin_06:17,10": 1,
+    "Paragon_Paladin_06:17,9": 1,
+    "Paragon_Paladin_06:17,8": 1,
+    "Paragon_Paladin_06:17,7": 1,
+    "Paragon_Paladin_06:17,6": 1,
+    "Paragon_Paladin_06:17,5": 1,
+    "Paragon_Paladin_06:16,5": 1,
+    "Paragon_Paladin_06:15,5": 1,
+    "Paragon_Paladin_06:15,4": 1,
+    "Paragon_Paladin_06:15,3": 1,
+    "Paragon_Paladin_06:14,5": 1,
+    "Paragon_Paladin_06:13,5": 1,
+    "Paragon_Paladin_06:12,5": 1,
+    "Paragon_Paladin_06:11,5": 1,
+    "Paragon_Paladin_06:11,6": 1,
+    "Paragon_Paladin_06:10,6": 1,
+    "Paragon_Paladin_06:16,7": 1,
+    "Paragon_Paladin_06:15,7": 1,
+    "Paragon_Paladin_06:15,8": 1,
+    "Paragon_Paladin_06:14,8": 1,
+    "Paragon_Paladin_06:14,9": 1,
+    "Paragon_Paladin_06:13,9": 1,
+    "Paragon_Paladin_06:13,10": 1,
+    "Paragon_Paladin_06:13,11": 1,
+    "Paragon_Paladin_06:13,12": 1,
+    "Paragon_Paladin_06:13,13": 1,
+    "Paragon_Paladin_06:12,13": 1,
+    "Paragon_Paladin_06:12,14": 1,
+    "Paragon_Paladin_06:12,15": 1,
+    "Paragon_Paladin_06:11,15": 1,
+    "Paragon_Paladin_06:11,16": 1,
+    "Paragon_Paladin_06:11,17": 1,
+    "Paragon_Paladin_06:10,17": 1,
+    "Paragon_Paladin_06:10,18": 1,
+    "Paragon_Paladin_06:10,19": 1,
+    "Paragon_Paladin_06:11,13": 1,
+    "Paragon_Paladin_06:10,13": 1,
+    "Paragon_Paladin_06:9,13": 1,
+    "Paragon_Paladin_06:8,13": 1,
+    "Paragon_Paladin_06:7,13": 1,
+    "Paragon_Paladin_06:7,12": 1,
+    "Paragon_Paladin_06:7,9": 1,
+    "Paragon_Paladin_06:7,10": 1,
+    "Paragon_Paladin_06:7,11": 1,
+    "Paragon_Paladin_06:7,8": 1,
+    "Paragon_Paladin_06:6,8": 1,
+    "Paragon_Paladin_06:5,8": 1,
+    "Paragon_Paladin_06:5,7": 1,
+    "Paragon_Paladin_06:10,12": 1,
+    "Paragon_Paladin_06:20,10": 1,
+    "Paragon_Paladin_06:10,20": 1,
+    "Paragon_Paladin_01:19,10": 1,
+    "Paragon_Paladin_01:19,9": 1,
+    "Paragon_Paladin_01:19,8": 1,
+    "Paragon_Paladin_01:19,7": 1,
+    "Paragon_Paladin_01:19,6": 1,
+    "Paragon_Paladin_01:19,5": 1,
+    "Paragon_Paladin_01:18,5": 1,
+    "Paragon_Paladin_01:17,5": 1,
+    "Paragon_Paladin_01:16,5": 1,
+    "Paragon_Paladin_01:15,4": 1,
+    "Paragon_Paladin_01:14,5": 1,
+    "Paragon_Paladin_01:15,3": 1,
+    "Paragon_Paladin_01:15,2": 1,
+    "Paragon_Paladin_01:14,2": 1,
+    "Paragon_Paladin_01:13,5": 1,
+    "Paragon_Paladin_01:12,5": 1,
+    "Paragon_Paladin_01:12,6": 1,
+    "Paragon_Paladin_01:12,7": 1,
+    "Paragon_Paladin_01:10,1": 1,
+    "Paragon_Paladin_01:12,8": 1,
+    "Paragon_Paladin_01:11,8": 1,
+    "Paragon_Paladin_01:11,9": 1,
+    "Paragon_Paladin_01:12,9": 1,
+    "Paragon_Paladin_01:11,10": 1,
+    "Paragon_Paladin_01:10,9": 1,
+    "Paragon_Paladin_01:9,9": 1,
+    "Paragon_Paladin_01:8,9": 1,
+    "Paragon_Paladin_01:8,10": 1,
+    "Paragon_Paladin_01:8,11": 1,
+    "Paragon_Paladin_01:7,11": 1,
+    "Paragon_Paladin_01:7,12": 1,
+    "Paragon_Paladin_01:6,12": 1,
+    "Paragon_Paladin_01:6,13": 1,
+    "Paragon_Paladin_01:5,14": 1,
+    "Paragon_Paladin_01:6,14": 1,
+    "Paragon_Paladin_01:5,15": 1,
+    "Paragon_Paladin_01:13,1": 1,
+    "Paragon_Paladin_01:12,1": 1,
+    "Paragon_Paladin_01:11,1": 1,
+    "Paragon_Paladin_01:13,2": 1,
+    "Paragon_Paladin_01:15,5": 1,
+    "Paragon_Paladin_01:10,0": 1,
+    "Paragon_Paladin_01:20,10": 1,
+    "Paragon_Paladin_02:10,1": 1,
+    "Paragon_Paladin_02:10,2": 1,
+    "Paragon_Paladin_02:10,3": 1,
+    "Paragon_Paladin_02:11,3": 1,
+    "Paragon_Paladin_02:12,3": 1,
+    "Paragon_Paladin_02:13,3": 1,
+    "Paragon_Paladin_02:14,3": 1,
+    "Paragon_Paladin_02:14,2": 1,
+    "Paragon_Paladin_02:13,4": 1,
+    "Paragon_Paladin_02:14,4": 1,
+    "Paragon_Paladin_02:15,3": 1,
+    "Paragon_Paladin_02:12,4": 1,
+    "Paragon_Paladin_02:12,5": 1,
+    "Paragon_Paladin_02:12,6": 1,
+    "Paragon_Paladin_02:10,6": 1,
+    "Paragon_Paladin_02:11,6": 1,
+    "Paragon_Paladin_02:9,6": 1,
+    "Paragon_Paladin_02:8,6": 1,
+    "Paragon_Paladin_02:8,7": 1,
+    "Paragon_Paladin_02:8,8": 1,
+    "Paragon_Paladin_02:9,8": 1,
+    "Paragon_Paladin_02:9,9": 1,
+    "Paragon_Paladin_02:12,8": 1,
+    "Paragon_Paladin_02:12,7": 1,
+    "Paragon_Paladin_02:12,9": 1,
+    "Paragon_Paladin_02:12,10": 1,
+    "Paragon_Paladin_02:12,11": 1,
+    "Paragon_Paladin_02:11,12": 1,
+    "Paragon_Paladin_02:10,12": 1,
+    "Paragon_Paladin_02:9,12": 1,
+    "Paragon_Paladin_02:13,12": 1,
+    "Paragon_Paladin_02:14,12": 1,
+    "Paragon_Paladin_02:15,12": 1,
+    "Paragon_Paladin_02:15,13": 1,
+    "Paragon_Paladin_02:15,14": 1,
+    "Paragon_Paladin_02:15,15": 1,
+    "Paragon_Paladin_02:17,15": 1,
+    "Paragon_Paladin_02:16,16": 1,
+    "Paragon_Paladin_02:17,17": 1,
+    "Paragon_Paladin_02:17,16": 1,
+    "Paragon_Paladin_02:7,6": 1,
+    "Paragon_Paladin_02:7,5": 1,
+    "Paragon_Paladin_02:6,5": 1,
+    "Paragon_Paladin_02:5,5": 1,
+    "Paragon_Paladin_02:6,4": 1,
+    "Paragon_Paladin_02:15,11": 1,
+    "Paragon_Paladin_02:16,11": 1,
+    "Paragon_Paladin_02:16,10": 1,
+    "Paragon_Paladin_02:17,10": 1,
+    "Paragon_Paladin_02:18,10": 1,
+    "Paragon_Paladin_02:19,10": 1,
+    "Paragon_Paladin_02:15,16": 1,
+    "Paragon_Paladin_02:12,12": 1,
+    "Paragon_Paladin_02:10,0": 1,
+    "Paragon_Paladin_02:20,10": 1,
+    "Paragon_Paladin_09:10,1": 1,
+    "Paragon_Paladin_09:11,1": 1,
+    "Paragon_Paladin_09:12,1": 1,
+    "Paragon_Paladin_09:13,1": 1,
+    "Paragon_Paladin_09:13,2": 1,
+    "Paragon_Paladin_09:13,3": 1,
+    "Paragon_Paladin_09:13,4": 1,
+    "Paragon_Paladin_09:13,5": 1,
+    "Paragon_Paladin_09:13,6": 1,
+    "Paragon_Paladin_09:13,7": 1,
+    "Paragon_Paladin_09:11,5": 1,
+    "Paragon_Paladin_09:10,5": 1,
+    "Paragon_Paladin_09:9,5": 1,
+    "Paragon_Paladin_09:8,5": 1,
+    "Paragon_Paladin_09:7,5": 1,
+    "Paragon_Paladin_09:6,6": 1,
+    "Paragon_Paladin_09:6,8": 1,
+    "Paragon_Paladin_09:6,7": 1,
+    "Paragon_Paladin_09:5,8": 1,
+    "Paragon_Paladin_09:5,10": 1,
+    "Paragon_Paladin_09:5,9": 1,
+    "Paragon_Paladin_09:4,10": 1,
+    "Paragon_Paladin_09:5,11": 1,
+    "Paragon_Paladin_09:6,5": 1,
+    "Paragon_Paladin_09:12,7": 1,
+    "Paragon_Paladin_09:12,8": 1,
+    "Paragon_Paladin_09:12,9": 1,
+    "Paragon_Paladin_09:12,10": 1,
+    "Paragon_Paladin_09:11,10": 1,
+    "Paragon_Paladin_09:10,10": 1,
+    "Paragon_Paladin_09:10,11": 1,
+    "Paragon_Paladin_09:10,12": 1,
+    "Paragon_Paladin_09:10,13": 1,
+    "Paragon_Paladin_09:10,14": 1,
+    "Paragon_Paladin_09:10,15": 1,
+    "Paragon_Paladin_09:11,15": 1,
+    "Paragon_Paladin_09:12,15": 1,
+    "Paragon_Paladin_09:13,15": 1,
+    "Paragon_Paladin_09:9,15": 1,
+    "Paragon_Paladin_09:8,15": 1,
+    "Paragon_Paladin_09:7,15": 1,
+    "Paragon_Paladin_09:7,14": 1,
+    "Paragon_Paladin_09:6,14": 1,
+    "Paragon_Paladin_09:6,16": 1,
+    "Paragon_Paladin_09:7,16": 1,
+    "Paragon_Paladin_09:12,5": 1,
+    "Paragon_Paladin_09:10,6": 1,
+    "Paragon_Paladin_09:10,0": 1
+   },
+   "glyphs": {
+    "Paragon_Paladin_00": "Rare_049_Strength_Main",
+    "Paragon_Paladin_06": "Rare_011_Willpower_Side",
+    "Paragon_Paladin_01": "Rare_050_Willpower_Side",
+    "Paragon_Paladin_02": "Rare_106_Strength_Main",
+    "Paragon_Paladin_09": "Rare_020_Intelligence_Side"
+   },
+   "glyphLv": {},
+   "cap": 300,
+   "base": {
+    "Strength": 0,
+    "Intelligence": 0,
+    "Willpower": 0,
+    "Dexterity": 0
+   }
+  },
+  "merc": {
+   "main": "ShieldBearer",
+   "sup": "CursedChild",
+   "supSkill": "Mercenary_CursedChild_Wither",
+   "opp": "avail",
+   "oppSkill": "",
+   "nodes": {
+    "BerserkerCrone": [
+     0,
+     3,
+     4,
+     5,
+     8,
+     11,
+     12,
+     14,
+     15
+    ],
+    "BountyHunter": [
+     2,
+     3,
+     5,
+     7,
+     9,
+     11,
+     13,
+     15,
+     17
+    ],
+    "CursedChild": [
+     1,
+     3,
+     5,
+     8,
+     9,
+     11,
+     14,
+     15,
+     17
+    ],
+    "ShieldBearer": [
+     1,
+     2,
+     5,
+     7,
+     9,
+     11,
+     12,
+     16,
+     17
+    ]
+   }
+  },
+  "notes": {
+   "about": "Shield Charge Paladin, A tier in Season 15. Build by Sanctum on mobalytics.gg, guide updated 2026-09-15. Variant: Endgame.\nhttps://mobalytics.gg/diablo-4/builds/paladin-shield-charge-endgame-build-guide\n\nSeal: Seal\nCharms: Berú of Righteous Will, Fer of Righteous Will, Linta of Righteous Will, Linta of Righteous Will, Griswold's Opus, Phoba of Righteous Will\n\nGems and runes:\nhelm: splinter of anguish, splinter of pain\nchest: bac, que\npants: igni, mot\nweapon: skull\namulet: topaz\nring1: ruby\nring2: emerald\noffhand: ruby\n\nNot matched to this game version, set these by hand:\nSkill tree: shield charge v2\nSkill tree: shield charge v2 hit count as blocking\nSkill tree: shield charge v2 damage bonus\nSkill tree: shield charge v2 relentless charge\nhelm affix: thorns\nchest affix: thorns\npants affix: thorns\noffhand affix: thorns\noffhand temper: worldly destruction critical strike chance",
+   "strengths": "",
+   "weaknesses": "",
+   "rotation": "",
+   "glyphs": "",
+   "video": "",
+   "filter": "",
+   "tags": []
+  },
+  "tc": {
+   "skill": "Paladin_ShieldCharge_Channel_Short",
+   "pay": "",
+   "wd": 2000,
+   "ws": 1,
+   "base": 0,
+   "vuln": 50,
+   "cond": {},
+   "off": {},
+   "st": {
+    "crit": true,
+    "vuln": true
+   },
+   "tg": 3
+  },
+  "df": {
+   "diff": 10,
+   "pit": 0,
+   "fort": false,
+   "weak": false,
+   "block": true,
+   "dodge": true,
+   "mon": {
+    "normal": "Fallen_Hound",
+    "boss": "EGB_Andariel_Boss",
+    "elite": "fallen_brute_fire_miniboss"
+   },
+   "rar": "elite",
+   "aff": []
+  }
+ }
+}

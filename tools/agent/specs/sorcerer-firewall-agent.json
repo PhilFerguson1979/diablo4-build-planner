@@ -1,0 +1,12 @@
+{
+ "key": "sorcerer-firewall-agent",
+ "name": "Firewall, agent search",
+ "cls": "Sorcerer",
+ "base": "Firewall",
+ "variant": 1,
+ "main": "Firewall",
+ "els": ["Fire", "Physical"],
+ "w": 0.5,
+ "idea": "Firewall keeps enemies Burning all the time, so every Burning payoff and Aspect of Disobedience (Damage Reduction from damage over time) stay on. A test of the agent on another class, starting from the meta Firewall build.",
+ "engine": ["Burning", "Damage over time"]
+}

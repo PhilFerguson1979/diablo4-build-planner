@@ -1,0 +1,13 @@
+{
+ "key": "paladin-shield-charge-block",
+ "name": "Shield Charge, block engine",
+ "cls": "Paladin",
+ "base": "Shield Charge",
+ "variant": 2,
+ "main": "Shield Charge",
+ "needMods": ["Hit Count As Blocking"],
+ "els": ["Physical", "Holy"],
+ "w": 0.5,
+ "idea": "Shield Charge's hits count as blocks, so every charge sets off the block payoffs (Akarat's Blessing cuts cooldowns, Northern Guard freezes, Redirected Force doubles its crit bonus, Bastion of Sir Matthias retaliates). The agent tests which of them the maths rewards.",
+ "engine": ["Block", "Cooldowns", "Crowd control"]
+}

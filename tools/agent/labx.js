@@ -34,7 +34,7 @@ window.LX = (() => {
     for (const st of x.classSets()) { const pcs = (x.GD().setPieces || {})[st.id] || []; const tiers = (st.tiers || []).map(t => t.n).filter(n => n <= Math.min(5, pcs.length));
       for (const n of tiers) tryOpt(st.name + ' ' + n + '-piece', () => { const slots = leastUseful(n, new Set()); slots.forEach((si, k) => { S.charms.sockets[si] = { t: 'set', id: st.id, piece: pcs[k].id, aff: [] }; }); fillAff(slots); }); }
     const rules = x.sealRules(); const uq = x.data().uniques.filter(u => u.kind === 'charm' && (!u.classes || !u.classes.length || u.classes.includes(S.cls)));
-    if (rules.uniques > 0) for (const u of uq) tryOpt(u.name, () => { const [si] = leastUseful(1, new Set()); if (si == null) return; S.charms.sockets[si] = { t: 'u', id: u.id, aff: [] }; fillAff([si]); });
+    if (rules.uniques > 0) for (const u of uq) if (!(window.AGENT_BAN && window.AGENT_BAN.test(u.name))) tryOpt(u.name, () => { const [si] = leastUseful(1, new Set()); if (si == null) return; S.charms.sockets[si] = { t: 'u', id: u.id, aff: [] }; fillAff([si]); });
     S.charms.sockets = JSON.parse(best); x.invalidate(); log.push('charms: ' + bestLbl); return log; };
   return { glyphs, mercs, charms };
 })();

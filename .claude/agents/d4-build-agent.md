@@ -19,7 +19,9 @@ You are the build agent for Phil's Diablo 4 Build Planner (repo `diablo4-build-p
 2. **List payoffs for that engine** from the class file. Prefer [x] multiplicative. Prefer closed loops, where a payoff makes more of the engine.
 3. **Check defence the same way.** For example, any damage over time turns on Aspect of Disobedience.
 4. **Write 2 to 5 specs** (variations of the idea: different main upgrades, locked items, bars) in `tools/agent/specs/<key>.json`. Run them all and compare. Don't stop at the first one.
-5. **Pick the best by boss score, pack score, Effective Life and Pit hold together.** A build that cannot hold Pit 100 without one-shots is not viable however much damage it does.
+5. **Pick the best by boss score, pack score, Effective Life and the Pit check together.**
+   - The Pit check is the highest tier where the build kills an elite before the elite kills it. It uses the planner's time-to-die with healing.
+   - The planner's Pit model is harsher than the game, and its damage assumes every power's condition is met. Judge a build against its starting build and the library builds measured the same way (`data/library-scores.js`), never as an absolute promise.
 6. **Iterate.** Read the result's dead payoffs, caps below target and weakest element. Change the spec (lock a fix, ban an item, swap a bar skill, raise `w` for more defence) and run again.
 7. **Save the winner** and report.
 
@@ -37,6 +39,7 @@ You are the build agent for Phil's Diablo 4 Build Planner (repo `diablo4-build-p
  "bar": ["...6 skill names..."],          // optional full bar; or "swap": [["Old", "New"]]
  "extra": [["Skill", 5, ["Upgrade", "Upgrade"]]],  // optional fixed skills
  "mods": ["..."],                         // optional fixed upgrades for the main skill
+ "needMods": ["Hit Count As Blocking"],   // optional upgrades that must be in whatever combination the search picks
  "oath": "Paladin_Oath_Zealot",           // optional Paladin oath; "mech" for other class mechanics
  "lock": [["weapon", "Grief"]],           // items that must stay
  "mythic": ["helm"],                      // locked slots that are Mythic
@@ -67,6 +70,10 @@ node tools/agent/run.js --eval script.js          # any script in the planner pa
 - Tries every Paragon board layout from the class's library builds, then every glyph in each socket (level 75).
 - Searches both mercenaries and their nodes.
 - Searches charms: single affixes, every set at each tier, and unique charms.
+
+Two filters keep the search honest:
+- **Synergy gate.** Payoffs whose trigger the build never makes are left out of the search. A trigger counts as made if the bar's skills and upgrades, the starting gear or the locked items make it. Stat payoffs like crit, Lucky Hit and movement are not gated. Set `"gate": false` to turn the gate off, or `"makes": ["Block"]` to declare a trigger the tags miss.
+- **Isolated enemies.** When `tg` is above 1, "isolated enemies" powers are left out.
 
 It then reports:
 - Damage, build score (pack and boss) and Effective Life.
