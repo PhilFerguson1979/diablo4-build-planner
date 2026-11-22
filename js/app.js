@@ -3471,6 +3471,11 @@
       if (m && !pwDef.some(x => x.id === 'pw:' + it.name + ':immune')) { const id = 'pw:' + it.name + ':immune'; pwDef.push({ id, name: it.name, kind: 'dr', v: Math.min(100, (+m[1] + +(m[2] || m[1])) / 2 / +m[3] * 100), upTo: false, on: (T.mdr || {})[id] !== false }); } });
     // how much of the time a power's Barrier is up: its duration over its cooldown when both are written, a tenth for a barrier of a few seconds with no stated cooldown, otherwise half
     const barrierUp = nm => { const it = SLOTS.map(sl => findItem((S.gear[sl.id] || {}).item)).find(q => q && q.name === nm); const t = it ? strip(it.desc) : ''; const d = t.match(/Barrier[^.]*?(?:for|lasts) ([\d.]+) seconds?/); const ev = t.match(/once every ([\d.]+) seconds/); const dur = d ? +d[1] : 0; return dur && ev ? Math.min(1, dur / +ev[1]) : dur && dur <= 3 ? 0.1 : 0.5; };
+    // Aspect of Disobedience: every tick of your damage over time adds a stack, so with any damage over time running it sits at full stacks
+    try { const stackRx = /Damage over Time grants you.{0,60}?Damage Reduction.{0,40}?stacking up to (\d+) times/i; const PW = sheetData().powers;
+      const txt = PW.filter(q => !stackRx.test(strip(q.desc || ''))).map(q => q.name + ' ' + strip(q.desc || '')).join(' | ') + ' | ' + unlockedSkills().map(id => strip(((cdata().powers[id] || {}).desc) || '')).join(' | ');
+      const dm = txt.match(/\bGrief\b|Poisoning|Burning|Bleeding|damage over time|over [\d.]+ seconds/i);
+      pwDef.forEach(x => { if (x.kind !== 'dr' || x.stacks) return; const q = PW.find(q => q.name === x.name); const m = q && strip(q.desc || '').match(stackRx); if (!m) return; x.stacks = dm ? +m[1] : 1; x.v = Math.min(99, x.v * x.stacks); x.why = dm ? 'full ' + m[1] + ' stacks (damage over time: ' + dm[0] + ')' : 'one stack (no damage over time found)'; }); } catch (e) { /* keep one stack */ }
     const pwSum = kind => pwDef.filter(x => x.on && x.kind === kind).reduce((a, x) => a + x.v, 0);
     const lifeFlat = M.life ? M.life.v : 0;
     const lifeMul = (1 + ((M.lifep ? M.lifep.v : 0) + pwSum('life')) / 100) * (1 + (M.lifep ? M.lifep.x : 0) / 100) * (1 + pwDef.filter(x => x.on && x.kind === 'barrier').reduce((a, x) => a + x.v * barrierUp(x.name), 0) / 100);   // a Barrier is extra Life for the share of the time it is up

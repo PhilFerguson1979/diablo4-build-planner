@@ -1,0 +1,14 @@
+{
+ "key": "paladin-grief-auradin",
+ "name": "Grief Auradin, Disobedience",
+ "cls": "Paladin",
+ "base": "Auradin, Holy Light Aura",
+ "variant": 1,
+ "main": "Holy Light Aura",
+ "lock": [["helm", "Leoric's Crown"], ["gloves", "Fists of Fate"], ["chest", "Enigma"], ["weapon", "Grief"]],
+ "mythic": ["helm", "gloves"],
+ "els": ["Holy", "Physical", "Fire", "Poison"],
+ "w": 0.5,
+ "idea": "Phil's find: Grief's poison is damage over time, so Aspect of Disobedience sits at full stacks and gives the biggest single Damage Reduction a Paladin can get. Holy Light Aura pulses keep Grief rolling.",
+ "engine": ["Aura cast / Aura Potency", "Damage over time", "Judgement"]
+}
