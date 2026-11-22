@@ -5,9 +5,9 @@ window.LAB = (() => {
   const st = s => String(s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
   function load(name, variant, cls) { const b = window.D4LIB.builds.find(x => (!cls || x.cls === cls) && (x.name === name || x.name.includes(name))); const r = window.__D4LIB.libResolve(b, variant || 0); X.setState(clone(r.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; return b.name; }
   // one damage line: expected hit against elites times hits a second
-  function line(skill, payKey, extra) { const T = X.tcState(); T.skill = skill; T.pay = payKey || ''; Object.assign(T, extra || {}); let R; try { R = X.theory(); } catch (e) { return { dps: 0, err: e.message }; }
+  function line(skill, payKey, extra) { const T = X.tcState(); T.skill = skill; T.pay = payKey || ''; const ex = Object.assign({}, extra || {}); delete ex.seg; Object.assign(T, ex); let R; try { R = X.theory(); } catch (e) { return { dps: 0, err: e.message }; }
     if (!R || !(R.base > 0)) return { dps: 0, R }; if (payKey && (!R.payD || R.payD.k !== payKey)) return { dps: 0, miss: 1, R };
-    return { dps: R.segs[1][1].exp * R.hps, hit: R.segs[1][1].exp, hps: R.hps, R }; }
+    const sg = (extra && extra.seg != null) ? extra.seg : (window.LAB_SEG != null ? window.LAB_SEG : 1); return { dps: R.segs[sg][1].exp * R.hps, hit: R.segs[sg][1].exp, hps: R.hps, R }; }
   function lines(list) { let tot = 0; const parts = []; for (const l of list) { const r = line(l.skill, l.pay, l.extra); const v = r.dps * (l.w == null ? 1 : l.w); tot += v; parts.push({ n: l.n || l.skill + ':' + (l.pay || ''), dps: v, hit: r.hit, hps: r.hps, cast: r.R && r.R.castEvery }); } return { tot, parts }; }
   function ehp() { try { const D = X.defense(); return D ? D.now || 0 : 0; } catch (e) { return 0; } }
   // best single line of a build, for judging the meta builds the same way
@@ -33,11 +33,15 @@ window.LAB = (() => {
           const sc = score(obj, w); if (off) G.offhand = off; if (sc.j > best.j + 1e-9) { best = sc; bestItem = { t: it.t, id: it.id }; } cur().item = keep; }
         cur().item = bestItem; }
       // affixes: four different ones, picked one at a time
-      const pool = affixPool(slot); const chosen = ((opt.aff || {})[slot] || []).filter(id => pool.some(a => a.id === id)).map(id => ({ id }));
-      for (let k = chosen.length; k < X.N_AFF; k++) { let top = null; cur().affixes = chosen.slice(); let b0 = -1e99;
-        for (const a of pool) { if (chosen.some(c => c.id === a.id || (a.fam && X.affixDef(c.id) && X.affixDef(c.id).fam === a.fam && a.fam))) continue; cur().affixes = chosen.concat([{ id: a.id }]); const sc = score(obj, w); if (sc.j > b0) { b0 = sc.j; top = a; } }
-        if (top) chosen.push({ id: top.id }); }
-      cur().affixes = chosen;
+      // a unique has 2 guaranteed affixes; one enchant can reroll either of them, so try keeping both, or enchanting away the first or the second
+      const pool = affixPool(slot); const itNow = X.findItem(cur().item); const uq = itNow && itNow.kind === 'unique' && X.fixedLines(itNow).length === 2;
+      const pickAff = () => { const chosen = ((opt.aff || {})[slot] || []).filter(id => pool.some(a => a.id === id)).map(id => ({ id }));
+        for (let k = chosen.length; k < X.N_AFF; k++) { let top = null; cur().affixes = chosen.slice(); let b0 = -1e99;
+          for (const a of pool) { if (chosen.some(c => c.id === a.id || (a.fam && X.affixDef(c.id) && X.affixDef(c.id).fam === a.fam && a.fam))) continue; cur().affixes = chosen.concat([{ id: a.id }]); const sc = score(obj, w); if (sc.j > b0) { b0 = sc.j; top = a; } }
+          if (top) chosen.push({ id: top.id }); }
+        cur().affixes = chosen; return chosen; };
+      let chosen; if (uq && opt.enchant !== false) { let bE = null; for (const e of [null, 0, 1]) { cur().ench = e; X.invalidate(); const ch = pickAff(); const sc = score(obj, w); if (!bE || sc.j > bE.j + 1e-9) bE = { j: sc.j, e, ch: ch.slice() }; } cur().ench = bE.e; cur().affixes = bE.ch; chosen = bE.ch; X.invalidate(); }
+      else { if (cur().ench != null) delete cur().ench; chosen = pickAff(); }
       // temper
       let bt = null, bj = -1e99; for (const t of temperPool(slot)) { cur().tempers = [{ rid: t.rid, oid: t.oid }]; const sc = score(obj, w); if (sc.j > bj) { bj = sc.j; bt = t; } }
       cur().tempers = bt ? [{ rid: bt.rid, oid: bt.oid }] : [];

@@ -741,7 +741,7 @@
     const hl = s => q ? s.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')(?![^<]*>)', 'ig'), '<mark>$1</mark>') : s;
     const kind = it.kind || 'aspect';
     const sub = it.sub ? it.sub : it.kind ? [it.kind === 'runeword' ? 'Runeword' : it.kind === 'charm' ? 'Charm' : 'Unique', it.type, it.runes, (it.classes || []).length >= 8 ? 'All classes' : (it.classes || []).join(', ')].filter(Boolean).join(' · ') : [it.cat ? it.cat + ' aspect' : 'Aspect', (it.classes || []).length >= 8 ? 'All classes' : (it.classes || []).join(', ')].join(' · ');
-    return `<div class="entry" ${attrs || ''}><h4 class="${kind}">${hl(esc(it.name))}</h4><div class="sub">${esc(sub)}</div><div class="d">${hl(it.desc)}</div>${(it.affixes || []).length ? `<div class="aff">${it.affixes.join('<br>')}</div>` : ''}</div>`;
+    return `<div class="entry" ${attrs || ''}><h4 class="${kind}">${hl(esc(it.name))}</h4><div class="sub">${esc(sub)}</div><div class="d">${hl(it.desc)}</div>${fixedLines(it).length ? `<div class="aff">${fixedLines(it).join('<br>')}${it.kind === 'unique' ? '<br><i>+ 2 random affixes</i>' : ''}</div>` : ''}</div>`;
   }
 
   // ---------- gear ----------
@@ -759,8 +759,33 @@
   }
   function findItem(ref) {
     if (!ref) return null; const D = data();
-    return ref.t === 'aspect' ? D.aspects.find(a => a.id === ref.id) : D.uniques.find(u => u.id === ref.id);
+    const it = ref.t === 'aspect' ? D.aspects.find(a => a.id === ref.id) : D.uniques.find(u => u.id === ref.id);
+    // a Mythic unique (any unique can be one since Season 14): its unique power is 30% stronger and every roll is at its maximum
+    if (it && it.kind === 'unique' && SLOTS.some(sl => { const g = S.gear && S.gear[sl.id]; return g && g.item === ref && g.mythic; })) return mythicOf(it);
+    return it;
   }
+  const MYTHIC_K = 1.3; const MYTHIC_CACHE = {};
+  function mythicDesc(h) { const f = n => { const x = parseFloat(String(n).replace(/,/g, '')) * MYTHIC_K; return Number.isInteger(+String(n).replace(/,/g, '')) && x >= 10 ? Math.round(x).toLocaleString('en-US') : String(Math.round(x * 10) / 10); };
+    let hit = false; let out = String(h || '').replace(/(<span class="c-random"><b class="num">)([^<]*)(<\/b>)/g, (m, a, inner, b) => { hit = true; return a + inner.replace(/\d[\d,]*(\.\d+)?/g, f) + b; });
+    if (!hit) out = out.replace(/(<b class="num">)([^<]*%[^<]*)(<\/b>)/, (m, a, inner, b) => a + inner.replace(/\d[\d,]*(\.\d+)?/g, f) + b);
+    return out; }
+  function mythicOf(it) { return MYTHIC_CACHE[it.id] || (MYTHIC_CACHE[it.id] = Object.assign({}, it, { desc: mythicDesc(it.desc), mythicOf: it.id })); }
+  // Uniques (patch 3.1): 2 guaranteed affixes, 2 you roll. The guaranteed list is in data/unique-guaranteed.js.
+  const UG_SLOT = t => /Helm/.test(t) ? 'helm' : /Chest/.test(t) ? 'chest' : /Gloves/.test(t) ? 'gloves' : /Legs/.test(t) ? 'pants' : /Boots/.test(t) ? 'boots' : /Amulet/.test(t) ? 'amulet' : /Ring/.test(t) ? 'ring' : /Shield|Focus|Totem|OffHand/.test(t) ? 'offhand' : 'weapon';
+  const ugKey = n => String(n || '').replace(/ \(Crucible\)$/, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ahjed/, 'ahjad').replace(/ryng/, 'ring').replace(/[^a-z0-9]/g, '');
+  let UG_IDX = null; const ugCats = it => { if (!UG_IDX) { UG_IDX = {}; Object.entries(window.D4UG || {}).forEach(([k, v]) => { UG_IDX[ugKey(k)] = v; }); } return UG_IDX[ugKey(it.name)] || null; };
+  const UG_TXT = { 'Weapon Damage': '+§ Weapon Damage', 'Maximum Life': '+§ Maximum Life', 'Attack Speed': '+§% Attack Speed', 'All Damage Multiplier': 'x§% All Damage Multiplier', 'Critical Strike Damage Multiplier': 'x§% Critical Strike Damage Multiplier', 'Critical Strike Chance': '+§% Critical Strike Chance', 'Lucky Hit Chance': '+§% Lucky Hit Chance', 'Movement Speed': '+§% Movement Speed', 'Armor': '+§ Armor', 'Cooldown Reduction': '§% Cooldown Reduction', 'Resource Cost Reduction': '§% Resource Cost Reduction', 'Resource Generation': '§% Resource Generation', 'Maximum Resource': '+§ Maximum Resource', 'All Stats': '+§ All Stats', 'All Resistances': '+§ Resistance to All Elements', 'Poison Resistance': '+§ Poison Resistance', 'Damage Over Time Multiplier': 'x§% Damage Over Time Multiplier', 'Vulnerable Damage Multiplier': 'x§% Vulnerable Damage Multiplier', 'Lucky Hit: Resource': 'Lucky Hit: Up to a 15% Chance to Restore +§% Primary Resource', 'Lightning Damage Multiplier': 'x§% Lightning Damage Multiplier', 'Fire Damage Multiplier': 'x§% Fire Damage Multiplier', 'Physical Damage Multiplier': 'x§% Physical Damage Multiplier', 'Poison Damage Multiplier': 'x§% Poison Damage Multiplier', 'Cold Damage Multiplier': 'x§% Cold Damage Multiplier', 'Shadow Damage Multiplier': 'x§% Shadow Damage Multiplier', 'Holy Damage Multiplier': 'x§% Holy Damage Multiplier' };
+  function ugDef(txt, slot) { const cls = S.cls; const A = GD().affixes.filter(a => a.t === txt && (!(a.cls || []).length || a.cls.includes(cls))); return A.find(a => (a.slots || []).includes(slot)) || A.slice().sort((a, b) => b.v - a.v)[0] || null; }
+  // an enchant can reroll one affix on an item, a guaranteed one included: g.ench (0 or 1) is the guaranteed affix you enchanted away, which frees a slot
+  function fixedFor(it, g) { const F = fixedLines(it); if (it && it.kind === 'unique' && g && (g.ench === 0 || g.ench === 1) && F.length > 1) return F.filter((x, i) => i !== g.ench); return F; }
+  // the fixed lines on an item: a runeword's own lines, or a unique's 2 guaranteed affixes at their top roll
+  function fixedLines(it) {
+    if (!it) return []; if (it.kind !== 'unique') return it.kind === 'charm' ? [] : (it.affixes || []);
+    const slot = UG_SLOT(it.type || ''); let cats = ugCats(it); if (!cats) cats = [slot === 'weapon' ? 'Weapon Damage' : 'Primary Core Stat', '?'];
+    return cats.map(c => { if (c === '?') return 'Second guaranteed affix (Blizzard has not listed it yet)';
+      let txt = UG_TXT[c]; if (c === 'Primary Core Stat') txt = '+§ ' + (MAINSTAT[S.cls] || ['Strength'])[0];
+      const m = c.match(/^Skill Ranks to (.+)$/); if (m) { const d = ugDef('+§ to ' + m[1], slot); return d ? fillTpl(d.t, d.v, 1) : '+<b class="num">2</b> to ' + esc(m[1]); }
+      const d = txt && ugDef(txt, slot); return d ? fillTpl(d.t, d.v, 1) : esc(c) + ' (guaranteed, not counted by the planner)'; }); }
   let gearSel = 'helm';
   function rarityOf(it, g) {
     if (!it) return 'empty';
@@ -844,8 +869,8 @@
   function itemLines(it, g, slotId) {
     g = craft(g || {}); const out = [];
     const unique = it && it.kind && it.kind !== 'charm';
-    const nFix = unique ? Math.min(N_AFF, (it.affixes || []).length) : 0;
-    if (unique) (it.affixes || []).forEach((h, i) => { const ga = !!g.uga[i]; out.push({ kind: 'base', ga, html: scaleHtml(h, lineScale(g, out.length, ga)), label: strip(h) }); });
+    const FX = unique ? fixedFor(it, g) : []; const nFix = unique ? Math.min(N_AFF, FX.length) : 0;
+    if (unique) FX.forEach((h, i) => { const ga = !!g.uga[i]; out.push({ kind: 'base', ga, html: scaleHtml(h, lineScale(g, out.length, ga)), label: strip(h) }); });
     g.affixes.slice(0, N_AFF - nFix).forEach(a => { const d = a && affixDef(a.id); if (!d) return; const ga = !!a.ga; const v = g.mythic ? d.v : rollOf(a, d); out.push({ kind: 'base', ga, html: fillTpl(d.t, v, lineScale(g, out.length, ga)), label: d.t.replace('§', v) }); });
     g.tempers.slice(0, N_TEMP).forEach(t => { const m = t && temperDef(t.rid); const o = m && m.opts.find(x => x.id === t.oid); if (!o) return; const v = rollOf(t, o); out.push({ kind: 'temper', html: fillTpl(o.t, v, lineScale(g, out.length, false)), label: o.t.replace('§', v), from: m.name }); });
     const sd = g.sanct && sanctDef(g.sanct);
@@ -918,8 +943,9 @@
     const manuals = GD().tempers.filter(t => t.slots.includes(kind) && okCls(t)); const manualsOther = GD().tempers.filter(t => !t.slots.includes(kind) && okCls(t));
     const lines = itemLines(it, g).filter(l => l.kind !== 'gem');
     let rows = '';
-    const nFix = unique ? Math.min(N_AFF, (it.affixes || []).length) : 0;
-    if (unique) rows = (it.affixes || []).map((h, i) => `<div class="frow"><span class="fval">${lines[i] ? lines[i].html : h}</span><button class="ga-btn${g.uga[i] ? ' on' : ''}" data-uga="${i}" aria-pressed="${!!g.uga[i]}" title="Greater affix: 50% more">${GA_ICON}GA</button></div>`).join('');
+    const FX0 = unique ? fixedLines(it) : []; const FX = unique ? fixedFor(it, g) : []; const nFix = unique ? Math.min(N_AFF, FX.length) : 0; const canEnch = it.kind === 'unique' && FX0.length === 2;
+    if (unique) { let j = 0; rows = FX0.map((h, i) => { if (canEnch && g.ench === i) return `<div class="frow"><span class="fval"><s>${h}</s> enchanted away</span><button class="ga-btn on" data-ench="${i}" aria-pressed="true" title="Keep this guaranteed affix instead">Keep</button></div>`; const k = j++;
+      return `<div class="frow"><span class="fval">${lines[k] ? lines[k].html : h}</span><button class="ga-btn${g.uga[k] ? ' on' : ''}" data-uga="${k}" aria-pressed="${!!g.uga[k]}" title="Greater affix: 50% more">${GA_ICON}GA</button>${canEnch ? `<button class="ga-btn" data-ench="${i}" aria-pressed="false" title="Enchant this guaranteed affix into one you choose (one enchant per item)">Enchant</button>` : ''}</div>`; }).join(''); }
     for (let i = 0; i < N_AFF - nFix; i++) {
       const a = g.affixes[i] || {}; const used = new Set(g.affixes.filter((x, k) => x && k !== i).map(x => x.id));
       rows += `<div class="frow"><select data-aff="${i}" aria-label="Affix ${nFix + i + 1}"><option value="">Affix ${nFix + i + 1}: choose...</option>${pool.filter(p => !used.has(p.id)).map(p => `<option value="${p.id}" ${p.id === a.id ? 'selected' : ''}>${esc(p.t.replace('§', p.v))}</option>`).join('')}</select>
@@ -1057,6 +1083,7 @@
     $$('#panel-gear [data-aff]').forEach(s => s.onchange = () => { const gg = G(); const i = +s.dataset.aff; gg.affixes[i] = s.value ? { id: s.value, ga: (gg.affixes[i] || {}).ga && !!s.value } : null; redo(); });
     $$('#panel-gear [data-ga]').forEach(b => b.onclick = () => { const a = G().affixes[+b.dataset.ga]; if (a) { a.ga = !a.ga; redo(); } });
     $$('#panel-gear [data-uga]').forEach(b => b.onclick = () => { const gg = G(); const i = +b.dataset.uga; gg.uga[i] = !gg.uga[i]; redo(); });
+    $$('#panel-gear [data-ench]').forEach(b => b.onclick = () => { const gg = G(); const i = +b.dataset.ench; gg.ench = gg.ench === i ? null : i; gg.uga = []; redo(); });
     $$('#panel-gear [data-tm]').forEach(s => s.onchange = () => { const gg = G(); const i = +s.dataset.tm; const m = temperDef(s.value); gg.tempers[i] = m ? { rid: m.id, oid: m.opts[0].id } : null; redo(); });
     $$('#panel-gear [data-to]').forEach(s => s.onchange = () => { const t = G().tempers[+s.dataset.to]; if (t) { t.oid = s.value; delete t.val; redo(); } });
     const setQ = v => { G().q = Math.max(0, Math.min(Q_MAX, Math.round(+v || 0))); redo(); };
@@ -1606,7 +1633,8 @@
   }
   let SD_CACHE = null, SB_CACHE = {};
   let HOSTLH = null;
-  const invalidate = () => { SD_CACHE = null; SB_CACHE = {}; HOSTLH = null; };
+  let OFFBLK = null;
+  const invalidate = () => { SD_CACHE = null; SB_CACHE = {}; HOSTLH = null; OFFBLK = null; };
   function sheetData() { return SD_CACHE || (SD_CACHE = sheetDataRaw()); }
   function sheetDataRaw() {
     const stats = new Map(); const effects = []; const powers = [];
@@ -2029,7 +2057,7 @@
       // Weapon Damage that stacks with attacks, one-handed only
       if ((q = t.match(new RegExp('One-Handed weapon, attacks increase your Weapon Damage by ' + N2 + '%, up to (\\d+) times'))) && !twoHanded()) out.push({ id: name + '#w', n: name, lo: +q[1] * +q[3], hi: +(q[2] || q[1]) * +q[3], what: 'Weapon Damage at ' + q[3] + ' stacks', scope: null, skill: '' });
       // Critical Strike Damage equal to a share of Block Chance
-      if ((q = t.match(new RegExp('increased Critical Strike Damage equal to ' + N2 + '%\\s*\\[x\\] of your Block Chance')))) { let b = 0; try { const M = statModel(); b = Math.min(100, M.block ? M.block.v : 0); } catch (e) { b = 0; } if (b > 0) { const ix = out.findIndex(x => x.n === name && x.only === 'crit'); if (ix >= 0) out.splice(ix, 1); out.push({ id: name + '#b', n: name, lo: +q[1] * b / 100, hi: +(q[2] || q[1]) * b / 100, what: 'Critical Strike Damage from ' + Math.round(b) + '% Block Chance (doubles for 10 seconds after a block, not counted)', only: 'crit', scope: null, skill: '' }); } }
+      if ((q = t.match(new RegExp('increased Critical Strike Damage equal to ' + N2 + '%\\s*\\[x\\] of your Block Chance')))) { let b = 0; try { const M = statModel(); b = Math.min(100, M.block ? M.block.v : 0); } catch (e) { b = 0; } if (b > 0) { let bl = 0; try { bl = blocksIn(); } catch (e) { bl = 0; } const dbl = bl >= 0.1 ? 2 : 1; const ix = out.findIndex(x => x.n === name && x.only === 'crit'); if (ix >= 0) out.splice(ix, 1); out.push({ id: name + '#b', n: name, lo: +q[1] * b / 100 * dbl, hi: +(q[2] || q[1]) * b / 100 * dbl, what: 'Critical Strike Damage from ' + Math.round(b) + '% Block Chance' + (dbl > 1 ? ', doubled: you block ' + (Math.round(bl * 100) / 100) + ' times a second' : ' (doubles for 10 seconds after a block; you block less than once every 10 seconds)'), only: 'crit', scope: null, skill: '' }); } }
     };
     if (probe) { scan(probe.name, probe.desc); return out; }   // audit hook: how one power's text is read
     const wornNames = new Set();   // the same aspect on two items only counts once
@@ -2791,7 +2819,7 @@
   // every aspect that fits the slot, tried on this item and ranked for the build as it stands. ref is the build with the item it would replace.
   function bestAspects(slotId, g, ref) {
     const k0 = JSON.stringify(Object.assign({}, S, { gear: Object.assign({}, S.gear, { [slotId]: null }), cmp: null })); if (ASP_CACHE.k !== k0) ASP_CACHE = { k: k0, v: {} };
-    const ck = slotId + '|' + JSON.stringify([g.affixes, g.tempers, g.q, g.gems, g.cap, g.mythic, g.wtype]) + '|' + (ref ? Math.round(ref.dmg || 0) + ':' + Math.round(ref.ehp || 0) : ''); if (ASP_CACHE.v[ck]) return ASP_CACHE.v[ck];
+    const ck = slotId + '|' + JSON.stringify([g.affixes, g.tempers, g.q, g.gems, g.cap, g.mythic, g.wtype, g.ench]) + '|' + (ref ? Math.round(ref.dmg || 0) + ':' + Math.round(ref.ehp || 0) : ''); if (ASP_CACHE.v[ck]) return ASP_CACHE.v[ck];
     const worn = new Set(SLOTS.filter(sl => sl.id !== slotId).map(sl => { const it = findItem((S.gear[sl.id] || {}).item); return it && !it.kind ? it.name : ''; }).filter(Boolean));
     const seen = new Set(); const out = [];
     data().aspects.forEach(a => { if (!(a.classes || []).includes(S.cls) || !aspectFits(a, slotId) || worn.has(a.name) || seen.has(a.name) || !ASPECT_SEEN.test(strip(a.desc))) return; seen.add(a.name);
@@ -2978,7 +3006,7 @@
       if (!uq && !as) { miss.push(`${to}: ${title}`); return; }
       const g = st.gear[to] = { item: { t: uq ? 'u' : 'aspect', id: (uq || as).id }, affixes: [], tempers: [], gems: [] }; const kind = slotKind(to);
       if (uq && mythic) g.mythic = true;
-      (stats || []).slice(0, N_AFF - (uq ? Math.min(N_AFF, (uq.affixes || []).length) : 0)).forEach(raw => { const ga = raw.endsWith('!'); let s = raw.replace(/!$/, '').replace(/-s04-corestat$/, '').replace(/^\d+-\d+-/, ''); s = LIB_ALIAS[s] || s;
+      (stats || []).slice(0, N_AFF - (uq ? Math.min(N_AFF, fixedLines(uq).length) : 0)).forEach(raw => { const ga = raw.endsWith('!'); let s = raw.replace(/!$/, '').replace(/-s04-corestat$/, '').replace(/^\d+-\d+-/, ''); s = LIB_ALIAS[s] || s;
         if (s === 'primary-core-stat') s = MAINSTAT[b.cls][0].toLowerCase();
         const want = lnorm(s.replace(/^ranks-to-/, 'to-')); const pool = G.affixes.filter(a => a.slots.includes(kind) && okCls(a) && !g.affixes.some(z => z.id === a.id));
         const d = pool.find(a => tkey(a.t) === want) || pool.filter(a => tkey(a.t).includes(want)).sort((x, y) => x.t.length - y.t.length)[0];
@@ -3182,7 +3210,7 @@
     x.fillStyle = '#7d705c'; x.font = '18px Georgia, serif'; x.textAlign = 'right'; x.fillText('Made with D4 Build Planner', W - 56, H - 44); x.textAlign = 'left';
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (S.name || 'build').replace(/[^\w -]+/g, '').trim().replace(/\s+/g, '_') + '_card.png'; a.click(); toast('Build card saved as a picture'); }, 'image/png');
   }
-  window.__D4X = { buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
+  window.__D4X = { fixedFor, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
   function wireScan() {
     const pick = $('#scanPick'), file = $('#scanFile'); if (pick && file) { pick.onclick = () => file.click(); file.onchange = () => { if (file.files[0]) scanImage(file.files[0]); }; }
     const drop = $('#scanDrop'); if (drop) drop.onclick = () => { SCAN = null; renderGear(); };
@@ -3569,7 +3597,19 @@
   // otherwise hits come from Defense's "Hits you take a second" and blocks are those hits times your Block Chance.
   function hitsIn() { const T = tcState(); if (T.hin !== '' && T.hin != null && !isNaN(+T.hin)) return Math.max(0, +T.hin); const d = dfState(); return +d.inHits > 0 ? +d.inHits : 1; }
   function blockChance() { const M = statModel(); return Math.min(100, M.block ? M.block.v : 0) / 100; }
-  function blocksIn() { const T = tcState(); if (T.blk !== '' && T.blk != null && !isNaN(+T.blk)) return Math.max(0, +T.blk); return hitsIn() * blockChance(); }
+  function blocksIn() { const T = tcState(); if (T.blk !== '' && T.blk != null && !isNaN(+T.blk)) return Math.max(0, +T.blk); return hitsIn() * blockChance() + offBlocks().r; }
+  // blocks you make yourself: skills whose upgrade makes their hits count as Blocks (Shield Charge: every hit; Shield Bash: once per cast).
+  // Casts a second: the cooldown if it has one, otherwise your attacks a second (weapon speed times attack speed).
+  function offBlocks() { if (offBlocks._busy) return { r: 0, parts: [] }; const C = cdata(); const T = tcState(); const tg = Math.max(1, +T.tg || 1);
+    const key = (S.hotbar || []).join(',') + '|' + tg + '|' + JSON.stringify(S.alloc || {}).length + '|' + (T.ws || 1); if (OFFBLK && OFFBLK.key === key) return OFFBLK.v;
+    offBlocks._busy = 1; const parts = []; let r = 0;
+    try { const M = statModel(); const aps = (+T.ws || 1) * (1 + Math.min(100, M.as ? +M.as.v || 0 : 0) / 100);
+      (S.hotbar || []).forEach(id => { const P = C.powers[id]; if (!P) return; let am; try { am = activeMods(id); } catch (e) { return; }
+        const md = (P.mods || []).find(m => am.has(m.key) && /counts? as Blocks/i.test(strip(String(m.desc || '')))); if (!md) return; const once = /once per Cast/i.test(strip(String(md.desc || '')));
+        let cd = 0; try { const c = skillCtx(id); cd = c.cd() > 0 ? c.cdEff() : 0; } catch (e) { cd = 0; } const casts = cd > 0 ? 1 / cd : aps; const v = casts * (once ? 1 : tg); r += v;
+        parts.push({ n: P.name + ': ' + md.name, v, how: `${D4T.fmtNum(Math.round(casts * 100) / 100)} casts a second${once ? ', one block each' : ', ' + tg + ' enem' + (tg === 1 ? 'y' : 'ies') + ' hit'}` }); });
+    } catch (e) { /* none */ } finally { offBlocks._busy = 0; }
+    const v = { r, parts }; OFFBLK = { key, v }; return v; }
   const POTION = { base: 4, heal: 35, every: 30 };
   function utilityTexts() {
     const C = cdata(); const out = []; const mid = t => decode(strip(t || '')).replace(/\s+/g, ' ').replace(/\[([\d.,]+)\s*[–-]\s*([\d.,]+)\]/g, (m, a, b) => String(Math.round((parseFloat(a.replace(/,/g, '')) + parseFloat(b.replace(/,/g, ''))) / 2 * 100) / 100));

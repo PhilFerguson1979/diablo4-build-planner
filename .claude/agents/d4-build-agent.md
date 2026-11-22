@@ -48,6 +48,7 @@ You are the build agent for Phil's Diablo 4 Build Planner (repo `diablo4-build-p
  "sum": ["PAYLOAD_KEY"],                  // other payloads of the main skill to add
  "els": ["Holy", "Physical"],             // elements for charm affixes
  "tg": 3,                                 // enemies in range
+ "target": "boss",                        // optimise against the boss (single target, boss damage) instead of elites
  "w": 0.5,                                // weight on Effective Life against damage (0.5 balanced, 1 tanky)
  "idea": "One or two sentences on why it works.",
  "engine": ["Damage over time", "Aura cast / Aura Potency"]
@@ -72,6 +73,8 @@ node tools/agent/run.js --eval script.js          # any script in the planner pa
 - Searches charms: single affixes, every set at each tier, and unique charms.
 
 Two filters keep the search honest:
+- **Uniques.** Each unique drops with 2 guaranteed affixes (from `data/unique-guaranteed.js`, Blizzard's patch 3.1 list) and 2 random ones. One enchant per item can reroll any affix, a guaranteed one included, so the search tries keeping both guaranteed affixes or enchanting either away. Any unique can be Mythic: every roll at maximum and +30% to its unique power.
+- **Blocks.** Blocks come from hits you take times Block Chance, plus your own blocks from skills whose hits count as Blocks (Shield Charge every hit, Shield Bash once a cast). Akarat's Blessing, Redirected Force's doubling, Bastion of Sir Matthias and the on-block heals use that rate.
 - **Synergy gate.** Payoffs whose trigger the build never makes are left out of the search. A trigger counts as made if the bar's skills and upgrades, the starting gear or the locked items make it. Stat payoffs like crit, Lucky Hit and movement are not gated. Set `"gate": false` to turn the gate off, or `"makes": ["Block"]` to declare a trigger the tags miss.
 - **Isolated enemies.** When `tg` is above 1, "isolated enemies" powers are left out.
 
