@@ -1,0 +1,3689 @@
+{
+ "class": "Paladin",
+ "triggers": [
+  "Block",
+  "Crowd control",
+  "Movement",
+  "Aura cast / Aura Potency",
+  "Cooldowns",
+  "Lucky Hit",
+  "Critical Strikes",
+  "Resolve, Fortify, Barrier",
+  "Judgement",
+  "Arbiter form",
+  "Thorns and Retribution",
+  "Faith",
+  "Healthy, Injured, Life",
+  "Ultimates",
+  "Elites, bosses and kills",
+  "Vulnerable",
+  "Burning, Poisoning, Bleeding",
+  "Evade and Dodge",
+  "Fervor (Zealot)"
+ ],
+ "powers": [
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Voracious Rage",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Forward Momentum",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Crushing",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Starlight",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Protector",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Inner Calm",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Wind Striker",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Conceited",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Protecting",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Disobedience",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Burning, Poisoning, Bleeding"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Retribution",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control",
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Crowded Sage",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life",
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Ghostwalker",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Shared Misery",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Crowd control",
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Eluding",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Assimilation",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life",
+    "Evade and Dodge"
+   ],
+   "pays": [
+    "Evade and Dodge"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Needleflare",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Deflecting Barrier",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Smiting",
+   "slot": null,
+   "makes": [
+    "Critical Strikes",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Crowd control",
+    "Healthy, Injured, Life"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Accelerating",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Exploiter's",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Craven",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Audacity",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Slaughter",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Juggernaut's",
+   "slot": null,
+   "makes": [
+    "Evade and Dodge"
+   ],
+   "pays": [
+    "Evade and Dodge"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Hectic",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Undying",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Healthy, Injured, Life"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Moonrise",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Metamorphosis",
+   "slot": null,
+   "makes": [
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Accursed Touch",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Frosty Strides",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Vulnerable",
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Concussive Strikes",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Apogeic Furor",
+   "slot": null,
+   "makes": [
+    "Cooldowns",
+    "Cooldowns",
+    "Ultimates",
+    "Ultimates"
+   ],
+   "pays": [
+    "Ultimates",
+    "Ultimates"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Assistance",
+   "slot": null,
+   "makes": [
+    "Cooldowns",
+    "Ultimates"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Vehement Brawler's",
+   "slot": null,
+   "makes": [
+    "Ultimates"
+   ],
+   "pays": [
+    "Ultimates"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Vulpine's",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Coagulation",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Spiked Armor",
+   "slot": null,
+   "makes": [
+    "Block",
+    "Thorns and Retribution"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Celestial Strife",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Arbiter form",
+    "Elites, bosses and kills",
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Proselytizing",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Bulwark's",
+   "slot": null,
+   "makes": [
+    "Block",
+    "Block"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Lord of Blood's",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Lucky Hit",
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Verdant Restoration",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Barbed Roses",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Akarat's Blessing",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Indomitable",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Enshrouding",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Elusive Menace",
+   "slot": null,
+   "makes": [
+    "Cooldowns",
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Nebulous Brews",
+   "slot": null,
+   "makes": [
+    "Movement",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Fortune",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Vanquishing",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Efficiency",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Rallying Reversal",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Crowd control",
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Bruiser's",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Binding Morass",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Unrelenting",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Bristleback",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Block",
+    "Evade and Dodge"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Redirected Force",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": [
+    "Block",
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Layered Wards",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Interdiction",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Alacrity",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Everliving",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Orange Herald",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Lightning Rod",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Inevitable Fate",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Burning, Poisoning, Bleeding"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Sticker-thought",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Dark Dance",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Creeping Death",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Crowd control",
+    "Elites, bosses and kills",
+    "Burning, Poisoning, Bleeding"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Prudent Heart",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Northern Guard",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Glynn's Anvil",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Juggernaut's Covenant",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Zealot's Covenant",
+   "slot": null,
+   "makes": [
+    "Fervor (Zealot)"
+   ],
+   "pays": [
+    "Fervor (Zealot)"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Squire's",
+   "slot": null,
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Jacques' Fervor",
+   "slot": null,
+   "makes": [
+    "Fervor (Zealot)"
+   ],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Apostle's",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life",
+    "Fervor (Zealot)"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "The Penitent's",
+   "slot": null,
+   "makes": [
+    "Critical Strikes",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Righteous Rage",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Healthy, Injured, Life"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Lapa's Scripture",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Tyrael's Jurisdiction",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Ascension",
+   "slot": null,
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Watkins' Law",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Pilgrim's Progress",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Valiance",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Dominance",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": [
+    "Crowd control",
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Swift Spirit",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Militance",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life",
+    "Fervor (Zealot)"
+   ],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Unstoppable Force",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Golden Hour",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Firm Decree",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Light's Mending",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Judgement",
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Hale's Salve",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Dazzling Light",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Judgement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Dedication",
+   "slot": null,
+   "makes": [
+    "Faith"
+   ],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Exorcism ",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Angelic Masterwork",
+   "slot": null,
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of the Arbiter's Zephyr",
+   "slot": null,
+   "makes": [
+    "Cooldowns",
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Contemplation",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Chastisement",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Crowd control",
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Excellence",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Salvation",
+   "slot": null,
+   "makes": [
+    "Faith"
+   ],
+   "pays": [
+    "Lucky Hit",
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Holy Cadence",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Aspect of Utmost Glory",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Healthy, Injured, Life"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Revelator's",
+   "slot": null,
+   "makes": [
+    "Fervor (Zealot)"
+   ],
+   "pays": [
+    "Fervor (Zealot)"
+   ]
+  },
+  {
+   "kind": "Aspect",
+   "name": "Shard of Dawn",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "The Butcher's Cleaver",
+   "slot": "Axe",
+   "makes": [
+    "Crowd control",
+    "Critical Strikes"
+   ],
+   "pays": [
+    "Healthy, Injured, Life",
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Thousand-Eye Reaver",
+   "slot": "Axe",
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Herald's Morningstar",
+   "slot": "Mace",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Eggis",
+   "slot": "Shield",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Bastion of Sir Matthias",
+   "slot": "Shield",
+   "makes": [],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Ward of the White Dove",
+   "slot": "Shield",
+   "makes": [],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Herald of Zakarum",
+   "slot": "Shield",
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Cathedral's Song",
+   "slot": "Shield",
+   "makes": [],
+   "pays": [
+    "Judgement",
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Doombringer",
+   "slot": "Sword",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Azurewrath",
+   "slot": "Sword",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "In-Geom",
+   "slot": "Sword",
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Griswold's Opus",
+   "slot": "Sword",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Lucky Hit",
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Messerschmidt's Reaver",
+   "slot": "Axe2H",
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Sundered Night",
+   "slot": "Axe2H",
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": [
+    "Aura cast / Aura Potency"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "The Furnace",
+   "slot": "Mace2H",
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "The Grandfather",
+   "slot": "Sword2H",
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Melted Heart of Selig",
+   "slot": "Amulet",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Blood-Mad Idol",
+   "slot": "Amulet",
+   "makes": [
+    "Burning, Poisoning, Bleeding"
+   ],
+   "pays": [
+    "Burning, Poisoning, Bleeding"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Sanctis of Kethamar",
+   "slot": "Amulet",
+   "makes": [
+    "Aura cast / Aura Potency",
+    "Arbiter form"
+   ],
+   "pays": [
+    "Aura cast / Aura Potency",
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Judgment of Auriel",
+   "slot": "Amulet",
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Penitent Greaves",
+   "slot": "Boots",
+   "makes": [
+    "Crowd control",
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Flickerstep",
+   "slot": "Boots",
+   "makes": [
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Yen's Blessing",
+   "slot": "Boots",
+   "makes": [
+    "Ultimates"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "March of the Stalwart Soul",
+   "slot": "Boots",
+   "makes": [],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Razorplate",
+   "slot": "ChestArmor",
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Soulbrand",
+   "slot": "ChestArmor",
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Shroud of False Death",
+   "slot": "ChestArmor",
+   "makes": [
+    "Crowd control",
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Squirt's Blouse",
+   "slot": "ChestArmor",
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Frostburn",
+   "slot": "Gloves",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control",
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Wyrdskin",
+   "slot": "Gloves",
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Nemesis Bracers",
+   "slot": "Gloves",
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Andariel's Visage",
+   "slot": "Helm",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Godslayer Crown",
+   "slot": "Helm",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Heir of Perdition",
+   "slot": "Helm",
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Judicant's Glaivehelm",
+   "slot": "Helm",
+   "makes": [
+    "Judgement"
+   ],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Bell of the Bovine",
+   "slot": "Amulet",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Temerity",
+   "slot": "Legs",
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Tibault's Will",
+   "slot": "Legs",
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Arcadia",
+   "slot": "Legs",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Wendigo Brand",
+   "slot": "Ring",
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Signet of Pelghain",
+   "slot": "Ring",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Sliver of Hate",
+   "slot": "Ring",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "Argent Veil",
+   "slot": "Ring",
+   "makes": [
+    "Evade and Dodge"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Seal of the Second Trumpet",
+   "slot": "Ring",
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Wreath of Auric Laurel",
+   "slot": "Ring",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Runeword",
+   "name": "Call to Arms",
+   "slot": "Axe",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Runeword",
+   "name": "Enigma",
+   "slot": "ChestArmor",
+   "makes": [
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Runeword",
+   "name": "Grief",
+   "slot": "Sword_Phase_Blade",
+   "makes": [
+    "Burning, Poisoning, Bleeding"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Runeword",
+   "name": "Infinity",
+   "slot": "Axe2H",
+   "makes": [
+    "Judgement",
+    "Vulnerable"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Runeword",
+   "name": "Phoenix",
+   "slot": "Axe",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Runeword",
+   "name": "Rain",
+   "slot": "ChestArmor",
+   "makes": [],
+   "pays": [
+    "Lucky Hit",
+    "Evade and Dodge"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Locran's Talisman",
+   "slot": "Amulet",
+   "makes": [
+    "Critical Strikes",
+    "Critical Strikes"
+   ],
+   "pays": [
+    "Critical Strikes",
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Rakanoth's Wake",
+   "slot": "Boots",
+   "makes": [],
+   "pays": [
+    "Cooldowns"
+   ]
+  },
+  {
+   "kind": "Unique",
+   "name": "Endurant Faith",
+   "slot": "Gloves",
+   "makes": [
+    "Healthy, Injured, Life",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique",
+   "name": "X'Fal's Corroded Signet",
+   "slot": "Boots",
+   "makes": [],
+   "pays": [
+    "Lucky Hit",
+    "Burning, Poisoning, Bleeding"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "The Butcher's Cleaver",
+   "slot": "Charm",
+   "makes": [
+    "Crowd control",
+    "Critical Strikes"
+   ],
+   "pays": [
+    "Healthy, Injured, Life",
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Thousand-Eye Reaver",
+   "slot": "Charm",
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Herald of Zakarum",
+   "slot": "Charm",
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Cathedral's Song",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Judgement",
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Doombringer",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Azurewrath",
+   "slot": "Charm",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "In-Geom",
+   "slot": "Charm",
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Griswold's Opus",
+   "slot": "Charm",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Lucky Hit",
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Sundered Night",
+   "slot": "Charm",
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": [
+    "Aura cast / Aura Potency"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "The Furnace",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "The Grandfather",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Melted Heart of Selig",
+   "slot": "Charm",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Blood-Mad Idol",
+   "slot": "Charm",
+   "makes": [
+    "Burning, Poisoning, Bleeding"
+   ],
+   "pays": [
+    "Burning, Poisoning, Bleeding"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Sanctis of Kethamar",
+   "slot": "Charm",
+   "makes": [
+    "Aura cast / Aura Potency",
+    "Arbiter form"
+   ],
+   "pays": [
+    "Aura cast / Aura Potency",
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Penitent Greaves",
+   "slot": "Charm",
+   "makes": [
+    "Crowd control",
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Flickerstep",
+   "slot": "Charm",
+   "makes": [
+    "Evade and Dodge"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Yen's Blessing",
+   "slot": "Charm",
+   "makes": [
+    "Ultimates"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Razorplate",
+   "slot": "Charm",
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Soulbrand",
+   "slot": "Charm",
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Shroud of False Death",
+   "slot": "Charm",
+   "makes": [
+    "Crowd control",
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Squirt's Blouse",
+   "slot": "Charm",
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Frostburn",
+   "slot": "Charm",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control",
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Wyrdskin",
+   "slot": "Charm",
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Nemesis Bracers",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Andariel's Visage",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Heir of Perdition",
+   "slot": "Charm",
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Judicant's Glaivehelm",
+   "slot": "Charm",
+   "makes": [
+    "Judgement"
+   ],
+   "pays": [
+    "Lucky Hit"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Temerity",
+   "slot": "Charm",
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Tibault's Will",
+   "slot": "Charm",
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Arcadia",
+   "slot": "Charm",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Wendigo Brand",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Signet of Pelghain",
+   "slot": "Charm",
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Argent Veil",
+   "slot": "Charm",
+   "makes": [
+    "Evade and Dodge"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Seal of the Second Trumpet",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Locran's Talisman",
+   "slot": "Charm",
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Rakanoth's Wake",
+   "slot": "Charm",
+   "makes": [],
+   "pays": [
+    "Cooldowns"
+   ]
+  },
+  {
+   "kind": "Unique charm",
+   "name": "Endurant Faith",
+   "slot": "Charm",
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Cathan's Righteous Will (2-piece)",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Cathan's Righteous Will (3-piece)",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Cathan's Righteous Will (5-piece)",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Cathan's Dauntless Faith (2-piece)",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Cathan's Dauntless Faith (5-piece)",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Heaven's Radiant Fire (2-piece)",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Heaven's Radiant Fire (3-piece)",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Heaven's Radiant Fire (5-piece)",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Light's Epiphany (2-piece)",
+   "slot": null,
+   "makes": [
+    "Cooldowns",
+    "Arbiter form"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Light's Epiphany (3-piece)",
+   "slot": null,
+   "makes": [
+    "Movement",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Light's Epiphany (5-piece)",
+   "slot": null,
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Cathan's Iron Conviction (2-piece)",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": [
+    "Aura cast / Aura Potency"
+   ]
+  },
+  {
+   "kind": "Talisman set",
+   "name": "Cathan's Iron Conviction (5-piece)",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Paragon node",
+   "name": "Shield Bearer",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Paragon node",
+   "name": "Fervent",
+   "slot": null,
+   "makes": [
+    "Critical Strikes",
+    "Fervor (Zealot)"
+   ],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Paragon node",
+   "name": "Divinity",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Arbiter form",
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Paragon node",
+   "name": "Relentless",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Paragon node",
+   "name": "Sentencing",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Paragon node",
+   "name": "Endure",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Imbiber",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Healthy, Injured, Life"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Exploit",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": [
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Control",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Revenge",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Undaunted",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Outmatch",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Healthy, Injured, Life",
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Spirit",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Diminish",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Honed",
+   "slot": null,
+   "makes": [
+    "Critical Strikes",
+    "Faith"
+   ],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Law",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Retribution",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Glyph",
+   "name": "Arbiter",
+   "slot": null,
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Challenger",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Resplendence",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": [
+    "Aura cast / Aura Potency"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Judicator",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Glyph",
+   "name": "Feverous",
+   "slot": null,
+   "makes": [
+    "Fervor (Zealot)"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Glyph",
+   "name": "Apostle ",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Falling Star",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Falling Star > Enhanced Falling Star",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Falling Star > Faster Than Light",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Falling Star > Vulnerable",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Falling Star > Cooldown Reduction",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Defiance Aura",
+   "slot": null,
+   "makes": [
+    "Movement",
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Defiance Aura > Rite of Might",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Defiance Aura > Rite of Prayer",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Defiance Aura > Rite of Thorns",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Defiance Aura > Maximum Life",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Defiance Aura > Bonus Healing",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Defiance Aura > Unstoppable",
+   "slot": null,
+   "makes": [
+    "Movement",
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Blessed Hammer",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Blessed Hammer > Slow",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Blessed Hammer > Cast Speed",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Holy Light Aura",
+   "slot": null,
+   "makes": [
+    "Lucky Hit",
+    "Judgement",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Holy Light Aura > Rite of Judgement",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Holy Light Aura > Rite of Mercy",
+   "slot": null,
+   "makes": [
+    "Judgement",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Holy Light Aura > Rite of Submission",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Judgement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Holy Light Aura > Judgement Damage Bonus",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Shield Charge",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Charge > Relentless Charge",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Charge > Virtuous Charge",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Charge > Resolve",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Charge > Retribution",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Charge > Hit Count As Blocking",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Aegis",
+   "slot": null,
+   "makes": [
+    "Block",
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Aegis > Stay Resolute",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Aegis > Faith Is My Shield",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Judgement"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Aegis > Impunity",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Aegis > Unstoppable",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Shield Bash",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Bash > Enhanced Shield Bash",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Bash > Lay Siege",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Bash > Smite",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Bash > Breach",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Bash > Hits Are Blocks",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Shield Bash > Distance",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Divine Lance",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Divine Lance > Enhanced Divine Lance",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Divine Lance > Tip of the Spear",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills",
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Divine Lance > Zealous Joust",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Divine Lance > Damage Bonus",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Divine Lance > Cost Reduction",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Blessed Shield",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Blessed Shield > Shield of Justice",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Blessed Shield > Shield of Retribution",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Movement",
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Blessed Shield > Damage Bonus",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": [
+    "Block"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Blessed Shield > Armor and Block Chance Bonus",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Blessed Shield > Faith Generation",
+   "slot": null,
+   "makes": [
+    "Faith"
+   ],
+   "pays": [
+    "Crowd control"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Zeal",
+   "slot": null,
+   "makes": [
+    "Lucky Hit",
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zeal > Death or Glory",
+   "slot": null,
+   "makes": [
+    "Critical Strikes",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zeal > Critical Strike Chance",
+   "slot": null,
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zeal > Fortify",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Fanaticism Aura",
+   "slot": null,
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Fanaticism Aura > Rite of Vengeance",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Fanaticism Aura > Rite of Humility",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": [
+    "Vulnerable"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Fanaticism Aura > Rite of Redemption",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Holy Bolt",
+   "slot": null,
+   "makes": [
+    "Lucky Hit",
+    "Faith"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Holy Bolt > Divine Bolt",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Holy Bolt > Storm Bolt",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Holy Bolt > Slow",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Rally",
+   "slot": null,
+   "makes": [
+    "Movement",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Rally > Enhanced Rally",
+   "slot": null,
+   "makes": [
+    "Movement",
+    "Faith"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Rally > Words of Rejuvenation",
+   "slot": null,
+   "makes": [
+    "Faith"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Rally > Words of Sacrifice",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Rally > Critical Strike Chance",
+   "slot": null,
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Rally > Unhindered and Movement Speed",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Brandish",
+   "slot": null,
+   "makes": [
+    "Lucky Hit",
+    "Faith"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Brandish > Sword of Mastery",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": [
+    "Movement",
+    "Healthy, Injured, Life"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Brandish > Vulnerable",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Brandish > Faith Generation",
+   "slot": null,
+   "makes": [
+    "Faith"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Clash",
+   "slot": null,
+   "makes": [
+    "Block",
+    "Lucky Hit",
+    "Faith"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Clash > Enhanced Clash",
+   "slot": null,
+   "makes": [
+    "Block"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Clash > Punishment",
+   "slot": null,
+   "makes": [
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Clash > Skirmish",
+   "slot": null,
+   "makes": [
+    "Block",
+    "Critical Strikes",
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Clash > Resolve",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Clash > Faith Generation",
+   "slot": null,
+   "makes": [
+    "Faith"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Advance",
+   "slot": null,
+   "makes": [
+    "Lucky Hit",
+    "Faith"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Advance > Vanguard's Rush",
+   "slot": null,
+   "makes": [
+    "Fervor (Zealot)"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Advance > Wave Dash",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Advance > Flash of the Blade",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Advance > Unhindered",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Advance > Critical Strike Chance",
+   "slot": null,
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Advance > Fortify",
+   "slot": null,
+   "makes": [
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Arbiter of Justice",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Arbiter of Justice > Enhanced Arbiter of Justice",
+   "slot": null,
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Arbiter of Justice > Seraph's Wings",
+   "slot": null,
+   "makes": [
+    "Arbiter form",
+    "Vulnerable"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Arbiter of Justice > Reach of the Law",
+   "slot": null,
+   "makes": [
+    "Judgement"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Arbiter of Justice > Divine Intervention",
+   "slot": null,
+   "makes": [
+    "Arbiter form",
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Arbiter of Justice > Wing Strike Recast",
+   "slot": null,
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Arbiter of Justice > Cooldown Reduction",
+   "slot": null,
+   "makes": [
+    "Arbiter form"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Arbiter of Justice > Movement Speed",
+   "slot": null,
+   "makes": [
+    "Movement",
+    "Arbiter form"
+   ],
+   "pays": [
+    "Arbiter form"
+   ]
+  },
+  {
+   "kind": "Skill",
+   "name": "Zenith",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Lucky Hit"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zenith > Enhanced Zenith",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zenith > Empyrean Edge",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Critical Strikes"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zenith > Sermon of Steel",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zenith > Sunder",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zenith > Unstoppable",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zenith > Weaken",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Zenith > Critical Strike Chance",
+   "slot": null,
+   "makes": [
+    "Critical Strikes"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Fortress",
+   "slot": null,
+   "makes": [
+    "Lucky Hit",
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": [
+    "Resolve, Fortify, Barrier"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Fortress > Barricade",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Elites, bosses and kills"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Fortress > Rampart of Thorns",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Thorns and Retribution"
+   ],
+   "pays": [
+    "Crowd control",
+    "Thorns and Retribution"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Fortress > Unstoppable",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Fortress > Resolve Damage Bonus",
+   "slot": null,
+   "makes": [
+    "Resolve, Fortify, Barrier"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Heaven's Fury",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Heaven's Fury > Slow",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Condemn",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Movement",
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Condemn > Enhanced Condemn",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": [
+    "Movement"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Condemn > Gather the Guilty",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Condemn > Movement Speed",
+   "slot": null,
+   "makes": [
+    "Movement"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Spear of the Heavens",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Lucky Hit"
+   ],
+   "pays": [
+    "Faith"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Spear of the Heavens > Cooldown Reduction",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Spear of the Heavens > Judgement Damage Bonus",
+   "slot": null,
+   "makes": [],
+   "pays": [
+    "Judgement"
+   ]
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Spear of the Heavens > Vulnerable",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Consecration",
+   "slot": null,
+   "makes": [
+    "Lucky Hit",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Consecration > Hallowed Ground",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Consecration > Bastion",
+   "slot": null,
+   "makes": [
+    "Crowd control",
+    "Aura cast / Aura Potency"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Consecration > Sanctify",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Consecration > Weaken",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Consecration > Duration",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Consecration > Fortify",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency",
+    "Healthy, Injured, Life"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Consecration > Resource Generation",
+   "slot": null,
+   "makes": [
+    "Aura cast / Aura Potency"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill",
+   "name": "Purify",
+   "slot": null,
+   "makes": [
+    "Lucky Hit"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Purify > Sentence",
+   "slot": null,
+   "makes": [
+    "Cooldowns"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Purify > Surrender",
+   "slot": null,
+   "makes": [
+    "Crowd control"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Purify > Absolution",
+   "slot": null,
+   "makes": [
+    "Vulnerable"
+   ],
+   "pays": []
+  },
+  {
+   "kind": "Skill upgrade",
+   "name": "Purify > Faith Generation",
+   "slot": null,
+   "makes": [
+    "Faith"
+   ],
+   "pays": []
+  }
+ ]
+}
