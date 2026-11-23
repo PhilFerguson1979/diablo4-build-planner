@@ -1,0 +1,32 @@
+{
+ "key": "argent-zeal",
+ "name": "Argent Veil, Zeal",
+ "cls": "Paladin",
+ "base": "Arbiter Wing Strikes",
+ "variant": 1,
+ "main": "Zeal",
+ "swap": [
+  [
+   "Consecration",
+   "Zeal"
+  ]
+ ],
+ "lock": [
+  [
+   "ring2",
+   "Argent Veil"
+  ]
+ ],
+ "els": [
+  "Holy",
+  "Physical"
+ ],
+ "w": 0.5,
+ "tg": 3,
+ "quick": true,
+ "idea": "Argent Veil makes Arbiter's Evade cast a random equipped Core Skill every 2 meters, so you fly around in Arbiter form and the ring casts Zeal for you. The only Core Skill on the bar gets every free cast.",
+ "engine": [
+  "Arbiter form",
+  "Movement"
+ ]
+}

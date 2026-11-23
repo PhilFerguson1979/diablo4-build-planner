@@ -80,14 +80,14 @@ window.AGENT = (() => {
     const banParts = []; if (spec.ban) banParts.push(spec.ban); if (E && E.dead.length) banParts.push('^(' + E.dead.map(d => esc(d.name)).join('|') + ')( \\(.*\\))?$');
     if ((spec.tg || 3) > 1) { const iso = X.data().uniques.concat(X.data().aspects).filter(q => /isolated enem/i.test(String(q.desc || '').replace(/<[^>]+>/g, ''))).map(q => esc(q.name)); if (iso.length) banParts.push('^(' + [...new Set(iso)].join('|') + ')( \\(.*\\))?$'); }
     const ban = banParts.length ? new RegExp(banParts.join('|')) : null; window.AGENT_BAN = ban; if (E) say('engine: ' + E.made.join(', ') + '; ' + E.dead.length + ' payoffs left out for lack of a trigger');
-    LAB.optimize(obj, { w, passes: 2, lock, ban }); say('gear searched (2 passes)');
+    LAB.optimize(obj, { w, passes: spec.quick ? 1 : 2, lock, ban }); say('gear searched (' + (spec.quick ? 1 : 2) + ' passes)');
     // Paragon: every board layout the class's library builds use, then glyphs for each socket
     let bestPara = clone(S().paragon), bj = SC(), paraFrom = 'kept from ' + baseName; const keepLv = clone((S().paragon || {}).glyphLv || {}); const cap0 = (S().paragon || {}).cap || 1e9;
-    for (const b of libOf(spec.cls)) for (let v = 0; v < Math.min(2, (b.variants || []).length); v++) { const r = resolve(b, v); if (!r || !r.st || !r.st.paragon || (r.st.paragon.cap || 0) > cap0) continue; S().paragon = clone(r.st.paragon); X.invalidate(); const j = SC(); if (j > bj + 1e-9) { bj = j; bestPara = clone(r.st.paragon); paraFrom = b.name + ' (' + ((b.variants[v] || {}).t || 'variant ' + v) + ')'; } }
+    if (!spec.quick) for (const b of libOf(spec.cls)) for (let v = 0; v < Math.min(2, (b.variants || []).length); v++) { const r = resolve(b, v); if (!r || !r.st || !r.st.paragon || (r.st.paragon.cap || 0) > cap0) continue; S().paragon = clone(r.st.paragon); X.invalidate(); const j = SC(); if (j > bj + 1e-9) { bj = j; bestPara = clone(r.st.paragon); paraFrom = b.name + ' (' + ((b.variants[v] || {}).t || 'variant ' + v) + ')'; } }
     S().paragon = bestPara; if (S().paragon) S().paragon.glyphLv = Object.assign({}, S().paragon.glyphLv || {}, keepLv); X.invalidate(); say('paragon boards from ' + paraFrom);
-    mods = pickMods(); PAY = best().k; LAB.optimize(obj, { w, passes: 1, lock, ban }); say('gear searched again with the new boards');
+    mods = pickMods(); PAY = best().k; if (!spec.quick) { LAB.optimize(obj, { w, passes: 1, lock, ban }); say('gear searched again with the new boards'); }
     const els = spec.els || ['Physical', C().powers[MAIN].dmg || 'Physical'];
-    const xlog = [].concat(LX.glyphs(obj, w), LX.mercs(obj, w)); window.charmFill(obj, w, els); xlog.push(...LX.charms(obj, w, els)); log.push(...xlog); say('glyphs, mercenaries and charms searched');
+    const xlog = [].concat(LX.glyphs(obj, w), LX.mercs(obj, w)); window.charmFill(obj, w, els); if (!spec.quick) xlog.push(...LX.charms(obj, w, els)); log.push(...xlog); say('glyphs, mercenaries and charms searched');
     PAY = best().k; X.invalidate();
     const E2 = E; return report(spec, { lad0, sc0, E: E2, MAIN, PAY, mods, trim, pts0, d0, e0, obj, procs, best, log, baseName, paraFrom, t0, tg });
   }

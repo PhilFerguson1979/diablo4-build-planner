@@ -143,6 +143,8 @@
     // "Clash becomes a Zealot Skill" swaps the school: it stops being a Juggernaut Skill. "is also" keeps both.
     const sw = schoolSwap(P); if (sw && SCHOOL_WORD[cat] && SCHOOL_WORD[cat] !== sw) return false;
     if (tags.includes(cat) || (al && tags.includes(al))) return true;
+    // an upgrade can turn a skill into a Core Skill (Fist of the Heavens, Relentless Charge)
+    if (cat === 'Core' && P.id && (P.mods || []).length) { try { const am = activeMods(P.id); if ((P.mods || []).some(m => am.has(m.key) && /becomes a Core Skill/i.test(strip(String(m.desc || '')).replace(/\{[^}]*\}/g, '')))) return true; } catch (e) { /* not on the tree */ } }
     const k = effSchool(P); return !!(k && (k === cat || k === al || (SCHOOL_COL[k] && SCHOOL_COL[k][0] === cat)));
   }
   // sum every stat line "<prefix> suffix" whose prefix is empty, this skill's name, or a category the skill belongs to
@@ -2408,7 +2410,13 @@
     const projLine = ownHit && projN > 0 && /PROJ/i.test(payD.k || '');
     // projectiles that fan out (Fist of the Heavens): on a single target count one of them (a cautious guess until tested in game); raise "Hits on one target" if more land
     const pph = pph0 * (ownHit ? 1 + echoN : 1) * (projLine && tg > 1 ? Math.max(1, projN / tg) : 1);
-    const hps = ((resI && resI.capped ? resI.lim : hps0) + blkCasts) * pph;
+    // Argent Veil: Arbiter's Evade casts a random equipped non-Channeled Core Skill every 2 meters. Assumed: in Arbiter form,
+    // an Evade every 2 seconds ("Evades a second") covering 10 meters ("Meters an Evade"), split across the Core Skills on your bar.
+    let argent = 0, argentWhy = ''; if (!isJudge && !isProc && !isDawn && !isThorns && !pulse && skillIs(P, 'Core') && !/Channel/i.test(strip(P.desc || ''))) worn.forEach(it => { if (!/Arbiter's Evade triggers a random equipped non-Channeled Core Skill for every ([\d.]+) meters/.test(strip(it.desc))) return;
+      const per = +strip(it.desc).match(/for every ([\d.]+) meters/)[1]; const ev = T.ev === '' || T.ev == null || isNaN(+T.ev) ? 0.5 : Math.max(0, +T.ev); const mt = T.evm === '' || T.evm == null || isNaN(+T.evm) ? 10 : Math.max(0, +T.evm);
+      const cores = (S.hotbar || []).filter(id => { const Q = C.powers[id]; return Q && skillIs(Q, 'Core') && !/Channel/i.test(strip(Q.desc || '')); }).length || 1; argent += ev * mt / per / cores;
+      argentWhy = `${it.name}: ${D4T.fmtNum(ev)} Arbiter's Evades a second over ${D4T.fmtNum(mt)} meters, a cast every ${per} meters, shared by ${cores} Core Skill${cores > 1 ? 's' : ''}`; });
+    const hps = ((resI && resI.capped ? resI.lim : hps0) + blkCasts + argent) * pph;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
