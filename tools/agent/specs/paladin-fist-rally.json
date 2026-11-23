@@ -1,0 +1,46 @@
+{
+ "key": "paladin-fist-rally",
+ "name": "Fist of the Heavens, Rally and Judgement (tanky)",
+ "cls": "Paladin",
+ "base": "Auradin, Holy Light Aura",
+ "variant": 4,
+ "main": "Spear of the Heavens",
+ "rank": 15,
+ "needMods": [
+  "Fist of the Heavens "
+ ],
+ "bar": [
+  "Spear of the Heavens",
+  "Rally",
+  "Holy Light Aura",
+  "Fanaticism Aura",
+  "Defiance Aura",
+  "Aegis"
+ ],
+ "oath": "Paladin_Oath_Judgement",
+ "els": [
+  "Holy",
+  "Physical"
+ ],
+ "tg": 1,
+ "target": "boss",
+ "w": 1,
+ "idea": "Same Fist of the Heavens Judgement engine with Rally as the Faith source and movement, weighted towards Effective Life for the Pit.",
+ "engine": [
+  "Judgement",
+  "Resource spending",
+  "Movement"
+ ],
+ "extra": [
+  [
+   "Rally",
+   5,
+   [
+    
+    "Critical Strike Chance",
+    "Unhindered and Movement Speed"
+   ]
+  ]
+ ],
+ "ban": "^(Aspect of Inner Calm|Vanquishing)( \\(.*\\))?$"
+}

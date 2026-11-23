@@ -1,0 +1,35 @@
+{
+ "key": "argent-fist-full",
+ "name": "Argent Veil, Fist of the Heavens",
+ "cls": "Paladin",
+ "base": "Arbiter Wing Strikes",
+ "variant": 1,
+ "main": "Spear of the Heavens",
+ "swap": [
+  [
+   "Consecration",
+   "Spear of the Heavens"
+  ]
+ ],
+ "lock": [
+  [
+   "ring2",
+   "Argent Veil"
+  ]
+ ],
+ "els": [
+  "Holy",
+  "Physical"
+ ],
+ "w": 0.5,
+ "tg": 3,
+ "quick": false,
+ "idea": "Argent Veil makes Arbiter's Evade cast a random equipped Core Skill every 2 meters, so you fly around in Arbiter form and the ring casts Fist of the Heavens for you. The only Core Skill on the bar gets every free cast.",
+ "engine": [
+  "Arbiter form",
+  "Movement"
+ ],
+ "needMods": [
+  "Fist of the Heavens "
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "key": "paladin-advance-wave-dash",
+ "name": "Wave Dash Advance, Juggernaut on the move",
+ "cls": "Paladin",
+ "base": "Shield Bash, Juggernaut",
+ "variant": 0,
+ "main": "Advance",
+ "rank": 15,
+ "needMods": ["Wave Dash"],
+ "bar": ["Advance", "Aegis", "Fanaticism Aura", "Defiance Aura", "Fortress", "Rally"],
+ "oath": "Paladin_Oath_Juggernaut",
+ "els": ["Physical", "Holy"],
+ "tg": 1,
+ "target": "boss",
+ "w": 0.5,
+ "idea": "Wave Dash makes Advance a Juggernaut skill whose impact waves out and builds Resolve on every hit. The build never stops moving, so Relentless and the moving payoffs stay on, and Resolve feeds Glynn's Anvil, Interdiction's Block Chance and Redirected Force while Juggernaut payoffs like Chastisement are [x] against bosses.",
+ "engine": ["Movement", "Resolve (Juggernaut)", "Block"]
+}

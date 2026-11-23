@@ -1,0 +1,1618 @@
+{
+ "key": "paladin-advance-wave-dash",
+ "name": "Wave Dash Advance, Juggernaut on the move",
+ "cls": "Paladin",
+ "base": "Shield Bash, Juggernaut",
+ "main": "Advance",
+ "pay": "UPGRADE_B_CONE_DAMAGE",
+ "mods": [
+  "Wave Dash",
+  "Unhindered",
+  "Critical Strike Chance"
+ ],
+ "trim": [],
+ "dmg": {
+  "start": 3319507927,
+  "main": 101608378921,
+  "procs": [],
+  "total": 101608378921,
+  "pack": 101608378921,
+  "boss": 101608378921,
+  "bestSkill": "Advance"
+ },
+ "def": {
+  "start": 899336,
+  "ehp": 1188661,
+  "life": 23289,
+  "armor": 29137,
+  "armorDR": 76.6,
+  "block": 30,
+  "dodge": 0,
+  "elems": [
+   {
+    "el": "Physical",
+    "dr": 93.6,
+    "ehp": 362409
+   },
+   {
+    "el": "Fire",
+    "dr": 99,
+    "ehp": 2249598
+   },
+   {
+    "el": "Lightning",
+    "dr": 99,
+    "ehp": 2249598
+   },
+   {
+    "el": "Cold",
+    "dr": 93.6,
+    "ehp": 362409
+   },
+   {
+    "el": "Poison",
+    "dr": 99,
+    "ehp": 2249598
+   },
+   {
+    "el": "Shadow",
+    "dr": 99,
+    "ehp": 2441228
+   }
+  ],
+  "overCap": [],
+  "whatIf": [
+   {
+    "affix": "Damage Reduction",
+    "gain": 17.6
+   },
+   {
+    "affix": "Maximum Life",
+    "gain": 14.2
+   },
+   {
+    "affix": "All Resistance",
+    "gain": 11.4
+   },
+   {
+    "affix": "Armor",
+    "gain": -16.6
+   }
+  ]
+ },
+ "caps": [
+  {
+   "id": "as",
+   "stat": "Attack Speed Bonus",
+   "v": 13.8,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "cs",
+   "stat": "Cast Speed Bonus (second attack speed cap)",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "csc",
+   "stat": "Critical Strike Chance",
+   "v": 40.5,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "retri",
+   "stat": "Retribution Chance",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "block",
+   "stat": "Block Chance",
+   "v": 30,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "blockr",
+   "stat": "Block Reduction",
+   "v": 30,
+   "cap": 80,
+   "at": false
+  },
+  {
+   "id": "dr",
+   "stat": "All Damage Reduction",
+   "v": 15,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "dodge",
+   "stat": "Dodge Chance",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "cdr",
+   "stat": "Cooldown Reduction",
+   "v": 10,
+   "cap": 75,
+   "at": false
+  },
+  {
+   "id": "lhc",
+   "stat": "Lucky Hit Chance Bonus",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  }
+ ],
+ "pit": [
+  {
+   "tier": 60,
+   "eliteTTK": 0,
+   "eliteKillsYouIn": 23.1,
+   "biggestHit": 1877,
+   "life": 23289,
+   "ok": true
+  },
+  {
+   "tier": 70,
+   "eliteTTK": 0,
+   "eliteKillsYouIn": 13.6,
+   "biggestHit": 2982,
+   "life": 23289,
+   "ok": true
+  },
+  {
+   "tier": 80,
+   "eliteTTK": 0.1,
+   "eliteKillsYouIn": 8.2,
+   "biggestHit": 4739,
+   "life": 23289,
+   "ok": true
+  },
+  {
+   "tier": 90,
+   "eliteTTK": 0.3,
+   "eliteKillsYouIn": 5.1,
+   "biggestHit": 7532,
+   "life": 23289,
+   "ok": true
+  },
+  {
+   "tier": 100,
+   "eliteTTK": 1.4,
+   "eliteKillsYouIn": 3.2,
+   "biggestHit": 11970,
+   "life": 23289,
+   "ok": true
+  },
+  {
+   "tier": 110,
+   "eliteTTK": 6.6,
+   "eliteKillsYouIn": 2,
+   "biggestHit": 19023,
+   "life": 23289,
+   "ok": false
+  },
+  {
+   "tier": 120,
+   "eliteTTK": 106,
+   "eliteKillsYouIn": 1.6,
+   "biggestHit": 24046,
+   "life": 23289,
+   "ok": false
+  },
+  {
+   "tier": 130,
+   "eliteTTK": 1702.7,
+   "eliteKillsYouIn": 1.3,
+   "biggestHit": 30395,
+   "life": 23289,
+   "ok": false
+  },
+  {
+   "tier": 140,
+   "eliteTTK": 27345.3,
+   "eliteKillsYouIn": 1,
+   "biggestHit": 38420,
+   "life": 23289,
+   "ok": false
+  },
+  {
+   "tier": 150,
+   "eliteTTK": 439159.1,
+   "eliteKillsYouIn": 0.8,
+   "biggestHit": 48564,
+   "life": 23289,
+   "ok": false
+  }
+ ],
+ "pitHold": 100,
+ "pitHoldStart": 80,
+ "startScore": {
+  "pack": 3319507927,
+  "boss": 3319507927
+ },
+ "rot": [
+  {
+   "id": "Paladin_Advance_lunge",
+   "name": "Advance",
+   "tag": "Basic",
+   "basic": false,
+   "main": true,
+   "cd": 0,
+   "cost": true,
+   "dmg": "Physical"
+  },
+  {
+   "id": "Paladin_Smite_FalconPunch_Recast_1",
+   "name": "Aegis",
+   "tag": "Valor",
+   "basic": false,
+   "main": false,
+   "cd": 14.4,
+   "cost": false,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Offensive_Aura",
+   "name": "Fanaticism Aura",
+   "tag": "Aura",
+   "basic": false,
+   "main": false,
+   "cd": 13.5,
+   "cost": true,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Defensive_Aura",
+   "name": "Defiance Aura",
+   "tag": "Aura",
+   "basic": true,
+   "main": false,
+   "cd": 18,
+   "cost": true,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Fortress",
+   "name": "Fortress",
+   "tag": "Ultimate",
+   "basic": false,
+   "main": false,
+   "cd": 54,
+   "cost": false,
+   "dmg": "Physical"
+  },
+  {
+   "id": "Paladin_Sacrifice",
+   "name": "Rally",
+   "tag": "Valor",
+   "basic": false,
+   "main": false,
+   "cd": 14.4,
+   "cost": false,
+   "dmg": ""
+  }
+ ],
+ "gear": [
+  {
+   "slot": "helm",
+   "slotName": "Helm",
+   "item": "Crown of Lucion",
+   "kind": "unique",
+   "mythic": true,
+   "fixed": [],
+   "affixes": [
+    "+121 Strength (guaranteed)",
+    "+1,450 Maximum Life",
+    "+100 All Stats",
+    "+1,225 Armor"
+   ],
+   "enchant": "7% Resource Cost Reduction",
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "chest",
+   "slotName": "Chest",
+   "item": "Mantle of the Grey",
+   "kind": "unique",
+   "mythic": true,
+   "fixed": [],
+   "affixes": [
+    "+121 Strength (guaranteed)",
+    "+2,500 Armor",
+    "+2,800 Shadow Resistance",
+    "+1,450 Maximum Life"
+   ],
+   "enchant": "+2 to Juggernaut Skills",
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "gloves",
+   "slotName": "Gloves",
+   "item": "Paingorger's Gauntlets",
+   "kind": "unique",
+   "mythic": true,
+   "fixed": [],
+   "affixes": [
+    "+180 Strength (guaranteed)",
+    "x50% Critical Strike Damage Multiplier",
+    "+8.5% Critical Strike Chance",
+    "x24% Physical Damage Multiplier"
+   ],
+   "enchant": "+10% Attack Speed",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "pants",
+   "slotName": "Pants",
+   "item": "Aspect of Disobedience",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+2,500 Armor",
+    "+3 to Advance",
+    "+121 Strength",
+    "+1,450 Maximum Life"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "boots",
+   "slotName": "Boots",
+   "item": "March of the Stalwart Soul",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+121 Strength (guaranteed)",
+    "+3 to Advance (guaranteed)",
+    "+2,800 Shadow Resistance",
+    "+1,450 Maximum Life"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+10% Defiance Aura Potency"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "amulet",
+   "slotName": "Amulet",
+   "item": "Blood-Mad Idol",
+   "kind": "unique",
+   "mythic": true,
+   "fixed": [],
+   "affixes": [
+    "+180 Strength (guaranteed)",
+    "x50% Critical Strike Damage Multiplier",
+    "+8.5% Critical Strike Chance",
+    "x24% Physical Damage Multiplier"
+   ],
+   "enchant": "+10% Attack Speed",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": [
+    {
+     "type": "Topaz",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "ring1",
+   "slotName": "Ring",
+   "item": "Vanguard's",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+5% Critical Strike Chance",
+    "x25% Critical Strike Damage Multiplier",
+    "x14% Vulnerable Damage Multiplier",
+    "x10% All Damage Multiplier"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": [
+    {
+     "type": "Ruby",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "ring2",
+   "slotName": "Ring",
+   "item": "Aspect of the Juggernaut's Covenant",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+5% Critical Strike Chance",
+    "x25% Critical Strike Damage Multiplier",
+    "x14% Vulnerable Damage Multiplier",
+    "x10% All Damage Multiplier"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": [
+    {
+     "type": "Emerald",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "weapon",
+   "slotName": "Weapon",
+   "item": "Shard of Verathiel",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+2 to Basic Skills (guaranteed)",
+    "x25% Critical Strike Damage Multiplier",
+    "+2,200 Maximum Life",
+    "+180 Strength"
+   ],
+   "enchant": "+157 Weapon Damage",
+   "tempers": [
+    "+5% Critical Strike Chance"
+   ],
+   "gems": [
+    {
+     "type": "Skull",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "offhand",
+   "slotName": "Off-hand",
+   "item": "Herald of Zakarum",
+   "kind": "unique",
+   "mythic": true,
+   "fixed": [],
+   "affixes": [
+    "+180 Strength (guaranteed)",
+    "+8.5% Critical Strike Chance",
+    "+2,500 Armor",
+    "15% Damage Reduction"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": [
+    {
+     "type": "Ruby",
+     "grade": 9
+    }
+   ]
+  }
+ ],
+ "glyphs": [
+  {
+   "board": "Start",
+   "glyph": "Revenge",
+   "level": 75
+  },
+  {
+   "board": "Shield Bearer",
+   "glyph": "Outmatch",
+   "level": 75
+  },
+  {
+   "board": "Beacon",
+   "glyph": "Honed",
+   "level": 75
+  },
+  {
+   "board": "Relentless",
+   "glyph": "Imbiber",
+   "level": 75
+  },
+  {
+   "board": "Castle",
+   "glyph": "Sentinel",
+   "level": 75
+  }
+ ],
+ "boards": [
+  "Start",
+  "Shield Bearer",
+  "Relentless",
+  "Castle",
+  "Beacon"
+ ],
+ "paraFrom": "Shield of Retribution, Thorns (Push)",
+ "charms": [
+  {
+   "kind": "rare",
+   "aff": [
+    "15%[x] Critical Strike Damage",
+    "15%[x] Vulnerable Damage"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Juggernaut Skills",
+    "+3 to Advance"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Juggernaut Skills",
+    "+3 to Advance"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Juggernaut Skills",
+    "+3 to Advance"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Juggernaut Skills",
+    "+3 to Advance"
+   ]
+  },
+  {
+   "kind": "unique",
+   "name": "The Grandfather"
+  }
+ ],
+ "seal": "Seal of the Diamond Mind",
+ "mercs": {
+  "main": "Varyana",
+  "sup": "Aldkin",
+  "supSkill": "Field of Languish"
+ },
+ "engine": {
+  "made": [
+   "Movement",
+   "Lucky Hit",
+   "Block",
+   "Crowd control",
+   "Thorns",
+   "Retribution",
+   "Critical Strikes",
+   "Attack speed",
+   "Resource spending",
+   "Resolve (Juggernaut)",
+   "Evade and Dodge",
+   "Fortify, Barrier, Healthy",
+   "Damage over time",
+   "Aura cast / Aura Potency"
+  ],
+  "leftOut": 11
+ },
+ "skills": [
+  "Defiance Aura r30 []",
+  "Aegis r16 [Impunity, Duration, Cooldown Reduction]",
+  "Fanaticism Aura r15 []",
+  "Rally r1 []",
+  "Advance r53 [Wave Dash, Unhindered, Critical Strike Chance]",
+  "Fortress r24 [Barricade, Unstoppable, Resolve Damage Bonus]"
+ ],
+ "bar": [
+  "Advance",
+  "Aegis",
+  "Fanaticism Aura",
+  "Defiance Aura",
+  "Fortress",
+  "Rally"
+ ],
+ "log": [
+  "started from Shield Bash, Juggernaut",
+  "main skill upgrades: Wave Dash, Unhindered, Critical Strike Chance",
+  "starting point holds Pit 80",
+  "engine: Movement, Lucky Hit, Block, Crowd control, Thorns, Retribution, Critical Strikes, Attack speed, Resource spending, Resolve (Juggernaut), Evade and Dodge, Fortify, Barrier, Healthy, Damage over time, Aura cast / Aura Potency; 11 payoffs left out for lack of a trigger",
+  "gear searched (2 passes)",
+  "paragon boards from Shield of Retribution, Thorns (Push)",
+  "gear searched again with the new boards",
+  "Paragon_Paladin_06: Spirit -> Imbiber",
+  "charms: The Grandfather",
+  "glyphs, mercenaries and charms searched"
+ ],
+ "secs": 1533,
+ "st": {
+  "v": 1,
+  "cls": "Paladin",
+  "ver": "live",
+  "name": "Shield Bash Paladin, Juggernaut",
+  "alloc": {
+   "31": 15,
+   "55": 1,
+   "56": 1,
+   "58": 1,
+   "153": 3,
+   "156": 5,
+   "157": 5,
+   "171": 1,
+   "172": 15,
+   "176": 1,
+   "178": 15,
+   "193": 1,
+   "195": 1,
+   "249": 9,
+   "252": 1
+  },
+  "bonusRanks": 0,
+  "sel": null,
+  "gear": {
+   "helm": {
+    "item": {
+     "t": "u",
+     "id": "S05_BSK_Helm_Unique_Generic_001"
+    },
+    "affixes": [
+     {
+      "id": "S04_CoreStat_Strength",
+      "g": 1
+     },
+     {
+      "id": "S04_Life"
+     },
+     {
+      "id": "S04_CoreStats_All"
+     },
+     {
+      "id": "S04_Armor"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [],
+    "mythic": true,
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "chest": {
+    "item": {
+     "t": "u",
+     "id": "Chest_Unique_Paladin_001"
+    },
+    "affixes": [
+     {
+      "id": "S04_CoreStat_Strength",
+      "g": 1
+     },
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "S04_Resistance_Single_Shadow"
+     },
+     {
+      "id": "S04_Life"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [],
+    "mythic": true,
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "pants": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_generic_036"
+    },
+    "affixes": [
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "X2_SkillRankBonus_Paladin_Basic_Advance"
+     },
+     {
+      "id": "S04_CoreStat_Strength"
+     },
+     {
+      "id": "S04_Life"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [],
+    "mythic": true,
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "boots": {
+    "item": {
+     "t": "u",
+     "id": "Boots_Unique_Paladin_001"
+    },
+    "affixes": [
+     {
+      "id": "S04_CoreStat_Strength",
+      "g": 1
+     },
+     {
+      "id": "X2_SkillRankBonus_Paladin_Basic_Advance",
+      "g": 1
+     },
+     {
+      "id": "S04_Resistance_Single_Shadow"
+     },
+     {
+      "id": "S04_Life"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Paladin_Utility_Aura_Tier3",
+      "oid": "Tempered_Special_Type_Aura_Paladin_Potency_Defiance_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "weapon": {
+    "item": {
+     "t": "u",
+     "id": "S05_BSK_1HSword_Unique_Generic_001"
+    },
+    "affixes": [
+     {
+      "id": "S04_SkillRankBonus_Generic_Category_Basic",
+      "g": 1
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "X2_Life_Greater"
+     },
+     {
+      "id": "X2_CoreStat_Strength_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Weapon_APSCrit_Tier3",
+      "oid": "Tempered_Generic_CritChance_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Skull",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "gloves": {
+    "item": {
+     "t": "u",
+     "id": "Gloves_Unique_Generic_004"
+    },
+    "affixes": [
+     {
+      "id": "X2_CoreStat_Strength_Greater",
+      "g": 1
+     },
+     {
+      "id": "X2_CritDamage_Greater"
+     },
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_DamageType_Physical_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [],
+    "mythic": true,
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "amulet": {
+    "item": {
+     "t": "u",
+     "id": "Amulet_Unique_Generic_102"
+    },
+    "affixes": [
+     {
+      "id": "X2_CoreStat_Strength_Greater",
+      "g": 1
+     },
+     {
+      "id": "X2_CritDamage_Greater"
+     },
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_DamageType_Physical_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Topaz",
+      "grade": 9
+     }
+    ],
+    "mythic": true,
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "ring1": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_paladin_011"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChanceJewelry"
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "S04_Damage_to_Vulnerable"
+     },
+     {
+      "id": "S04_Damage_All"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Ruby",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "ring2": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_paladin_033"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChanceJewelry"
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "S04_Damage_to_Vulnerable"
+     },
+     {
+      "id": "S04_Damage_All"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Emerald",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "offhand": {
+    "item": {
+     "t": "u",
+     "id": "1HShield_Unique_Paladin_004"
+    },
+    "affixes": [
+     {
+      "id": "X2_CoreStat_Strength_Greater",
+      "g": 1
+     },
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "S04_DamageReduction"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Ruby",
+      "grade": 9
+     }
+    ],
+    "mythic": true,
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   }
+  },
+  "charms": {
+   "seal": "Talisman_Seal_MythicUnique_03",
+   "count": {},
+   "horadric": {},
+   "torch": "",
+   "uniques": [],
+   "sockets": [
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_Virtue_Bravery",
+      "Talisman_Charm_Virtue_Wrath"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
+      "Talisman_Charm_SkillRankBonus_Paladin_Basic_Advance"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
+      "Talisman_Charm_SkillRankBonus_Paladin_Basic_Advance"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
+      "Talisman_Charm_SkillRankBonus_Paladin_Basic_Advance"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
+      "Talisman_Charm_SkillRankBonus_Paladin_Basic_Advance"
+     ]
+    },
+    {
+     "t": "u",
+     "id": "Talisman_Charm_Unique_2HSword_Unique_Generic_001",
+     "aff": [
+      "Talisman_Charm_Virtue_Haste",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut"
+     ]
+    }
+   ]
+  },
+  "calc": {
+   "cd": {
+    "skill": "",
+    "base": "",
+    "cdr": [
+     {
+      "n": "Relentless while moving",
+      "v": 0
+     }
+    ],
+    "flat": [
+     {
+      "n": "Rune or proc cuts per second",
+      "v": 0
+     }
+    ],
+    "dur": ""
+   },
+   "lh": {
+    "skill": "",
+    "base": "",
+    "bonus": 0,
+    "hits": 4,
+    "fx": []
+   },
+   "dmg": {
+    "wd": 4000,
+    "ms": 2500,
+    "ranks": 20,
+    "add": 250,
+    "cc": 60,
+    "cd": 200,
+    "vuln": 120,
+    "vulnUp": 80,
+    "mult": [
+     {
+      "n": "Aspect slot",
+      "v": 60
+     },
+     {
+      "n": "Unique power",
+      "v": 100
+     }
+    ]
+   },
+   "ehp": {
+    "life": 12000,
+    "armorDr": 60,
+    "res": 70,
+    "dr": [
+     {
+      "n": "Firm Decree",
+      "v": 30
+     },
+     {
+      "n": "Righteous Will (2 min Resolve)",
+      "v": 20
+     }
+    ]
+   }
+  },
+  "hotbar": [
+   "Paladin_Advance_lunge",
+   "Paladin_Smite_FalconPunch_Recast_1",
+   "Paladin_Offensive_Aura",
+   "Paladin_Defensive_Aura",
+   "Paladin_Fortress",
+   "Paladin_Sacrifice"
+  ],
+  "mech": {
+   "Paladin": {
+    "picks": {
+     "0": [
+      "Paladin_Oath_Juggernaut"
+     ]
+    },
+    "bond": "",
+    "up": {}
+   }
+  },
+  "paragon": {
+   "boards": [
+    {
+     "id": "Paragon_Paladin_00",
+     "ox": 0,
+     "oy": 0,
+     "r": 0
+    },
+    {
+     "id": "Paragon_Paladin_02",
+     "ox": 0,
+     "oy": -21,
+     "r": 1,
+     "at": {
+      "gx": 10,
+      "gy": 0,
+      "dx": 0,
+      "dy": -1
+     }
+    },
+    {
+     "id": "Paragon_Paladin_06",
+     "ox": 21,
+     "oy": -21,
+     "r": 1,
+     "at": {
+      "gx": 20,
+      "gy": -11,
+      "dx": 1,
+      "dy": 0
+     }
+    },
+    {
+     "id": "Paragon_Paladin_01",
+     "ox": 21,
+     "oy": 0,
+     "r": 0,
+     "at": {
+      "gx": 31,
+      "gy": -1,
+      "dx": 0,
+      "dy": 1
+     }
+    },
+    {
+     "id": "Paragon_Paladin_09",
+     "ox": 42,
+     "oy": 0,
+     "r": 3,
+     "at": {
+      "gx": 41,
+      "gy": 10,
+      "dx": 1,
+      "dy": 0
+     }
+    }
+   ],
+   "alloc": {
+    "Paragon_Paladin_00:10,1": 1,
+    "Paragon_Paladin_00:11,2": 1,
+    "Paragon_Paladin_00:11,3": 1,
+    "Paragon_Paladin_00:11,4": 1,
+    "Paragon_Paladin_00:11,5": 1,
+    "Paragon_Paladin_00:11,6": 1,
+    "Paragon_Paladin_00:9,4": 1,
+    "Paragon_Paladin_00:8,5": 1,
+    "Paragon_Paladin_00:10,7": 1,
+    "Paragon_Paladin_00:10,8": 1,
+    "Paragon_Paladin_00:9,8": 1,
+    "Paragon_Paladin_00:8,9": 1,
+    "Paragon_Paladin_00:8,10": 1,
+    "Paragon_Paladin_00:8,11": 1,
+    "Paragon_Paladin_00:9,11": 1,
+    "Paragon_Paladin_00:11,8": 1,
+    "Paragon_Paladin_00:11,9": 1,
+    "Paragon_Paladin_00:11,10": 1,
+    "Paragon_Paladin_00:11,11": 1,
+    "Paragon_Paladin_00:12,11": 1,
+    "Paragon_Paladin_00:12,10": 1,
+    "Paragon_Paladin_00:13,11": 1,
+    "Paragon_Paladin_00:12,12": 1,
+    "Paragon_Paladin_00:12,13": 1,
+    "Paragon_Paladin_00:11,13": 1,
+    "Paragon_Paladin_00:10,13": 1,
+    "Paragon_Paladin_00:11,1": 1,
+    "Paragon_Paladin_00:9,5": 1,
+    "Paragon_Paladin_00:9,3": 1,
+    "Paragon_Paladin_00:9,6": 1,
+    "Paragon_Paladin_00:12,4": 1,
+    "Paragon_Paladin_00:12,3": 1,
+    "Paragon_Paladin_00:12,5": 1,
+    "Paragon_Paladin_00:9,9": 1,
+    "Paragon_Paladin_00:10,6": 1,
+    "Paragon_Paladin_00:10,0": 1,
+    "Paragon_Paladin_02:13,3": 1,
+    "Paragon_Paladin_02:14,3": 1,
+    "Paragon_Paladin_02:14,2": 1,
+    "Paragon_Paladin_02:12,4": 1,
+    "Paragon_Paladin_02:12,5": 1,
+    "Paragon_Paladin_02:12,6": 1,
+    "Paragon_Paladin_02:11,6": 1,
+    "Paragon_Paladin_02:10,6": 1,
+    "Paragon_Paladin_02:9,6": 1,
+    "Paragon_Paladin_02:8,6": 1,
+    "Paragon_Paladin_02:8,8": 1,
+    "Paragon_Paladin_02:8,7": 1,
+    "Paragon_Paladin_02:9,8": 1,
+    "Paragon_Paladin_02:9,9": 1,
+    "Paragon_Paladin_02:8,5": 1,
+    "Paragon_Paladin_02:7,5": 1,
+    "Paragon_Paladin_02:6,5": 1,
+    "Paragon_Paladin_02:5,5": 1,
+    "Paragon_Paladin_02:5,6": 1,
+    "Paragon_Paladin_02:4,6": 1,
+    "Paragon_Paladin_02:4,5": 1,
+    "Paragon_Paladin_02:12,7": 1,
+    "Paragon_Paladin_02:12,8": 1,
+    "Paragon_Paladin_02:12,9": 1,
+    "Paragon_Paladin_02:12,11": 1,
+    "Paragon_Paladin_02:9,11": 1,
+    "Paragon_Paladin_02:8,11": 1,
+    "Paragon_Paladin_02:11,9": 1,
+    "Paragon_Paladin_02:11,8": 1,
+    "Paragon_Paladin_02:16,15": 1,
+    "Paragon_Paladin_02:17,16": 1,
+    "Paragon_Paladin_02:17,15": 1,
+    "Paragon_Paladin_02:16,16": 1,
+    "Paragon_Paladin_02:16,17": 1,
+    "Paragon_Paladin_02:17,17": 1,
+    "Paragon_Paladin_02:9,12": 1,
+    "Paragon_Paladin_02:8,12": 1,
+    "Paragon_Paladin_02:7,12": 1,
+    "Paragon_Paladin_02:6,12": 1,
+    "Paragon_Paladin_02:5,12": 1,
+    "Paragon_Paladin_02:4,12": 1,
+    "Paragon_Paladin_02:3,13": 1,
+    "Paragon_Paladin_02:3,14": 1,
+    "Paragon_Paladin_02:4,14": 1,
+    "Paragon_Paladin_02:4,13": 1,
+    "Paragon_Paladin_02:3,15": 1,
+    "Paragon_Paladin_02:2,14": 1,
+    "Paragon_Paladin_02:15,17": 1,
+    "Paragon_Paladin_02:12,10": 1,
+    "Paragon_Paladin_02:10,12": 1,
+    "Paragon_Paladin_02:14,12": 1,
+    "Paragon_Paladin_02:15,12": 1,
+    "Paragon_Paladin_02:15,13": 1,
+    "Paragon_Paladin_02:15,14": 1,
+    "Paragon_Paladin_02:15,15": 1,
+    "Paragon_Paladin_02:15,11": 1,
+    "Paragon_Paladin_02:13,12": 1,
+    "Paragon_Paladin_02:16,11": 1,
+    "Paragon_Paladin_02:17,10": 1,
+    "Paragon_Paladin_02:18,10": 1,
+    "Paragon_Paladin_02:19,10": 1,
+    "Paragon_Paladin_02:17,11": 1,
+    "Paragon_Paladin_02:13,4": 1,
+    "Paragon_Paladin_02:15,3": 1,
+    "Paragon_Paladin_02:14,4": 1,
+    "Paragon_Paladin_02:6,4": 1,
+    "Paragon_Paladin_02:11,12": 1,
+    "Paragon_Paladin_02:12,3": 1,
+    "Paragon_Paladin_02:11,3": 1,
+    "Paragon_Paladin_02:10,3": 1,
+    "Paragon_Paladin_02:10,2": 1,
+    "Paragon_Paladin_02:10,1": 1,
+    "Paragon_Paladin_02:12,12": 1,
+    "Paragon_Paladin_02:10,0": 1,
+    "Paragon_Paladin_02:20,10": 1,
+    "Paragon_Paladin_06:7,12": 1,
+    "Paragon_Paladin_06:7,13": 1,
+    "Paragon_Paladin_06:7,11": 1,
+    "Paragon_Paladin_06:10,13": 1,
+    "Paragon_Paladin_06:11,13": 1,
+    "Paragon_Paladin_06:12,13": 1,
+    "Paragon_Paladin_06:13,13": 1,
+    "Paragon_Paladin_06:13,12": 1,
+    "Paragon_Paladin_06:14,12": 1,
+    "Paragon_Paladin_06:14,13": 1,
+    "Paragon_Paladin_06:13,11": 1,
+    "Paragon_Paladin_06:5,8": 1,
+    "Paragon_Paladin_06:5,7": 1,
+    "Paragon_Paladin_06:4,7": 1,
+    "Paragon_Paladin_06:4,8": 1,
+    "Paragon_Paladin_06:3,7": 1,
+    "Paragon_Paladin_06:17,10": 1,
+    "Paragon_Paladin_06:18,10": 1,
+    "Paragon_Paladin_06:19,10": 1,
+    "Paragon_Paladin_06:15,8": 1,
+    "Paragon_Paladin_06:15,7": 1,
+    "Paragon_Paladin_06:17,7": 1,
+    "Paragon_Paladin_06:17,6": 1,
+    "Paragon_Paladin_06:17,5": 1,
+    "Paragon_Paladin_06:16,5": 1,
+    "Paragon_Paladin_06:15,5": 1,
+    "Paragon_Paladin_06:14,5": 1,
+    "Paragon_Paladin_06:13,5": 1,
+    "Paragon_Paladin_06:12,6": 1,
+    "Paragon_Paladin_06:11,6": 1,
+    "Paragon_Paladin_06:10,6": 1,
+    "Paragon_Paladin_06:15,4": 1,
+    "Paragon_Paladin_06:15,3": 1,
+    "Paragon_Paladin_06:14,4": 1,
+    "Paragon_Paladin_06:14,3": 1,
+    "Paragon_Paladin_06:12,14": 1,
+    "Paragon_Paladin_06:11,15": 1,
+    "Paragon_Paladin_06:12,15": 1,
+    "Paragon_Paladin_06:11,16": 1,
+    "Paragon_Paladin_06:11,12": 1,
+    "Paragon_Paladin_06:12,10": 1,
+    "Paragon_Paladin_06:11,10": 1,
+    "Paragon_Paladin_06:9,13": 1,
+    "Paragon_Paladin_06:8,13": 1,
+    "Paragon_Paladin_06:7,14": 1,
+    "Paragon_Paladin_06:7,10": 1,
+    "Paragon_Paladin_06:7,9": 1,
+    "Paragon_Paladin_06:8,9": 1,
+    "Paragon_Paladin_06:7,8": 1,
+    "Paragon_Paladin_06:6,8": 1,
+    "Paragon_Paladin_06:11,17": 1,
+    "Paragon_Paladin_06:10,17": 1,
+    "Paragon_Paladin_06:10,18": 1,
+    "Paragon_Paladin_06:10,19": 1,
+    "Paragon_Paladin_06:13,10": 1,
+    "Paragon_Paladin_06:13,9": 1,
+    "Paragon_Paladin_06:14,9": 1,
+    "Paragon_Paladin_06:17,9": 1,
+    "Paragon_Paladin_06:17,8": 1,
+    "Paragon_Paladin_06:16,8": 1,
+    "Paragon_Paladin_06:14,8": 1,
+    "Paragon_Paladin_06:13,6": 1,
+    "Paragon_Paladin_06:10,12": 1,
+    "Paragon_Paladin_06:20,10": 1,
+    "Paragon_Paladin_06:10,20": 1,
+    "Paragon_Paladin_01:19,10": 1,
+    "Paragon_Paladin_01:18,5": 1,
+    "Paragon_Paladin_01:16,5": 1,
+    "Paragon_Paladin_01:12,8": 1,
+    "Paragon_Paladin_01:11,8": 1,
+    "Paragon_Paladin_01:11,9": 1,
+    "Paragon_Paladin_01:12,9": 1,
+    "Paragon_Paladin_01:12,7": 1,
+    "Paragon_Paladin_01:14,5": 1,
+    "Paragon_Paladin_01:15,4": 1,
+    "Paragon_Paladin_01:13,5": 1,
+    "Paragon_Paladin_01:12,5": 1,
+    "Paragon_Paladin_01:12,6": 1,
+    "Paragon_Paladin_01:10,9": 1,
+    "Paragon_Paladin_01:12,14": 1,
+    "Paragon_Paladin_01:13,14": 1,
+    "Paragon_Paladin_01:13,15": 1,
+    "Paragon_Paladin_01:12,15": 1,
+    "Paragon_Paladin_01:13,16": 1,
+    "Paragon_Paladin_01:14,14": 1,
+    "Paragon_Paladin_01:9,9": 1,
+    "Paragon_Paladin_01:8,9": 1,
+    "Paragon_Paladin_01:7,9": 1,
+    "Paragon_Paladin_01:7,8": 1,
+    "Paragon_Paladin_01:6,8": 1,
+    "Paragon_Paladin_01:5,7": 1,
+    "Paragon_Paladin_01:6,7": 1,
+    "Paragon_Paladin_01:6,6": 1,
+    "Paragon_Paladin_01:8,10": 1,
+    "Paragon_Paladin_01:8,11": 1,
+    "Paragon_Paladin_01:7,11": 1,
+    "Paragon_Paladin_01:7,12": 1,
+    "Paragon_Paladin_01:6,12": 1,
+    "Paragon_Paladin_01:6,13": 1,
+    "Paragon_Paladin_01:5,14": 1,
+    "Paragon_Paladin_01:6,14": 1,
+    "Paragon_Paladin_01:5,15": 1,
+    "Paragon_Paladin_01:15,3": 1,
+    "Paragon_Paladin_01:15,2": 1,
+    "Paragon_Paladin_01:16,2": 1,
+    "Paragon_Paladin_01:15,1": 1,
+    "Paragon_Paladin_01:10,1": 1,
+    "Paragon_Paladin_01:14,1": 1,
+    "Paragon_Paladin_01:18,10": 1,
+    "Paragon_Paladin_01:17,10": 1,
+    "Paragon_Paladin_01:16,10": 1,
+    "Paragon_Paladin_01:11,10": 1,
+    "Paragon_Paladin_01:11,11": 1,
+    "Paragon_Paladin_01:12,11": 1,
+    "Paragon_Paladin_01:12,12": 1,
+    "Paragon_Paladin_01:12,13": 1,
+    "Paragon_Paladin_01:19,5": 1,
+    "Paragon_Paladin_01:17,6": 1,
+    "Paragon_Paladin_01:15,7": 1,
+    "Paragon_Paladin_01:15,8": 1,
+    "Paragon_Paladin_01:15,9": 1,
+    "Paragon_Paladin_01:14,8": 1,
+    "Paragon_Paladin_01:15,6": 1,
+    "Paragon_Paladin_01:17,5": 1,
+    "Paragon_Paladin_01:17,4": 1,
+    "Paragon_Paladin_01:20,5": 1,
+    "Paragon_Paladin_01:17,2": 1,
+    "Paragon_Paladin_01:15,0": 1,
+    "Paragon_Paladin_01:13,2": 1,
+    "Paragon_Paladin_01:14,4": 1,
+    "Paragon_Paladin_01:13,6": 1,
+    "Paragon_Paladin_01:12,4": 1,
+    "Paragon_Paladin_01:11,4": 1,
+    "Paragon_Paladin_01:11,5": 1,
+    "Paragon_Paladin_01:13,1": 1,
+    "Paragon_Paladin_01:12,1": 1,
+    "Paragon_Paladin_01:11,1": 1,
+    "Paragon_Paladin_01:15,10": 1,
+    "Paragon_Paladin_01:15,5": 1,
+    "Paragon_Paladin_01:10,0": 1,
+    "Paragon_Paladin_01:20,10": 1,
+    "Paragon_Paladin_09:10,1": 1,
+    "Paragon_Paladin_09:7,5": 1,
+    "Paragon_Paladin_09:6,6": 1,
+    "Paragon_Paladin_09:8,5": 1,
+    "Paragon_Paladin_09:15,9": 1,
+    "Paragon_Paladin_09:16,9": 1,
+    "Paragon_Paladin_09:16,10": 1,
+    "Paragon_Paladin_09:15,10": 1,
+    "Paragon_Paladin_09:15,11": 1,
+    "Paragon_Paladin_09:16,11": 1,
+    "Paragon_Paladin_09:10,10": 1,
+    "Paragon_Paladin_09:10,11": 1,
+    "Paragon_Paladin_09:8,4": 1,
+    "Paragon_Paladin_09:5,9": 1,
+    "Paragon_Paladin_09:4,10": 1,
+    "Paragon_Paladin_09:5,10": 1,
+    "Paragon_Paladin_09:5,11": 1,
+    "Paragon_Paladin_09:10,12": 1,
+    "Paragon_Paladin_09:10,13": 1,
+    "Paragon_Paladin_09:10,14": 1,
+    "Paragon_Paladin_09:10,15": 1,
+    "Paragon_Paladin_09:9,15": 1,
+    "Paragon_Paladin_09:8,15": 1,
+    "Paragon_Paladin_09:7,15": 1,
+    "Paragon_Paladin_09:7,14": 1,
+    "Paragon_Paladin_09:6,15": 1,
+    "Paragon_Paladin_09:11,15": 1,
+    "Paragon_Paladin_09:12,15": 1,
+    "Paragon_Paladin_09:13,15": 1,
+    "Paragon_Paladin_09:11,10": 1,
+    "Paragon_Paladin_09:10,5": 1,
+    "Paragon_Paladin_09:12,10": 1,
+    "Paragon_Paladin_09:11,1": 1,
+    "Paragon_Paladin_09:12,1": 1,
+    "Paragon_Paladin_09:13,1": 1,
+    "Paragon_Paladin_09:13,2": 1,
+    "Paragon_Paladin_09:13,3": 1,
+    "Paragon_Paladin_09:13,4": 1,
+    "Paragon_Paladin_09:12,4": 1,
+    "Paragon_Paladin_09:11,4": 1,
+    "Paragon_Paladin_09:13,5": 1,
+    "Paragon_Paladin_09:13,6": 1,
+    "Paragon_Paladin_09:13,7": 1,
+    "Paragon_Paladin_09:14,7": 1,
+    "Paragon_Paladin_09:14,6": 1,
+    "Paragon_Paladin_09:15,6": 1,
+    "Paragon_Paladin_09:14,8": 1,
+    "Paragon_Paladin_09:15,8": 1,
+    "Paragon_Paladin_09:12,9": 1,
+    "Paragon_Paladin_09:12,8": 1,
+    "Paragon_Paladin_09:10,9": 1,
+    "Paragon_Paladin_09:9,5": 1,
+    "Paragon_Paladin_09:8,6": 1,
+    "Paragon_Paladin_09:6,5": 1,
+    "Paragon_Paladin_09:6,7": 1,
+    "Paragon_Paladin_09:6,8": 1,
+    "Paragon_Paladin_09:5,8": 1,
+    "Paragon_Paladin_09:6,16": 1,
+    "Paragon_Paladin_09:7,16": 1,
+    "Paragon_Paladin_09:6,14": 1,
+    "Paragon_Paladin_09:11,5": 1,
+    "Paragon_Paladin_09:12,7": 1,
+    "Paragon_Paladin_09:10,6": 1,
+    "Paragon_Paladin_09:10,0": 1
+   },
+   "glyphs": {
+    "Paragon_Paladin_00": "Rare_033_Intelligence_Side",
+    "Paragon_Paladin_02": "Rare_049_Strength_Main",
+    "Paragon_Paladin_09": "Rare_104_Dexterity_Side",
+    "Paragon_Paladin_06": "Rare_011_Willpower_Side",
+    "Paragon_Paladin_01": "Rare_103_Strength_Main"
+   },
+   "glyphLv": {
+    "Paragon_Paladin_00": 100,
+    "Paragon_Paladin_06": 100,
+    "Paragon_Paladin_01": 100,
+    "Paragon_Paladin_02": 100,
+    "Paragon_Paladin_09": 100
+   },
+   "cap": 316,
+   "base": {
+    "Strength": 0,
+    "Intelligence": 0,
+    "Willpower": 0,
+    "Dexterity": 0
+   }
+  },
+  "merc": {
+   "main": "BerserkerCrone",
+   "sup": "CursedChild",
+   "supSkill": "Mercenary_CursedChild_Wither",
+   "opp": "avail",
+   "oppSkill": "",
+   "nodes": {
+    "BerserkerCrone": [
+     0,
+     3,
+     4,
+     5,
+     8,
+     11,
+     13,
+     20,
+     15
+    ]
+   }
+  },
+  "notes": {
+   "about": "Lab build. 27.79 billion a second. Effective Life 579,487. Pit 100 elite in about 5 seconds.\n\nShield Bash with Smite, Hits Are Blocks and Size Bonus. Clash stays as the Faith builder, Fortress and Aegis for defence. Bastion's 15% chance to bash back on a block is counted on the Damage Theory Craft page from your hits taken a second and Block Chance; the total here was taken before that was added, so it reads a little low.\n\nGuides on mobalytics.gg ran Shield Bash with Bastion of Sir Matthias through Season 12.\n\nBuilt by the planner's own search on 18 Nov 2026, after an audit of how every aspect and unique is counted. Each slot was tried with every item that fits, four affixes and a temper, then glyphs, both mercenaries and their nodes, and six charms (single affixes, every set at each tier, and unique charms) were searched, with each Virtue counted once. Paragon boards are carried over from the meta build it started from. Numbers assume a 2,000 damage weapon, top rolls, 3 enemies in range and every power's condition met, except mercenary bonuses (counted for the share of time their skill is active) and boss-only bonuses (left out). Nothing here has been checked in game. Heir of Perdition and The Grandfather taken out on 22 Nov 2026 (nerfed): the slot was searched again without them.",
+   "strengths": "",
+   "weaknesses": "",
+   "rotation": "",
+   "glyphs": "",
+   "video": "",
+   "filter": "",
+   "tags": []
+  },
+  "tc": {
+   "skill": "Paladin_Advance_lunge",
+   "pay": "",
+   "wd": 2000,
+   "ws": 1,
+   "base": 0,
+   "vuln": 50,
+   "cond": {},
+   "off": {},
+   "st": {
+    "crit": true,
+    "vuln": true,
+    "boss": false
+   },
+   "tg": 1
+  },
+  "df": {
+   "diff": 10,
+   "pit": 0,
+   "fort": false,
+   "weak": false,
+   "block": true,
+   "dodge": true,
+   "mon": {
+    "normal": "Fallen_Hound",
+    "boss": "EGB_Andariel_Boss",
+    "elite": "fallen_brute_fire_miniboss"
+   },
+   "rar": "elite",
+   "aff": []
+  }
+ }
+}

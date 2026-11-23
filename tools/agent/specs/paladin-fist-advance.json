@@ -1,0 +1,45 @@
+{
+ "key": "paladin-fist-advance",
+ "name": "Fist of the Heavens, Advance and Judgement",
+ "cls": "Paladin",
+ "base": "Auradin, Holy Light Aura",
+ "variant": 4,
+ "main": "Spear of the Heavens",
+ "rank": 15,
+ "needMods": [
+  "Fist of the Heavens "
+ ],
+ "bar": [
+  "Spear of the Heavens",
+  "Advance",
+  "Holy Light Aura",
+  "Fanaticism Aura",
+  "Defiance Aura",
+  "Aegis"
+ ],
+ "oath": "Paladin_Oath_Judgement",
+ "els": [
+  "Holy",
+  "Physical"
+ ],
+ "tg": 1,
+ "target": "boss",
+ "w": 0.5,
+ "idea": "Fist of the Heavens turns Spear of the Heavens into a Core spender. Advance is the Faith generator and keeps the Paladin moving, so Relentless stays on honestly. Aegis Faith Is My Shield and Heaven's Radiant Fire keep Judgement up, and Spear's Judgement Damage Bonus is a pure [x] against Judged enemies. Inner Calm and Vanquishing are banned because their conditions clash with moving and with bosses.",
+ "engine": [
+  "Judgement",
+  "Resource spending",
+  "Movement"
+ ],
+ "extra": [
+  [
+   "Advance",
+   5,
+   [
+    "Unhindered",
+    "Critical Strike Chance"
+   ]
+  ]
+ ],
+ "ban": "^(Aspect of Inner Calm|Vanquishing)( \\(.*\\))?$"
+}

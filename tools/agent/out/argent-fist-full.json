@@ -1,0 +1,1475 @@
+{
+ "key": "argent-fist-full",
+ "name": "Argent Veil, Fist of the Heavens",
+ "cls": "Paladin",
+ "base": "Arbiter Wing Strikes",
+ "main": "Spear of the Heavens",
+ "pay": "UPGRADE_C_PROJ_PAYLOAD",
+ "mods": [
+  "Fist of the Heavens ",
+  "Cooldown Reduction",
+  "Judgement Damage Bonus"
+ ],
+ "trim": [
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura",
+  "Defiance Aura"
+ ],
+ "dmg": {
+  "start": 65623850,
+  "main": 64108690659,
+  "procs": [],
+  "total": 64108690659,
+  "pack": 64108690659,
+  "boss": 28023426144,
+  "bestSkill": "Spear of the Heavens"
+ },
+ "def": {
+  "start": 159129,
+  "ehp": 350208,
+  "life": 18714,
+  "armor": 36197,
+  "armorDR": 78.9,
+  "block": 30,
+  "dodge": 0,
+  "elems": [
+   {
+    "el": "Physical",
+    "dr": 85.6,
+    "ehp": 130342
+   },
+   {
+    "el": "Fire",
+    "dr": 97.4,
+    "ehp": 716652
+   },
+   {
+    "el": "Lightning",
+    "dr": 85.6,
+    "ehp": 130342
+   },
+   {
+    "el": "Cold",
+    "dr": 85.6,
+    "ehp": 130342
+   },
+   {
+    "el": "Poison",
+    "dr": 85.6,
+    "ehp": 130342
+   },
+   {
+    "el": "Shadow",
+    "dr": 97.4,
+    "ehp": 716652
+   }
+  ],
+  "overCap": [],
+  "whatIf": [
+   {
+    "affix": "Damage Reduction",
+    "gain": 17.6
+   },
+   {
+    "affix": "Maximum Life",
+    "gain": 17.6
+   },
+   {
+    "affix": "All Resistance",
+    "gain": 10.2
+   },
+   {
+    "affix": "Armor",
+    "gain": -10.8
+   }
+  ]
+ },
+ "caps": [
+  {
+   "id": "as",
+   "stat": "Attack Speed Bonus",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "cs",
+   "stat": "Cast Speed Bonus (second attack speed cap)",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "csc",
+   "stat": "Critical Strike Chance",
+   "v": 40.5,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "retri",
+   "stat": "Retribution Chance",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "block",
+   "stat": "Block Chance",
+   "v": 30,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "blockr",
+   "stat": "Block Reduction",
+   "v": 30,
+   "cap": 80,
+   "at": false
+  },
+  {
+   "id": "dr",
+   "stat": "All Damage Reduction",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "dodge",
+   "stat": "Dodge Chance",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  },
+  {
+   "id": "cdr",
+   "stat": "Cooldown Reduction",
+   "v": 5,
+   "cap": 75,
+   "at": false
+  },
+  {
+   "id": "lhc",
+   "stat": "Lucky Hit Chance Bonus",
+   "v": 0,
+   "cap": 100,
+   "at": false
+  }
+ ],
+ "pit": [
+  {
+   "tier": 60,
+   "eliteTTK": 0,
+   "eliteKillsYouIn": 13.7,
+   "biggestHit": 4193,
+   "life": 18714,
+   "ok": true
+  },
+  {
+   "tier": 70,
+   "eliteTTK": 0,
+   "eliteKillsYouIn": 6.8,
+   "biggestHit": 6663,
+   "life": 18714,
+   "ok": true
+  },
+  {
+   "tier": 80,
+   "eliteTTK": 0.1,
+   "eliteKillsYouIn": 3.8,
+   "biggestHit": 10589,
+   "life": 18714,
+   "ok": true
+  },
+  {
+   "tier": 90,
+   "eliteTTK": 0.5,
+   "eliteKillsYouIn": 2.2,
+   "biggestHit": 16829,
+   "life": 18714,
+   "ok": true
+  },
+  {
+   "tier": 100,
+   "eliteTTK": 2.2,
+   "eliteKillsYouIn": 1.4,
+   "biggestHit": 26744,
+   "life": 18714,
+   "ok": false
+  },
+  {
+   "tier": 110,
+   "eliteTTK": 10.5,
+   "eliteKillsYouIn": 0.9,
+   "biggestHit": 42503,
+   "life": 18714,
+   "ok": false
+  },
+  {
+   "tier": 120,
+   "eliteTTK": 168,
+   "eliteKillsYouIn": 0.7,
+   "biggestHit": 53725,
+   "life": 18714,
+   "ok": false
+  },
+  {
+   "tier": 130,
+   "eliteTTK": 2698.7,
+   "eliteKillsYouIn": 0.5,
+   "biggestHit": 67910,
+   "life": 18714,
+   "ok": false
+  },
+  {
+   "tier": 140,
+   "eliteTTK": 43340.6,
+   "eliteKillsYouIn": 0.4,
+   "biggestHit": 85840,
+   "life": 18714,
+   "ok": false
+  },
+  {
+   "tier": 150,
+   "eliteTTK": 696040.5,
+   "eliteKillsYouIn": 0.3,
+   "biggestHit": 108504,
+   "life": 18714,
+   "ok": false
+  }
+ ],
+ "pitHold": 90,
+ "pitHoldStart": 60,
+ "startScore": {
+  "pack": 65623850,
+  "boss": 39374310
+ },
+ "rot": [
+  {
+   "id": "Paladin_Condemn",
+   "name": "Condemn",
+   "tag": "Justice",
+   "basic": false,
+   "main": false,
+   "cd": 11.25,
+   "cost": false,
+   "dmg": "Holy"
+  },
+  {
+   "id": "Paladin_Disciple_of_Justice",
+   "name": "Arbiter of Justice",
+   "tag": "Ultimate",
+   "basic": false,
+   "main": false,
+   "cd": 114,
+   "cost": false,
+   "dmg": "Holy"
+  },
+  {
+   "id": "Paladin_Offensive_Aura",
+   "name": "Fanaticism Aura",
+   "tag": "Aura",
+   "basic": false,
+   "main": false,
+   "cd": 14.25,
+   "cost": true,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Defensive_Aura",
+   "name": "Defiance Aura",
+   "tag": "Aura",
+   "basic": true,
+   "main": false,
+   "cd": 19,
+   "cost": true,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_Smite_FalconPunch_Recast_1",
+   "name": "Aegis",
+   "tag": "Valor",
+   "basic": false,
+   "main": false,
+   "cd": 15.2,
+   "cost": false,
+   "dmg": ""
+  },
+  {
+   "id": "Paladin_SpearOfTheHeavens",
+   "name": "Spear of the Heavens",
+   "tag": "Justice",
+   "basic": false,
+   "main": true,
+   "cd": 0,
+   "cost": true,
+   "dmg": "Holy"
+  }
+ ],
+ "gear": [
+  {
+   "slot": "helm",
+   "slotName": "Helm",
+   "item": "Crown of Lucion",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+121 Strength (guaranteed)",
+    "+2,800 Shadow Resistance",
+    "+1,450 Maximum Life",
+    "+100 All Stats"
+   ],
+   "enchant": "7% Resource Cost Reduction",
+   "tempers": [
+    "+2,000 Armor"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "chest",
+   "slotName": "Chest",
+   "item": "Squirt's Blouse",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+121 Strength (guaranteed)",
+    "+2,500 Armor",
+    "+2,800 Shadow Resistance",
+    "+1,450 Maximum Life"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+2,000 Armor"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "gloves",
+   "slotName": "Gloves",
+   "item": "Vanquishing",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "x50% Critical Strike Damage Multiplier",
+    "+8.5% Critical Strike Chance",
+    "x24% Holy Damage Multiplier",
+    "x28% Vulnerable Damage Multiplier"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "pants",
+   "slotName": "Pants",
+   "item": "Juggernaut's",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+2,500 Armor",
+    "+1,450 Maximum Life",
+    "+121 Strength",
+    "+2,800 Fire Resistance"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+1,500 Maximum Life"
+   ],
+   "gems": [
+    {
+     "type": "Ruby",
+     "grade": 9
+    },
+    {
+     "type": "Ruby",
+     "grade": 9
+    }
+   ]
+  },
+  {
+   "slot": "boots",
+   "slotName": "Boots",
+   "item": "Exploiter's",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+3 to Spear of the Heavens",
+    "+1,450 Maximum Life",
+    "+121 Strength",
+    "+2,800 Fire Resistance"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+10% Fanaticism Aura Potency"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "amulet",
+   "slotName": "Amulet",
+   "item": "Blood-Mad Idol",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+180 Strength (guaranteed)",
+    "x50% Critical Strike Damage Multiplier",
+    "+8.5% Critical Strike Chance",
+    "x24% Holy Damage Multiplier"
+   ],
+   "enchant": "+10% Attack Speed",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "ring1",
+   "slotName": "Ring",
+   "item": "Aspect of the Valintyr",
+   "kind": "aspect",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+5% Critical Strike Chance",
+    "x25% Critical Strike Damage Multiplier",
+    "x10% All Damage Multiplier",
+    "+1,450 Maximum Life"
+   ],
+   "enchant": "",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "ring2",
+   "slotName": "Ring",
+   "item": "Argent Veil",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+2 to Core Skills (guaranteed)",
+    "+5% Critical Strike Chance",
+    "x25% Critical Strike Damage Multiplier",
+    "x14% Vulnerable Damage Multiplier"
+   ],
+   "enchant": "+121 Strength",
+   "tempers": [
+    "+50% Critical Strike Damage"
+   ],
+   "gems": []
+  },
+  {
+   "slot": "weapon",
+   "slotName": "Weapon",
+   "item": "The Grandfather",
+   "kind": "unique",
+   "mythic": false,
+   "fixed": [],
+   "affixes": [
+    "+8.5% Critical Strike Chance (guaranteed)",
+    "+2,200 Maximum Life",
+    "x25% Critical Strike Damage Multiplier",
+    "+180 Strength"
+   ],
+   "enchant": "+157 Weapon Damage",
+   "tempers": [
+    "+5% Critical Strike Chance"
+   ],
+   "gems": [
+    {
+     "type": "Ruby",
+     "grade": 9
+    },
+    {
+     "type": "Ruby",
+     "grade": 9
+    }
+   ]
+  }
+ ],
+ "glyphs": [
+  {
+   "board": "Start",
+   "glyph": "Arbiter",
+   "level": 75
+  },
+  {
+   "board": "Relentless",
+   "glyph": "Imbiber",
+   "level": 75
+  },
+  {
+   "board": "Castle",
+   "glyph": "Spirit",
+   "level": 75
+  },
+  {
+   "board": "Shield Bearer",
+   "glyph": "Retribution",
+   "level": 75
+  },
+  {
+   "board": "Beacon",
+   "glyph": "Control",
+   "level": 75
+  }
+ ],
+ "boards": [
+  "Start",
+  "Relentless",
+  "Castle",
+  "Shield Bearer",
+  "Beacon"
+ ],
+ "paraFrom": "Shield Charge, block engine (Agent search)",
+ "charms": [
+  {
+   "kind": "rare",
+   "aff": [
+    "15%[x] Critical Strike Damage",
+    "+3 to Justice Skills"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Justice Skills",
+    "15%[x] Vulnerable Damage"
+   ]
+  },
+  {
+   "kind": "unique",
+   "name": "The Grandfather"
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Justice Skills",
+    "+3 to Spear of the Heavens"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Justice Skills",
+    "+3 to Spear of the Heavens"
+   ]
+  },
+  {
+   "kind": "rare",
+   "aff": [
+    "+3 to Justice Skills",
+    "+3 to Spear of the Heavens"
+   ]
+  }
+ ],
+ "seal": "Seal of the Diamond Mind",
+ "mercs": {
+  "main": "Varyana",
+  "sup": "Aldkin",
+  "supSkill": "Field of Languish"
+ },
+ "engine": {
+  "made": [
+   "Movement",
+   "Lucky Hit",
+   "Resolve (Juggernaut)",
+   "Block",
+   "Crowd control",
+   "Critical Strikes",
+   "Attack speed",
+   "Vulnerable",
+   "Arbiter form",
+   "Cooldowns",
+   "Aura cast / Aura Potency",
+   "Evade and Dodge"
+  ],
+  "leftOut": 12
+ },
+ "skills": [
+  "Defiance Aura r8 [Rite of Might, Maximum Life, Bonus Healing]",
+  "Aegis r15 [Stay Resolute, Duration, Cooldown Reduction]",
+  "Fanaticism Aura r15 [Rite of Humility, Extra Passive Stack, Potency]",
+  "Arbiter of Justice r5 [Seraph's Wings, Wing Strike Recast, Movement Speed]",
+  "Condemn r19 [Gather the Guilty, Cooldown Reduction, Movement Speed]",
+  "Spear of the Heavens r50 [Fist of the Heavens , Cooldown Reduction, Judgement Damage Bonus]"
+ ],
+ "bar": [
+  "Condemn",
+  "Arbiter of Justice",
+  "Fanaticism Aura",
+  "Defiance Aura",
+  "Aegis",
+  "Spear of the Heavens"
+ ],
+ "log": [
+  "started from Arbiter Wing Strikes",
+  "main skill upgrades: Fist of the Heavens , Cooldown Reduction, Judgement Damage Bonus",
+  "starting point holds Pit 60",
+  "engine: Movement, Lucky Hit, Resolve (Juggernaut), Block, Crowd control, Critical Strikes, Attack speed, Vulnerable, Arbiter form, Cooldowns, Aura cast / Aura Potency, Evade and Dodge; 12 payoffs left out for lack of a trigger",
+  "gear searched (2 passes)",
+  "paragon boards from Shield Charge, block engine (Agent search)",
+  "gear searched again with the new boards",
+  "Paragon_Paladin_00: Outmatch -> Arbiter",
+  "hired Raheir -> Varyana",
+  "reinforcement Aldkin -> Aldkin (Mercenary_CursedChild_Wither)",
+  "charms: The Grandfather",
+  "glyphs, mercenaries and charms searched"
+ ],
+ "secs": 1144,
+ "st": {
+  "v": 1,
+  "cls": "Paladin",
+  "ver": "live",
+  "name": "Arbiter Wing Strikes Paladin, Endgame",
+  "alloc": {
+   "12": 1,
+   "15": 1,
+   "16": 1,
+   "31": 8,
+   "55": 1,
+   "57": 1,
+   "58": 1,
+   "103": 1,
+   "106": 1,
+   "108": 1,
+   "172": 15,
+   "176": 15,
+   "181": 1,
+   "182": 1,
+   "204": 1,
+   "206": 1,
+   "210": 3,
+   "211": 3,
+   "237": 1,
+   "243": 1,
+   "250": 5,
+   "259": 1,
+   "265": 3,
+   "267": 15
+  },
+  "bonusRanks": 0,
+  "sel": null,
+  "gear": {
+   "amulet": {
+    "item": {
+     "t": "u",
+     "id": "Amulet_Unique_Generic_102"
+    },
+    "affixes": [
+     {
+      "id": "X2_CoreStat_Strength_Greater",
+      "g": 1
+     },
+     {
+      "id": "X2_CritDamage_Greater"
+     },
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_DamageType_Holy_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "ring1": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_paladin_007"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChanceJewelry"
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "S04_Damage_All"
+     },
+     {
+      "id": "S04_Life"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "weapon": {
+    "item": {
+     "t": "u",
+     "id": "2HSword_Unique_Generic_001"
+    },
+    "affixes": [
+     {
+      "id": "S04_CritChance",
+      "g": 1
+     },
+     {
+      "id": "X2_Life_Greater"
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "X2_CoreStat_Strength_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Weapon_APSCrit_Tier3",
+      "oid": "Tempered_Generic_CritChance_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Ruby",
+      "grade": 9
+     },
+     {
+      "type": "Ruby",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "helm": {
+    "item": {
+     "t": "u",
+     "id": "S05_BSK_Helm_Unique_Generic_001"
+    },
+    "affixes": [
+     {
+      "id": "S04_CoreStat_Strength",
+      "g": 1
+     },
+     {
+      "id": "S04_Resistance_Single_Shadow"
+     },
+     {
+      "id": "S04_Life"
+     },
+     {
+      "id": "S04_CoreStats_All"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_Armor_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "chest": {
+    "item": {
+     "t": "u",
+     "id": "Chest_Unique_Generic_104"
+    },
+    "affixes": [
+     {
+      "id": "S04_CoreStat_Strength",
+      "g": 1
+     },
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "S04_Resistance_Single_Shadow"
+     },
+     {
+      "id": "S04_Life"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_Armor_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "gloves": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_sorc_129"
+    },
+    "affixes": [
+     {
+      "id": "X2_CritDamage_Greater"
+     },
+     {
+      "id": "S04_CritChance"
+     },
+     {
+      "id": "X2_DamageType_Holy_Greater"
+     },
+     {
+      "id": "X2_Damage_to_Vulnerable_Greater"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "ring2": {
+    "item": {
+     "t": "u",
+     "id": "Ring_Unique_Paladin_001"
+    },
+    "affixes": [
+     {
+      "id": "S04_SkillRankBonus_Generic_Category_Core",
+      "g": 1
+     },
+     {
+      "id": "S04_CritChanceJewelry"
+     },
+     {
+      "id": "S04_CritDamage"
+     },
+     {
+      "id": "S04_Damage_to_Vulnerable"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Offensive_Damage_Conditional_Tier3",
+      "oid": "Tempered_CritDamage_Generic_All_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "pants": {
+    "item": {
+     "t": "aspect",
+     "id": "legendary_generic_117"
+    },
+    "affixes": [
+     {
+      "id": "X2_Armor_Greater"
+     },
+     {
+      "id": "S04_Life"
+     },
+     {
+      "id": "S04_CoreStat_Strength"
+     },
+     {
+      "id": "S04_Resistance_Single_Fire"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Generic_Defensive_Simple_Tier3",
+      "oid": "Tempered_Generic_LifeMax_Tier3"
+     }
+    ],
+    "gems": [
+     {
+      "type": "Ruby",
+      "grade": 9
+     },
+     {
+      "type": "Ruby",
+      "grade": 9
+     }
+    ],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   },
+   "boots": {
+    "item": {
+     "t": "aspect",
+     "id": "Legendary_Generic_111"
+    },
+    "affixes": [
+     {
+      "id": "X2_SkillRankBonus_Paladin_Justice_SpearOfTheHeavens"
+     },
+     {
+      "id": "S04_Life"
+     },
+     {
+      "id": "S04_CoreStat_Strength"
+     },
+     {
+      "id": "S04_Resistance_Single_Fire"
+     }
+    ],
+    "tempers": [
+     {
+      "rid": "Tempering_Paladin_Utility_Aura_Tier3",
+      "oid": "Tempered_Special_Type_Aura_Paladin_Potency_Fanaticism_Tier3"
+     }
+    ],
+    "gems": [],
+    "uga": [],
+    "q": 0,
+    "cap": 0,
+    "seeded": 1
+   }
+  },
+  "charms": {
+   "seal": "Talisman_Seal_MythicUnique_03",
+   "count": {},
+   "horadric": {},
+   "torch": "",
+   "uniques": [],
+   "sockets": [
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_Virtue_Bravery",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Justice"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Justice",
+      "Talisman_Charm_Virtue_Wrath"
+     ]
+    },
+    {
+     "t": "u",
+     "id": "Talisman_Charm_Unique_2HSword_Unique_Generic_001",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Justice",
+      "Talisman_Charm_SkillRankBonus_Paladin_Justice_SpearOfTheHeavens"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Justice",
+      "Talisman_Charm_SkillRankBonus_Paladin_Justice_SpearOfTheHeavens"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Justice",
+      "Talisman_Charm_SkillRankBonus_Paladin_Justice_SpearOfTheHeavens"
+     ]
+    },
+    {
+     "t": "r",
+     "aff": [
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Justice",
+      "Talisman_Charm_SkillRankBonus_Paladin_Justice_SpearOfTheHeavens"
+     ]
+    }
+   ]
+  },
+  "calc": {
+   "cd": {
+    "skill": "",
+    "base": "",
+    "cdr": [
+     {
+      "n": "Relentless while moving",
+      "v": 0
+     }
+    ],
+    "flat": [
+     {
+      "n": "Rune or proc cuts per second",
+      "v": 0
+     }
+    ],
+    "dur": ""
+   },
+   "lh": {
+    "skill": "",
+    "base": "",
+    "bonus": 0,
+    "hits": 4,
+    "fx": []
+   },
+   "dmg": {
+    "wd": 4000,
+    "ms": 2500,
+    "ranks": 20,
+    "add": 250,
+    "cc": 60,
+    "cd": 200,
+    "vuln": 120,
+    "vulnUp": 80,
+    "mult": [
+     {
+      "n": "Aspect slot",
+      "v": 60
+     },
+     {
+      "n": "Unique power",
+      "v": 100
+     }
+    ]
+   },
+   "ehp": {
+    "life": 12000,
+    "armorDr": 60,
+    "res": 70,
+    "dr": [
+     {
+      "n": "Firm Decree",
+      "v": 30
+     },
+     {
+      "n": "Righteous Will (2 min Resolve)",
+      "v": 20
+     }
+    ]
+   }
+  },
+  "hotbar": [
+   "Paladin_Condemn",
+   "Paladin_Disciple_of_Justice",
+   "Paladin_Offensive_Aura",
+   "Paladin_Defensive_Aura",
+   "Paladin_Smite_FalconPunch_Recast_1",
+   "Paladin_SpearOfTheHeavens"
+  ],
+  "mech": {
+   "Paladin": {
+    "picks": {
+     "0": [
+      "Paladin_Oath_Angel"
+     ]
+    },
+    "bond": "",
+    "up": {}
+   }
+  },
+  "paragon": {
+   "boards": [
+    {
+     "id": "Paragon_Paladin_00",
+     "ox": 0,
+     "oy": 0,
+     "r": 0
+    },
+    {
+     "id": "Paragon_Paladin_06",
+     "ox": 0,
+     "oy": -21,
+     "r": 0,
+     "at": {
+      "gx": 10,
+      "gy": 0,
+      "dx": 0,
+      "dy": -1
+     }
+    },
+    {
+     "id": "Paragon_Paladin_01",
+     "ox": 21,
+     "oy": -21,
+     "r": 2,
+     "at": {
+      "gx": 20,
+      "gy": -11,
+      "dx": 1,
+      "dy": 0
+     }
+    },
+    {
+     "id": "Paragon_Paladin_02",
+     "ox": 21,
+     "oy": 0,
+     "r": 0,
+     "at": {
+      "gx": 31,
+      "gy": -1,
+      "dx": 0,
+      "dy": 1
+     }
+    },
+    {
+     "id": "Paragon_Paladin_09",
+     "ox": 42,
+     "oy": 0,
+     "r": 3,
+     "at": {
+      "gx": 41,
+      "gy": 10,
+      "dx": 1,
+      "dy": 0
+     }
+    }
+   ],
+   "alloc": {
+    "Paragon_Paladin_00:10,13": 1,
+    "Paragon_Paladin_00:11,13": 1,
+    "Paragon_Paladin_00:12,13": 1,
+    "Paragon_Paladin_00:12,12": 1,
+    "Paragon_Paladin_00:12,11": 1,
+    "Paragon_Paladin_00:11,11": 1,
+    "Paragon_Paladin_00:12,10": 1,
+    "Paragon_Paladin_00:12,9": 1,
+    "Paragon_Paladin_00:11,9": 1,
+    "Paragon_Paladin_00:11,8": 1,
+    "Paragon_Paladin_00:10,8": 1,
+    "Paragon_Paladin_00:10,7": 1,
+    "Paragon_Paladin_00:9,8": 1,
+    "Paragon_Paladin_00:9,9": 1,
+    "Paragon_Paladin_00:9,10": 1,
+    "Paragon_Paladin_00:8,10": 1,
+    "Paragon_Paladin_00:8,11": 1,
+    "Paragon_Paladin_00:9,11": 1,
+    "Paragon_Paladin_00:9,5": 1,
+    "Paragon_Paladin_00:9,6": 1,
+    "Paragon_Paladin_00:8,5": 1,
+    "Paragon_Paladin_00:8,4": 1,
+    "Paragon_Paladin_00:9,3": 1,
+    "Paragon_Paladin_00:9,4": 1,
+    "Paragon_Paladin_00:8,3": 1,
+    "Paragon_Paladin_00:11,6": 1,
+    "Paragon_Paladin_00:11,5": 1,
+    "Paragon_Paladin_00:12,5": 1,
+    "Paragon_Paladin_00:12,4": 1,
+    "Paragon_Paladin_00:11,4": 1,
+    "Paragon_Paladin_00:11,3": 1,
+    "Paragon_Paladin_00:12,3": 1,
+    "Paragon_Paladin_00:11,2": 1,
+    "Paragon_Paladin_00:11,1": 1,
+    "Paragon_Paladin_00:10,1": 1,
+    "Paragon_Paladin_00:10,6": 1,
+    "Paragon_Paladin_00:10,0": 1,
+    "Paragon_Paladin_06:19,10": 1,
+    "Paragon_Paladin_06:18,10": 1,
+    "Paragon_Paladin_06:17,10": 1,
+    "Paragon_Paladin_06:17,9": 1,
+    "Paragon_Paladin_06:17,8": 1,
+    "Paragon_Paladin_06:17,7": 1,
+    "Paragon_Paladin_06:17,6": 1,
+    "Paragon_Paladin_06:17,5": 1,
+    "Paragon_Paladin_06:16,5": 1,
+    "Paragon_Paladin_06:15,5": 1,
+    "Paragon_Paladin_06:15,4": 1,
+    "Paragon_Paladin_06:15,3": 1,
+    "Paragon_Paladin_06:14,5": 1,
+    "Paragon_Paladin_06:13,5": 1,
+    "Paragon_Paladin_06:12,5": 1,
+    "Paragon_Paladin_06:11,5": 1,
+    "Paragon_Paladin_06:11,6": 1,
+    "Paragon_Paladin_06:10,6": 1,
+    "Paragon_Paladin_06:16,7": 1,
+    "Paragon_Paladin_06:15,7": 1,
+    "Paragon_Paladin_06:15,8": 1,
+    "Paragon_Paladin_06:14,8": 1,
+    "Paragon_Paladin_06:14,9": 1,
+    "Paragon_Paladin_06:13,9": 1,
+    "Paragon_Paladin_06:13,10": 1,
+    "Paragon_Paladin_06:13,11": 1,
+    "Paragon_Paladin_06:13,12": 1,
+    "Paragon_Paladin_06:13,13": 1,
+    "Paragon_Paladin_06:12,13": 1,
+    "Paragon_Paladin_06:12,14": 1,
+    "Paragon_Paladin_06:12,15": 1,
+    "Paragon_Paladin_06:11,15": 1,
+    "Paragon_Paladin_06:11,16": 1,
+    "Paragon_Paladin_06:11,17": 1,
+    "Paragon_Paladin_06:10,17": 1,
+    "Paragon_Paladin_06:10,18": 1,
+    "Paragon_Paladin_06:10,19": 1,
+    "Paragon_Paladin_06:11,13": 1,
+    "Paragon_Paladin_06:10,13": 1,
+    "Paragon_Paladin_06:9,13": 1,
+    "Paragon_Paladin_06:8,13": 1,
+    "Paragon_Paladin_06:7,13": 1,
+    "Paragon_Paladin_06:7,12": 1,
+    "Paragon_Paladin_06:7,9": 1,
+    "Paragon_Paladin_06:7,10": 1,
+    "Paragon_Paladin_06:7,11": 1,
+    "Paragon_Paladin_06:7,8": 1,
+    "Paragon_Paladin_06:6,8": 1,
+    "Paragon_Paladin_06:5,8": 1,
+    "Paragon_Paladin_06:5,7": 1,
+    "Paragon_Paladin_06:10,12": 1,
+    "Paragon_Paladin_06:20,10": 1,
+    "Paragon_Paladin_06:10,20": 1,
+    "Paragon_Paladin_01:19,10": 1,
+    "Paragon_Paladin_01:19,9": 1,
+    "Paragon_Paladin_01:19,8": 1,
+    "Paragon_Paladin_01:19,7": 1,
+    "Paragon_Paladin_01:19,6": 1,
+    "Paragon_Paladin_01:19,5": 1,
+    "Paragon_Paladin_01:18,5": 1,
+    "Paragon_Paladin_01:17,5": 1,
+    "Paragon_Paladin_01:16,5": 1,
+    "Paragon_Paladin_01:15,4": 1,
+    "Paragon_Paladin_01:14,5": 1,
+    "Paragon_Paladin_01:15,3": 1,
+    "Paragon_Paladin_01:15,2": 1,
+    "Paragon_Paladin_01:14,2": 1,
+    "Paragon_Paladin_01:13,5": 1,
+    "Paragon_Paladin_01:12,5": 1,
+    "Paragon_Paladin_01:12,6": 1,
+    "Paragon_Paladin_01:12,7": 1,
+    "Paragon_Paladin_01:10,1": 1,
+    "Paragon_Paladin_01:12,8": 1,
+    "Paragon_Paladin_01:11,8": 1,
+    "Paragon_Paladin_01:11,9": 1,
+    "Paragon_Paladin_01:12,9": 1,
+    "Paragon_Paladin_01:11,10": 1,
+    "Paragon_Paladin_01:10,9": 1,
+    "Paragon_Paladin_01:9,9": 1,
+    "Paragon_Paladin_01:8,9": 1,
+    "Paragon_Paladin_01:8,10": 1,
+    "Paragon_Paladin_01:8,11": 1,
+    "Paragon_Paladin_01:7,11": 1,
+    "Paragon_Paladin_01:7,12": 1,
+    "Paragon_Paladin_01:6,12": 1,
+    "Paragon_Paladin_01:6,13": 1,
+    "Paragon_Paladin_01:5,14": 1,
+    "Paragon_Paladin_01:6,14": 1,
+    "Paragon_Paladin_01:5,15": 1,
+    "Paragon_Paladin_01:13,1": 1,
+    "Paragon_Paladin_01:12,1": 1,
+    "Paragon_Paladin_01:11,1": 1,
+    "Paragon_Paladin_01:13,2": 1,
+    "Paragon_Paladin_01:15,5": 1,
+    "Paragon_Paladin_01:10,0": 1,
+    "Paragon_Paladin_01:20,10": 1,
+    "Paragon_Paladin_02:10,1": 1,
+    "Paragon_Paladin_02:10,2": 1,
+    "Paragon_Paladin_02:10,3": 1,
+    "Paragon_Paladin_02:11,3": 1,
+    "Paragon_Paladin_02:12,3": 1,
+    "Paragon_Paladin_02:13,3": 1,
+    "Paragon_Paladin_02:14,3": 1,
+    "Paragon_Paladin_02:14,2": 1,
+    "Paragon_Paladin_02:13,4": 1,
+    "Paragon_Paladin_02:14,4": 1,
+    "Paragon_Paladin_02:15,3": 1,
+    "Paragon_Paladin_02:12,4": 1,
+    "Paragon_Paladin_02:12,5": 1,
+    "Paragon_Paladin_02:12,6": 1,
+    "Paragon_Paladin_02:10,6": 1,
+    "Paragon_Paladin_02:11,6": 1,
+    "Paragon_Paladin_02:9,6": 1,
+    "Paragon_Paladin_02:8,6": 1,
+    "Paragon_Paladin_02:8,7": 1,
+    "Paragon_Paladin_02:8,8": 1,
+    "Paragon_Paladin_02:9,8": 1,
+    "Paragon_Paladin_02:9,9": 1,
+    "Paragon_Paladin_02:12,8": 1,
+    "Paragon_Paladin_02:12,7": 1,
+    "Paragon_Paladin_02:12,9": 1,
+    "Paragon_Paladin_02:12,10": 1,
+    "Paragon_Paladin_02:12,11": 1,
+    "Paragon_Paladin_02:11,12": 1,
+    "Paragon_Paladin_02:10,12": 1,
+    "Paragon_Paladin_02:9,12": 1,
+    "Paragon_Paladin_02:13,12": 1,
+    "Paragon_Paladin_02:14,12": 1,
+    "Paragon_Paladin_02:15,12": 1,
+    "Paragon_Paladin_02:15,13": 1,
+    "Paragon_Paladin_02:15,14": 1,
+    "Paragon_Paladin_02:15,15": 1,
+    "Paragon_Paladin_02:17,15": 1,
+    "Paragon_Paladin_02:16,16": 1,
+    "Paragon_Paladin_02:17,17": 1,
+    "Paragon_Paladin_02:17,16": 1,
+    "Paragon_Paladin_02:7,6": 1,
+    "Paragon_Paladin_02:7,5": 1,
+    "Paragon_Paladin_02:6,5": 1,
+    "Paragon_Paladin_02:5,5": 1,
+    "Paragon_Paladin_02:6,4": 1,
+    "Paragon_Paladin_02:15,11": 1,
+    "Paragon_Paladin_02:16,11": 1,
+    "Paragon_Paladin_02:16,10": 1,
+    "Paragon_Paladin_02:17,10": 1,
+    "Paragon_Paladin_02:18,10": 1,
+    "Paragon_Paladin_02:19,10": 1,
+    "Paragon_Paladin_02:15,16": 1,
+    "Paragon_Paladin_02:12,12": 1,
+    "Paragon_Paladin_02:10,0": 1,
+    "Paragon_Paladin_02:20,10": 1,
+    "Paragon_Paladin_09:10,1": 1,
+    "Paragon_Paladin_09:11,1": 1,
+    "Paragon_Paladin_09:12,1": 1,
+    "Paragon_Paladin_09:13,1": 1,
+    "Paragon_Paladin_09:13,2": 1,
+    "Paragon_Paladin_09:13,3": 1,
+    "Paragon_Paladin_09:13,4": 1,
+    "Paragon_Paladin_09:13,5": 1,
+    "Paragon_Paladin_09:13,6": 1,
+    "Paragon_Paladin_09:13,7": 1,
+    "Paragon_Paladin_09:11,5": 1,
+    "Paragon_Paladin_09:10,5": 1,
+    "Paragon_Paladin_09:9,5": 1,
+    "Paragon_Paladin_09:8,5": 1,
+    "Paragon_Paladin_09:7,5": 1,
+    "Paragon_Paladin_09:6,6": 1,
+    "Paragon_Paladin_09:6,8": 1,
+    "Paragon_Paladin_09:6,7": 1,
+    "Paragon_Paladin_09:5,8": 1,
+    "Paragon_Paladin_09:5,10": 1,
+    "Paragon_Paladin_09:5,9": 1,
+    "Paragon_Paladin_09:4,10": 1,
+    "Paragon_Paladin_09:5,11": 1,
+    "Paragon_Paladin_09:6,5": 1,
+    "Paragon_Paladin_09:12,7": 1,
+    "Paragon_Paladin_09:12,8": 1,
+    "Paragon_Paladin_09:12,9": 1,
+    "Paragon_Paladin_09:12,10": 1,
+    "Paragon_Paladin_09:11,10": 1,
+    "Paragon_Paladin_09:10,10": 1,
+    "Paragon_Paladin_09:10,11": 1,
+    "Paragon_Paladin_09:10,12": 1,
+    "Paragon_Paladin_09:10,13": 1,
+    "Paragon_Paladin_09:10,14": 1,
+    "Paragon_Paladin_09:10,15": 1,
+    "Paragon_Paladin_09:11,15": 1,
+    "Paragon_Paladin_09:12,15": 1,
+    "Paragon_Paladin_09:13,15": 1,
+    "Paragon_Paladin_09:9,15": 1,
+    "Paragon_Paladin_09:8,15": 1,
+    "Paragon_Paladin_09:7,15": 1,
+    "Paragon_Paladin_09:7,14": 1,
+    "Paragon_Paladin_09:6,14": 1,
+    "Paragon_Paladin_09:6,16": 1,
+    "Paragon_Paladin_09:7,16": 1,
+    "Paragon_Paladin_09:12,5": 1,
+    "Paragon_Paladin_09:10,6": 1,
+    "Paragon_Paladin_09:10,0": 1
+   },
+   "glyphs": {
+    "Paragon_Paladin_00": "Rare_106_Willpower_Side",
+    "Paragon_Paladin_06": "Rare_011_Willpower_Side",
+    "Paragon_Paladin_01": "Rare_050_Willpower_Side",
+    "Paragon_Paladin_02": "Rare_106_Strength_Main",
+    "Paragon_Paladin_09": "Rare_020_Intelligence_Side"
+   },
+   "glyphLv": {},
+   "cap": 300,
+   "base": {
+    "Strength": 0,
+    "Intelligence": 0,
+    "Willpower": 0,
+    "Dexterity": 0
+   }
+  },
+  "merc": {
+   "main": "BerserkerCrone",
+   "sup": "CursedChild",
+   "supSkill": "Mercenary_CursedChild_Wither",
+   "opp": "avail",
+   "oppSkill": "",
+   "nodes": {
+    "BerserkerCrone": [
+     0,
+     3,
+     4,
+     5,
+     8,
+     11,
+     13,
+     20,
+     15
+    ]
+   }
+  },
+  "notes": {
+   "about": "Arbiter Wing Strikes Paladin, B tier in Season 15. Build by Sanctum on mobalytics.gg, guide updated 2026-09-15. Variant: Endgame.\nhttps://mobalytics.gg/diablo-4/builds/wing-strikes-paladin\n\nSeal: Seal\nCharms: Berú of Light's Epiphany, Fer of Light's Epiphany, Linta of Light's Epiphany, Mlor of Light's Epiphany, Phoba of Light's Epiphany, Griswold's Opus\n\nGems and runes:\namulet: splinter of sin\nring1: splinter of the mother\nweapon: ruby, ruby\nhelm: splinter of anguish, splinter of pain\nchest: igni, mot\nring2: splinter of the black soulstone\npants: ruby, ruby\n\nNot matched to this game version, set these by hand:\nweapon affix: weapon damage min",
+   "strengths": "",
+   "weaknesses": "",
+   "rotation": "",
+   "glyphs": "",
+   "video": "",
+   "filter": "",
+   "tags": []
+  },
+  "tc": {
+   "skill": "Paladin_SpearOfTheHeavens",
+   "pay": "",
+   "wd": 2000,
+   "ws": 1,
+   "base": 0,
+   "vuln": 50,
+   "cond": {},
+   "off": {},
+   "st": {
+    "crit": true,
+    "vuln": true
+   },
+   "tg": 3
+  },
+  "df": {
+   "diff": 10,
+   "pit": 0,
+   "fort": false,
+   "weak": false,
+   "block": true,
+   "dodge": true,
+   "mon": {
+    "normal": "Fallen_Hound",
+    "boss": "EGB_Andariel_Boss",
+    "elite": "fallen_brute_fire_miniboss"
+   },
+   "rar": "elite",
+   "aff": []
+  }
+ }
+}

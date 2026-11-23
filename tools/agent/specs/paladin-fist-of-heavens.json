@@ -1,0 +1,18 @@
+{
+ "key": "paladin-fist-of-heavens",
+ "name": "Fist of the Heavens, Judgement detonation",
+ "cls": "Paladin",
+ "base": "Auradin, Holy Light Aura",
+ "variant": 4,
+ "main": "Spear of the Heavens",
+ "rank": 15,
+ "needMods": ["Fist of the Heavens "],
+ "bar": ["Spear of the Heavens", "Holy Light Aura", "Fanaticism Aura", "Defiance Aura", "Aegis", "Fortress"],
+ "oath": "Paladin_Oath_Judgement",
+ "els": ["Holy", "Physical"],
+ "tg": 1,
+ "target": "boss",
+ "w": 0.5,
+ "idea": "Fist of the Heavens turns Spear of the Heavens into a Core spender that crashes down and splits into projectiles. Holy Light Aura's Rite of Judgement and Aegis keep Judgement on the target, Spear's Judgement Damage Bonus is a pure [x] against Judged enemies, and every Fist hit detonates and reapplies Judgement.",
+ "engine": ["Judgement", "Aura cast / Aura Potency", "Resource spending"]
+}
