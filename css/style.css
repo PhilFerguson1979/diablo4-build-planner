@@ -1545,3 +1545,21 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
   .ttip { width: calc(100vw - 16px); max-width: 460px; font-size: 14px; padding: 30px 14px 12px; }
   .ttip h4 { font-size: 19px; }
 }
+
+/* phones: gear slots in two columns with the crest and its numbers below them, so nothing sits on top of the numbers;
+   temper and other two-up choices stack so their text fits */
+@media (max-width: 760px) {
+  .doll { grid-template-columns: 1fr 1fr; gap: 22px 12px; padding: 26px 14px; }
+  .doll .col { justify-items: center; }
+  .doll .col:last-of-type { order: 2; }
+  .doll .crest { grid-column: 1 / -1; order: 3; padding-top: 0; }
+  .crest-stats { width: 100%; }
+  .forge .frow.two { display: flex; flex-wrap: wrap; grid-template-columns: minmax(0, 1fr); }
+  .forge .frow.two > select { flex: 1 1 100%; width: 100%; }
+  .picker { padding: 8px !important; z-index: 300 !important; }
+  .picker-box { width: 100% !important; max-width: 100%; min-width: 0; height: calc(100vh - 16px); }
+  .picker-head { flex-wrap: wrap; gap: 8px; }
+  .picker-head input, .picker-head input[type="search"] { width: 100%; min-width: 0; flex: 1 1 100%; }
+  .picker-box * { max-width: 100%; overflow-wrap: anywhere; }
+  .forge select { min-width: 0; max-width: 100%; text-overflow: ellipsis; }
+}
