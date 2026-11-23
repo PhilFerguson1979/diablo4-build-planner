@@ -1539,3 +1539,9 @@ button.mon-tag { cursor: pointer; background: none; font: inherit; font-size: in
 .sc-rank li small { color: var(--mute); }
 .sc-del { background: none; border: 1px solid #4a3a2a; color: var(--mute); font-size: 12px; padding: 1px 6px; cursor: pointer; }
 @media (max-width: 760px) { .sc-tiles { grid-template-columns: 1fr 1fr; } .sc-rank li { grid-template-columns: 1fr auto; } .sc-rank li small, .sc-del { grid-column: 1 / -1; } }
+
+/* phones: tooltips centred, full width, slightly smaller text */
+@media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+  .ttip { width: calc(100vw - 16px); max-width: 460px; font-size: 14px; padding: 30px 14px 12px; }
+  .ttip h4 { font-size: 19px; }
+}

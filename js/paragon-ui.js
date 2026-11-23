@@ -384,6 +384,7 @@
 
     function wire() {
       const svg = $('#pboard'); let drag = null;
+      if (window.__pinchZoom) window.__pinchZoom(svg, () => pview, v => { pview = v; });
       svg.addEventListener('pointerdown', e => {
         const t = e.target.closest && (e.target.closest('[data-c]') || e.target.closest('[data-attach]') || e.target.closest('[data-act]'));
         drag = { x: e.clientX, y: e.clientY, v: Object.assign({}, pview), moved: false, t, btn: e.button };
@@ -409,7 +410,7 @@
       });
       svg.addEventListener('contextmenu', e => { e.preventDefault(); const g = e.target.closest('[data-c]'); if (g) toggle(g.dataset.c, false); });
       const tipEl = () => { let t = document.getElementById('ptip'); if (!t) { t = document.createElement('div'); t.id = 'ptip'; t.className = 'ttip ptip'; t.hidden = true; document.body.appendChild(t); } return t; };
-      const tipMove = e => { const t = tipEl(); if (t.hidden) return; const w = t.offsetWidth, h = t.offsetHeight; let x = e.clientX + 22, y = e.clientY + 18; if (x + w > innerWidth - 8) x = e.clientX - w - 22; if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8); t.style.left = Math.max(8, x) + 'px'; t.style.top = y + 'px'; };
+      const tipMove = e => { const t = tipEl(); if (t.hidden) return; if (window.__phoneTip && window.__phoneTip()) { window.__centerTip(t); return; } t.style.transform = ''; const w = t.offsetWidth, h = t.offsetHeight; let x = e.clientX + 22, y = e.clientY + 18; if (x + w > innerWidth - 8) x = e.clientX - w - 22; if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8); t.style.left = Math.max(8, x) + 'px'; t.style.top = y + 'px'; };
       const tipShow = (key, e) => { const R = compute(); const c = R.W.cells.get(key); if (!c) return; const t = tipEl(); t.innerHTML = tipHtml(c, R); t.hidden = false; tipMove(e); };
       svg.addEventListener('mousemove', e => { if (drag && drag.moved) tipEl().hidden = true; else tipMove(e); });
       svg.addEventListener('mouseleave', () => { tipEl().hidden = true; });

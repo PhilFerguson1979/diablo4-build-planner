@@ -546,6 +546,25 @@
     });
   }
   // ---------- in-game style hover tooltip for skills and their upgrades ----------
+  // ---------- phones: two-finger pinch zoom on the skill tree and Paragon board, and tooltips that fit the screen ----------
+  // pinchZoom(svg, getView, setView): while two fingers are down it zooms the viewBox around their midpoint and keeps the
+  // one-finger pan and tap handlers from seeing those touches (so a pinch never buys a node).
+  function pinchZoom(svg, getV, setV) { const pts = new Map(); let pin = null; let lock = false;
+    const stop = e => { e.stopImmediatePropagation(); e.preventDefault(); };
+    svg.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch') return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2) { const [a, b] = [...pts.values()]; const v = Object.assign({}, getV()); pin = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, v }; lock = true; try { svg.setPointerCapture(e.pointerId); } catch (er) { /* fine */ } stop(e); } else if (lock) stop(e); }, true);
+    svg.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (!pin) { if (lock) stop(e); return; }
+      const [a, b] = [...pts.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y) || 1; const k = Math.max(0.15, Math.min(8, pin.d / d)); const r = svg.getBoundingClientRect();
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; const v0 = pin.v; const px = v0.x + (mx - r.left) / r.width * v0.w, py = v0.y + (my - r.top) / r.height * v0.h;
+      const v = { x: px - (px - v0.x) * k, y: py - (py - v0.y) * k, w: v0.w * k, h: v0.h * k }; setV(v); svg.setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`); stop(e); }, true);
+    const up = e => { if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if (pts.size < 2) pin = null; if (lock) { stop(e); if (!pts.size) lock = false; } };
+    svg.addEventListener('pointerup', up, true); svg.addEventListener('pointercancel', up, true); }
+  window.__pinchZoom = pinchZoom;
+  // on a phone a tooltip sits in the middle of the screen, full width, shrunk to fit if it is taller than the screen
+  const phoneTip = () => window.innerWidth <= 760 || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && window.innerWidth <= 1024);
+  function centerTip(t) { t.style.transform = ''; const W = window.innerWidth, H = window.innerHeight; const r = t.getBoundingClientRect(); const k = r.height > H - 16 ? (H - 16) / r.height : 1;
+    t.style.transformOrigin = 'top left'; if (k < 1) t.style.transform = `scale(${k})`; t.style.left = Math.max(8, (W - r.width * k) / 2) + 'px'; t.style.top = Math.max(8, (H - r.height * k) / 2) + 'px'; }
+  window.__centerTip = centerTip; window.__phoneTip = phoneTip;
   let TREE_MODICON = {}; let ttipNode = null;
   // ---------- hover cards for anything marked data-tt="kind|arg|arg" ----------
   const TT_KIND = {}; let ttEl = null; let ttX = 0, ttY = 0; const MINI = {};
@@ -624,7 +643,7 @@
     ttEl = null; t.classList.remove('noicon'); ttipNode = i; t.innerHTML = h; t.hidden = false; placeTtip(x, y);
   }
   function placeTtip(x, y) {
-    const t = $('#ttip'); if (!t || t.hidden) return; const r = t.getBoundingClientRect(); const W = window.innerWidth, H = window.innerHeight;
+    const t = $('#ttip'); if (!t || t.hidden) return; if (phoneTip()) { centerTip(t); return; } t.style.transform = ''; const r = t.getBoundingClientRect(); const W = window.innerWidth, H = window.innerHeight;
     let left = x + 24, top = y - r.height / 2;
     if (left + r.width > W - 10) left = x - r.width - 24;
     top = Math.max(10, Math.min(H - r.height - 10, top));
@@ -646,6 +665,7 @@
   }
   function wireTree() {
     const svg = $('#tree'); let drag = null;
+    pinchZoom(svg, () => view, v => { view = v; });
     svg.addEventListener('pointerdown', e => { const g = e.target.closest && e.target.closest('.node'); drag = { x: e.clientX, y: e.clientY, v: Object.assign({}, view), moved: false, node: g ? +g.dataset.i : null, btn: e.button }; if (e.button === 0) svg.setPointerCapture(e.pointerId); });
     svg.addEventListener('pointermove', e => {
       if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
@@ -2317,7 +2337,7 @@
     // a skill with a cooldown is cast once per cooldown. A proc that takes a second off cooldowns (Messerschmidt's Reaver) shortens it by its chance on each enemy the cast hits.
     const lhFrac = (() => { try { const v = sk.lhEff(); return Math.min(1, (v > 1 ? v / 100 : v) * pwLhx); } catch (e) { return 0; } })();
     // a skill with charges is limited by how fast a charge comes back, not by the short gap between two charges
-    const cdOf = (c, Pw) => { try { if (!(c.cd() > 0)) return 0; const chg = Pw.charges ? +c.ev(Pw.charges) || 0 : 0; const rc = chg > 0 && Pw.recharge ? +c.ev(Pw.recharge) || 0 : 0; return rc > 0 ? rc * c.SB.cdrKeep : c.cdEff(); } catch (e) { return 0; } };
+    const cdOf = (c, Pw) => { try { const chg = Pw.charges ? +c.ev(Pw.charges) || 0 : 0; const rc = chg > 0 && Pw.recharge ? +c.ev(Pw.recharge) || 0 : 0; if (rc > 0) return rc * c.SB.cdrKeep; if (!(c.cd() > 0)) return 0; return c.cdEff(); } catch (e) { return 0; } };
     const cdBase = cdOf(sk, P);
     const cutter = pays.find(x => x.proc && x.cut); const tg = Math.max(1, +T.tg || 1);
     // hits each cast lands for Lucky Hits: echoes repeat the whole cast ("Purify echoes 2 additional times"), and a skill that breaks into
@@ -2386,7 +2406,8 @@
     const pph0 = !isProc && !isJudge && !isThorns && !isDawn && +T.pph > 1 ? +T.pph : 1;
     const ownHit = !isProc && !isJudge && !isThorns && !isDawn && !isGrief;
     const projLine = ownHit && projN > 0 && /PROJ/i.test(payD.k || '');
-    const pph = pph0 * (ownHit ? 1 + echoN : 1) * (projLine ? Math.max(1, projN / tg) : 1);
+    // projectiles that fan out (Fist of the Heavens): on a single target count one of them (a cautious guess until tested in game); raise "Hits on one target" if more land
+    const pph = pph0 * (ownHit ? 1 + echoN : 1) * (projLine && tg > 1 ? Math.max(1, projN / tg) : 1);
     const hps = ((resI && resI.capped ? resI.lim : hps0) + blkCasts) * pph;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
     const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
