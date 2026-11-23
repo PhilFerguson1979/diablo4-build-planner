@@ -5,14 +5,14 @@ window.LAB = (() => {
   const st = s => String(s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
   function load(name, variant, cls) { const b = window.D4LIB.builds.find(x => (!cls || x.cls === cls) && (x.name === name || x.name.includes(name))); const r = window.__D4LIB.libResolve(b, variant || 0); X.setState(clone(r.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; return b.name; }
   // one damage line: expected hit against elites times hits a second
-  function line(skill, payKey, extra) { const T = X.tcState(); T.skill = skill; T.pay = payKey || ''; const ex = Object.assign({}, extra || {}); delete ex.seg; Object.assign(T, ex); let R; try { R = X.theory(); } catch (e) { return { dps: 0, err: e.message }; }
+  function line(skill, payKey, extra) { const T = X.tcState(); T.skill = skill; T.pay = payKey || ''; const ex = Object.assign({}, extra || {}); delete ex.seg; delete ex.riders; Object.assign(T, ex); let R; try { R = X.theory(); } catch (e) { return { dps: 0, err: e.message }; }
     if (!R || !(R.base > 0)) return { dps: 0, R }; if (payKey && (!R.payD || R.payD.k !== payKey)) return { dps: 0, miss: 1, R };
-    const sg = (extra && extra.seg != null) ? extra.seg : (window.LAB_SEG != null ? window.LAB_SEG : 1); return { dps: R.segs[sg][1].exp * R.hps, hit: R.segs[sg][1].exp, hps: R.hps, R }; }
+    const sg = (extra && extra.seg != null) ? extra.seg : (window.LAB_SEG != null ? window.LAB_SEG : 1); const rid = (extra && extra.riders === false) ? 0 : X.riderDps(sg).v; return { dps: R.segs[sg][1].exp * R.hps + rid, main: R.segs[sg][1].exp * R.hps, riders: rid, hit: R.segs[sg][1].exp, hps: R.hps, R }; }
   function lines(list) { let tot = 0; const parts = []; for (const l of list) { const r = line(l.skill, l.pay, l.extra); const v = r.dps * (l.w == null ? 1 : l.w); tot += v; parts.push({ n: l.n || l.skill + ':' + (l.pay || ''), dps: v, hit: r.hit, hps: r.hps, cast: r.R && r.R.castEvery }); } return { tot, parts }; }
   function ehp() { try { const D = X.defense(); return D ? D.now || 0 : 0; } catch (e) { return 0; } }
   // best single line of a build, for judging the meta builds the same way
   function bestLine() { let best = { dps: 0 }; for (const id of X.unlockedSkills()) { const P = C().powers[id]; if (!P || P.passive) continue; let pays = []; try { X.tcState().skill = id; X.tcState().pay = ''; const R = X.theory(); pays = R ? R.pays.map(p => p.k) : []; } catch (e) { pays = []; }
-      for (const k of pays) { const r = line(id, k); if (r.dps > best.dps) best = { dps: r.dps, skill: P.name, pay: k, hit: r.hit, hps: r.hps }; } } return best; }
+      for (const k of pays) { if (/^(GRIEF|ECHO|PROC)/.test(k)) continue; const r = line(id, k); if (r.dps > best.dps) best = { dps: r.dps, skill: P.name, pay: k, hit: r.hit, hps: r.hps }; } } return best; }
   const slotKind = id => id.replace(/\d$/, '');
   function score(obj, w) { const d = obj().tot; const e = ehp(); return { d, e, j: Math.log(Math.max(d, 1)) + (w == null ? 1 : w) * Math.log(Math.max(e, 1)) }; }
   // candidates for a slot: every unique or runeword the class can put there, and every aspect that fits

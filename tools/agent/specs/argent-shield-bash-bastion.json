@@ -1,0 +1,40 @@
+{
+ "key": "argent-shield-bash-bastion",
+ "name": "Argent Veil, Shield Bash with Bastion",
+ "cls": "Paladin",
+ "base": "Arbiter Wing Strikes",
+ "variant": 1,
+ "main": "Shield Bash",
+ "swap": [
+  [
+   "Consecration",
+   "Shield Bash"
+  ]
+ ],
+ "lock": [
+  [
+   "ring2",
+   "Argent Veil"
+  ],
+  [
+   "offhand",
+   "Bastion of Sir Matthias"
+  ]
+ ],
+ "els": [
+  "Holy",
+  "Physical"
+ ],
+ "w": 0.5,
+ "tg": 3,
+ "quick": false,
+ "idea": "Argent Veil makes Arbiter's Evade cast Shield Bash every 2 meters. Every Shield Bash counts as a Block, and Bastion of Sir Matthias gives each Block a 15% chance to retaliate with another Shield Bash, which is itself a Block, so the chain feeds itself. Bastion also makes Shield Bash hit 80 to 100% [x] harder and adds a chance to deal double damage.",
+ "engine": [
+  "Arbiter form",
+  "Movement",
+  "Block"
+ ],
+ "needMods": [
+  "Hits Are Blocks"
+ ]
+}

@@ -650,7 +650,7 @@
   "charms: Light's Epiphany 5-piece",
   "glyphs, mercenaries and charms searched"
  ],
- "secs": 1148,
+ "secs": 4,
  "st": {
   "v": 1,
   "cls": "Paladin",
@@ -1541,7 +1541,7 @@
   },
   "tc": {
    "skill": "Paladin_Impale",
-   "pay": "",
+   "pay": "PROJECTILE_BURST_PAYLOAD",
    "wd": 2000,
    "ws": 1,
    "base": 0,

@@ -17,3 +17,9 @@ node tools/agent/run.js --eval script.js               # run any script in the p
 - `out/`: raw results.
 
 A full search takes several minutes on two cores, because it tries every item in every slot.
+
+## Changes, 23 Nov 2026
+- Shield skills (Shield Bash, Shield Charge, Blessed Shield, Clash) deal no damage without a shield; a two-handed weapon can no longer win a shield build.
+- Bastion of Sir Matthias: a retaliated Shield Bash is itself a Block when Shield Bash counts as Blocks, so the chain is counted, and Argent Veil's free casts block too.
+- `LAB.line` now adds the damage that rides on the main line (Grief's poison, echoes and novas, gear procs) through `__D4X.riderDps(seg)`; pass `{ riders: false }` to leave them out. The build score does the same.
+- Unique audit: The Furnace counts on elites, Windforce's triple damage, Protection of the Prime's Damage Reduction, Emblem of Staalbreak's Berserking, Nesekem's marked crits and Leoric's Crown gems are counted. Descriptions with no space after a full stop are now split into sentences.

@@ -4,7 +4,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const strip = s => String(s || '').replace(/<[^>]+>/g, '');
+  const strip = s => String(s || '').replace(/<[^>]+>/g, '').replace(/([a-z\])%])\.(?=[A-Z])/g, '$1. ');
   const ALL = window.D4DATA || {};
   const CLASS_LIST = ['Barbarian', 'Druid', 'Necromancer', 'Paladin', 'Rogue', 'Sorcerer', 'Spiritborn', 'Warlock'];
   // Main-stat damage scaling per point, matching community damage sheets.
@@ -866,6 +866,10 @@
   const wtypeOf = (it, g) => (it && it.kind && it.type) || (g && g.wtype) || '';
   const twoHanded = () => { const g = S.gear.weapon || {}; const it = findItem(g.item); return !!it && TWO_HAND_RE.test(wtypeOf(it, g)); };
   // why the off-hand cannot be used right now, or '' when it can
+  // skills the game marks "Requires a Shield": they cannot be cast with a two-handed weapon or an empty off-hand
+  const SHIELD_SKILLS = /^Paladin_(ShieldBash|ShieldCharge|BlessedShield|Punish)/;
+  const hasShield = () => S.cls === 'Paladin' && !twoHanded() && !!findItem((S.gear.offhand || {}).item);
+  const needsShield = P => !!P && SHIELD_SKILLS.test(P.id || '') && !hasShield();
   const offhandBlock = () => !OFFHAND_CLASSES.includes(S.cls) ? `${S.cls}s cannot use an off-hand.` : twoHanded() ? 'Blocked by your two-handed weapon.' : '';
   function socketMax(slotId, it, g) {
     if (it && it.runes) return 0;
@@ -873,8 +877,10 @@
     return SOCKET_MAX[slotId] || 0;
   }
   function gemLines(slotId, g, it) {
-    const out = []; const tgt = gemTarget(slotId);
-    (g.gems || []).slice(0, socketMax(slotId, it, g)).forEach(x => { const q = spDef(x); if (q) { out.push({ kind: 'gem', gem: { sp: 1, type: '', name: q.t.name }, html: esc(q.t.sock).replace(/([\d,]+)/, '<b class="num">$1</b>'), label: q.t.sock }); return; } const d = x && gemDef(x.type, x.grade); if (!d) return; (d[tgt] || []).forEach(l => { const t = gemTpl(l.t); out.push({ kind: 'gem', gem: d, html: fillTpl(t, l.v, 1), label: t.replace('§', l.v) }); }); });
+    const out = []; let tgt = gemTarget(slotId);
+    // Leoric's Crown: the helm counts as Jewelry for its gems, and their effect is raised by 35-50%[x]
+    let gx = 1; { const lm = it && strip(it.desc || '').match(/counts as Jewelry and increases the effect of any gem socketed into the helm by \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?%/); if (lm && slotId === 'helm') { tgt = 'j'; gx = 1 + (+lm[1] + +(lm[2] || lm[1])) / 200; } }
+    (g.gems || []).slice(0, socketMax(slotId, it, g)).forEach(x => { const q = spDef(x); if (q) { out.push({ kind: 'gem', gem: { sp: 1, type: '', name: q.t.name }, html: esc(q.t.sock).replace(/([\d,]+)/, '<b class="num">$1</b>'), label: q.t.sock }); return; } const d = x && gemDef(x.type, x.grade); if (!d) return; (d[tgt] || []).forEach(l => { const t = gemTpl(l.t); const v = Math.round(l.v * gx * 100) / 100; out.push({ kind: 'gem', gem: d, html: fillTpl(t, v, 1), label: t.replace('§', v) }); }); });
     return out;
   }
   const N_AFF = 4, N_TEMP = 1, Q_MAX = 25;
@@ -2057,6 +2063,8 @@
         out.push({ id, n: name, lo, hi, what, role, jud, skill: skill || '', scope, only, boss, ccNeed }); });
       if (!role) { const NS = '\\[?([\\d.]+)(?:\\s*[–-]\\s*([\\d.]+))?\\]?'; const sents = t.split(/(?<=[^\d][.!])\s*(?=[A-Z])|•/); const stat = (kind, lo, hi, sn, extra) => out.push(Object.assign({ id: name + '#s' + (i++), n: name, stat: kind, lo, hi, what: sn.slice(0, 90), scope: powerScope(sn.replace(/\[?[\d.]+(?:\s*[–-]\s*[\d.]+)?\]?%.*$/, ''), 'damage'), skill: '' }, extra || {}));
         sents.forEach(sn => { let q; let M0 = null; const SM = () => { if (!M0) { try { M0 = statModel(); } catch (e) { M0 = {}; } } return M0; };
+          // Nesekem: one marked enemy at a time takes guaranteed Critical Strikes; counted as that enemy's share of your hits
+          if (/your attacks against them are guaranteed to Critically Strike/.test(sn) && /mark a Nearby enemy/.test(t)) { const tg = Math.max(1, +tcState().tg || 1); const cc0 = Math.min(100, SM().cc ? +SM().cc.v || 0 : 0); const v = (100 - cc0) / tg; stat('cc', v, v, 'marked enemy takes guaranteed Critical Strikes (one of ' + tg + ' targets)'); return; }
           if ((q = sn.match(new RegExp('Critical Strike Chance is increased by ' + NS + '% of your Movement Speed bonus')))) { const ms = SM().ms ? SM().ms.v : 0; if (ms > 0) stat('cc', +q[1] * ms / 100, +(q[2] || q[1]) * ms / 100, sn); return; }
           if ((q = sn.match(new RegExp('Primary Stat equal to ' + NS + '%(?:\\s*\\[x\\])? of your (Strength|Intelligence|Willpower|Dexterity)')))) { const k = { Strength: 'str', Intelligence: 'int', Willpower: 'wil', Dexterity: 'dex' }[q[3]]; const base = SM()[k] ? SM()[k].v : 0; stat('mainflat', +q[1] * base / 100, +(q[2] || q[1]) * base / 100, sn); return; }
           // extra hits worth a share of the skill's own damage: "each dealing 45% of Blight's damage", "dealing 90% of normal damage"
@@ -2064,6 +2072,8 @@
           { const NM = scopeCtx().names; let nm;
             if ((q = sn.match(new RegExp('^Casting (.+?) has an? ([\\d.]+)% chance to activate 1 to ' + NS + ' additional times'))) && NM.includes(q[1])) { const sc = powerScope('Casting ' + q[1] + ' deals', 'damage'); sc.own = q[1]; out.push({ id: name + '#e' + (i++), n: name, lo: +q[2] * (1 + +q[3]) / 2, hi: +q[2] * (1 + +(q[4] || q[3])) / 2, what: 'extra casts, on average', scope: sc, skill: q[1] }); }
             if ((q = sn.match(/\b(?:and )?(.+?) has an? ([\d.]+)% chance to land an additional strike, up to (\d+) times/)) && (nm = NM.find(x => q[1].endsWith(x)))) { const pch = +q[2] / 100; let ex = 0; for (let k = 1; k <= +q[3]; k++) ex += Math.pow(pch, k); const sc = powerScope(nm + ' deals', 'damage'); sc.own = nm; out.push({ id: name + '#e' + (i++), n: name, lo: ex * 100, hi: ex * 100, what: 'extra strikes, on average', scope: sc, skill: nm }); }
+            // "Hits of Barrage have a 25% chance to deal triple damage": two extra hits' worth at that chance
+            if ((q = sn.match(new RegExp('^Hits of (.+?) have an? ' + NS + '% chance to deal (double|triple) damage'))) && NM.includes(q[1])) { const k = q[4] === 'triple' ? 2 : 1; const sc = powerScope(q[1] + ' deals', 'damage'); sc.own = q[1]; out.push({ id: name + '#e' + (i++), n: name, lo: +q[2] * k, hi: +(q[3] || q[2]) * k, what: q[4] + ' damage at its chance, on average', scope: sc, skill: q[1] }); }
             if ((q = sn.match(/have an? ([\d.]+)% chance to trigger themselves on Cast/))) out.push({ id: name + '#e' + (i++), n: name, lo: +q[1], hi: +q[1], what: 'extra casts, on average', scope: powerScope(sn.slice(0, q.index).replace(/ deal .*$/, '') + ' deal', 'damage'), skill: '' }); }
           if (/\b(Minions?|Summons?|Companions?|Golem|Skeletal|allies)\b[^.]*Critical Strike Chance|reduced by|chance equal to|of your Movement Speed|for every \d+% Critical/.test(sn)) return;
           if ((q = sn.match(new RegExp(NS + '%(?:\\s*\\[[+x]\\])?\\s*(?:increased |bonus |additional )?Critical Strike Chance'))) || (q = sn.match(new RegExp('Critical Strike Chance (?:of [^.]*?|with [^.]*? )?(?:is |are )?(?:increased )?by ' + NS + '%')))) { const st = sn.match(/up to (\d+) times/); const k = st ? +st[1] : 1; stat(/\[x\]/.test(q[0]) ? 'ccx' : 'cc', +q[1] * k, +(q[2] || q[1]) * k, sn); }
@@ -2285,7 +2295,9 @@
     let fanCc = 0; try { const fa = 'Paladin_Offensive_Aura'; if (S.cls === 'Paladin' && C.powers[fa] && skillRank(fa) > 0) { const fc = skillCtx(fa); fanCc = (fc.ev(C.powers[fa].sf[4]) || 0) * (fc.ev(C.powers[fa].sf[8]) || 0) * 100; } } catch (e) { fanCc = 0; }
     const pwCcx = pwStat('ccx').reduce((a, x) => a * (1 + (x.lo + x.hi) / 200), 1); const pwCc = pwStat('cc').reduce((a, x) => a + (x.lo + x.hi) / 2, 0), pwCsd = pwStat('csd').reduce((a, x) => a + (x.lo + x.hi) / 2, 0), pwLhx = pwStat('lhx').reduce((a, x) => a * (1 + (x.lo + x.hi) / 200), 1);
     // "You are always Berserking" (Blood-Mad Idol): Berserking's 25% joins the always-on pool
-    try { const bz = sheetData().powers.find(q => /You are always Berserking/i.test(strip(q.desc || ''))); if (bz && !(T.st || {}).berserk) always.push({ v: 25, src: bz.name, what: 'Berserking, always on' }); } catch (e) { /* none */ }
+    // Emblem of Staalbreak: Berserking's bonus raised by 56.7-73.3% of itself, and always Berserk while not Healthy (counted as always on)
+    try { const PW0 = sheetData().powers; const em = PW0.map(q => strip(q.desc || '').match(/Berserking's damage bonus is increased by \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?%/)).find(Boolean); const bzv = 25 * (1 + (em ? (+em[1] + +(em[2] || em[1])) / 200 : 0));
+      const bz = PW0.find(q => /You are always Berserking|While not Healthy, you are always Berserk/i.test(strip(q.desc || ''))); if (bz && !(T.st || {}).berserk) always.push({ v: bzv, src: bz.name, what: 'Berserking, always on' + (em ? ', bonus raised by Emblem of Staalbreak' : '') }); else if (em && (T.st || {}).berserk) always.push({ v: bzv - 25, src: 'Emblem of Staalbreak', what: 'extra Berserking damage' }); } catch (e) { /* none */ }
     const addAlways = sum(always), addCondAll = Object.values(cond).reduce((a, l) => a + sum(l), 0), addCondOn = condOn.reduce((a, k) => a + sum(cond[k]), 0), addElite = sum(elite);
     // [x] multipliers: stat lines marked [x] that fit this skill, plus aspect and unique powers
     // "x% ... Damage Multiplier" affixes of one kind add together first (All Damage joins the element); "[x]" lines each multiply on their own
@@ -2306,6 +2318,8 @@
     if (isJudge) { try { unlockedSkills().forEach(id => { const q = C.powers[id]; const c2 = skillCtx(id); (q.mods || []).filter(md => c2.mods.has(md.key)).forEach(md => { const mm = strip(powerText(q, md.desc, c2.lvl, C.powers)).match(/Judgement damage by ([\d.]+)%\s*\[x\]/); if (mm) { const xid = 'jud:' + id + ':' + md.key; xGear.push({ id: xid, n: q.name + ': ' + md.name, lo: +mm[1], hi: +mm[1], what: 'Judgement damage for a few seconds after a detonation', on: !T.off[xid] }); } }); }); } catch (e) { /* skip */ } }
     xGear.forEach((x, i) => { if (x.ccNeed && ccUp < 1) xGear[i] = Object.assign({}, x, { lo: x.lo * ccUp, hi: x.hi * ccUp, what: (x.what || '') + ', counted ' + Math.round(ccUp * 100) + '%: ' + ccHow }); });
     const prod = (l, f) => l.reduce((a, x) => a * (1 + f(x) / 100), 1);
+    // bonuses "to Elites" (The Furnace) count on the elite and boss rows even with the boss chip off
+    const xElite = (T.st || {}).boss ? 1 : GM.filter(x => x.boss && !x.add && !x.stat && /Elites/.test(x.what || '') && !T.off[x.id] && !(isJudge ? x.skill : isProc ? (x.skill || x.jud) : x.jud) && !scopeMiss(x.scope, Pm, Pd.dmg, !!(dot || isGrief))).reduce((a, x) => a * (1 + (x.lo + x.hi) / 200), 1);
     const xS = (1 + xSumEl / 100) * Object.values(xSumBy).reduce((a, v) => a * (1 + v / 100), 1) * xOwn;
     { const tgN = Math.max(1, +T.tg || 1); xGear.forEach((x, i) => { if (x.firstN && x.firstN < tgN) { const f = x.firstN / tgN; xGear[i] = Object.assign({}, x, { lo: x.lo * f, hi: x.hi * f, what: String(x.what || '') + `, spread over ${tgN} targets` }); } }); }
     const xAll = xGear.filter(x => x.on && !x.only); const xOnly = k => prod(xGear.filter(x => x.on && x.only === k), x => (x.lo + x.hi) / 2);
@@ -2403,7 +2417,7 @@
         if ((m = t.match(/If a Core Skill hits 4 or more enemies, \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% of the Resource cost is refunded/)) && skillIs(P, 'Core') && tg >= 4) { const v = mid(m, 1, 2); cost *= 1 - v / 100; parts.push(it.name + ' refunds ' + D4T.fmtNum(v) + '% of the cost'); } });
       const lim = inc / cost; return { cost, inc, lim, gen, parts, capped: lim < hps0 }; })();
     // "Blocking has a 15% chance to retaliate with a Shield Bash": free casts of this skill from blocks, outside the resource limit
-    let blkCasts = 0; const blkSrc = []; try { sheetData().powers.forEach(q => { const m = strip(q.desc || '').match(/Blocking has an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to retaliate with an? ([A-Z][\w' ]+?)\./); if (m && m[3] === P.name && !isProc && !isJudge && !isDawn && !isThorns) { const r = blk * (+m[1] + +(m[2] || m[1])) / 200; blkCasts += r; blkSrc.push(q.name); } }); } catch (e) { blkCasts = 0; }
+    let blkCasts = 0, blkK = 0; const blkSrc = []; try { sheetData().powers.forEach(q => { const m = strip(q.desc || '').match(/Blocking has an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to retaliate with an? ([A-Z][\w' ]+?)\./); if (m && m[3] === P.name && !isProc && !isJudge && !isDawn && !isThorns) { const k = (+m[1] + +(m[2] || m[1])) / 200; blkK += k; blkCasts += blk * k; blkSrc.push(q.name); } }); } catch (e) { blkCasts = 0; }
     // more than one projectile or wave of one cast can land on the same big target (Brandish with Supplication, shotgunning a boss)
     const pph0 = !isProc && !isJudge && !isThorns && !isDawn && +T.pph > 1 ? +T.pph : 1;
     const ownHit = !isProc && !isJudge && !isThorns && !isDawn && !isGrief;
@@ -2416,16 +2430,22 @@
       const per = +strip(it.desc).match(/for every ([\d.]+) meters/)[1]; const ev = T.ev === '' || T.ev == null || isNaN(+T.ev) ? 0.5 : Math.max(0, +T.ev); const mt = T.evm === '' || T.evm == null || isNaN(+T.evm) ? 10 : Math.max(0, +T.evm);
       const cores = (S.hotbar || []).filter(id => { const Q = C.powers[id]; return Q && skillIs(Q, 'Core') && !/Channel/i.test(strip(Q.desc || '')); }).length || 1; argent += ev * mt / per / cores;
       argentWhy = `${it.name}: ${D4T.fmtNum(ev)} Arbiter's Evades a second over ${D4T.fmtNum(mt)} meters, a cast every ${per} meters, shared by ${cores} Core Skill${cores > 1 ? 's' : ''}`; });
+    // when this skill's own hits count as Blocks (Shield Bash), a retaliated cast is itself a Block and can retaliate again,
+    // and Argent Veil's free casts block too: count the skill's real cast rate, not its attack speed, and add the chain
+    if (blkK > 0) { const own = offBlocks().parts.find(x => x.n.indexOf(P.name + ':') === 0);
+      if (own) { const m = / one block each/.test(own.how) ? 1 : tg; const c0 = (resI && resI.capped ? resI.lim : hps0) + argent; const bo = Math.max(0, blk - own.v);
+        blkCasts = blkK * (bo + c0 * m) / Math.max(0.05, 1 - blkK * m); } }
     const hps = ((resI && resI.capped ? resI.lim : hps0) + blkCasts + argent) * pph;
     const dawnX = (isDawn ? 1 + dawn.per * dawn.stacks / 100 : 1) * (spOn ? spFx.x : 1);
-    const base = (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
+    const noShield = !isThorns && !isProc && !isJudge && !isDawn && needsShield(P);
+    const base = noShield ? 0 : (isThorns ? thornsStat : wd) * skillPct / 100 * msMult * monDR * asDmg * dawnX * (dot ? dotX : 1);
     const seg = eliteOn => {
       const A0 = addAlways + (eliteOn ? addElite : 0) + (dot ? dotAdd : 0); const p = dot ? 0 : cc / 100; const cm = dot ? 1 : critMult; const roll = dot || isDawn || isThorns ? 0 : 0.1;
       const min = base * (1 - roll) * (isDawn ? dawn.lo / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + A0 / 100) * xLo;
       const hit = (c, v) => (1 + (A0 + addCondOn + (c ? csdAdd : 0) + (v ? vulnAdd : 0)) / 100) * (c ? cm : 1) * (v ? vulnMult : 1);
       const exp = base * xMid * ((1 - p) * (1 - vu) * hit(0, 0) * dsF + p * (1 - vu) * hit(1, 0) + (1 - p) * vu * hit(0, 1) * dsF + p * vu * hit(1, 1));
       const max = base * (1 + roll) * (isDawn ? dawn.hi / ((dawn.lo + dawn.hi) / 2) : 1) * (1 + (A0 + addCondAll + (dot ? 0 : csdAdd) + vulnAdd) / 100) * xHi * (dsCh > 0 ? Math.max(cm, dsHit) : cm) * vulnMult;
-      return { min, exp, max };
+      const ex = eliteOn ? xElite : 1; return { min: min * ex, exp: exp * ex, max: max * ex };
     };
     // one exact hit with the states ticked across the top, against the same hit with none of them
     const st = T.st || {}; const opAdd = M.od ? M.od.v : 0; const opX = M.od ? M.od.x : 0;
@@ -2437,11 +2457,17 @@
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
     const potI = S.cls === 'Paladin' && /_Aura$/.test(P.id || '') ? auraPotency(P.id) : null; const wornSN = worn.some(it => /Aura Potency while standing in Consecration/.test(strip(it.desc || '')));
-    return { dsCh, dsX, dsHit, dsF, dsSrc, lhMult, echoN, projN, pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { noShield, dsCh, dsX, dsHit, dsF, dsSrc, lhMult, echoN, projN, pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   // ===== Build score: the build's best damage line with a fixed 2,000 damage weapon, on packs and on a boss, so any two builds compare =====
   const RANK_KEY = 'sanctuary-ledger-ranked';
   let SCORE_CACHE = { k: '', v: null };
+  // damage that rides on the main line: Grief's poison, echoes and novas (Andariel's Visage, Cowl of the Nameless), and procs from gear.
+  // Each is its own line on the Theory Craft page; the build score and the agent add them to the main line.
+  function riderDps(seg) { const T = tcState(); const main = T.pay; let R0; try { R0 = theory(); } catch (e) { return { v: 0, parts: [] }; } if (!R0) return { v: 0, parts: [] };
+    const list = (R0.pays || []).filter(p => p.k !== main && (p.grief || p.copy || p.proc) && !p.dawn); let v = 0; const parts = [];
+    try { for (const p of list) { T.pay = p.k; let R; try { R = theory(); } catch (e) { continue; } if (!R || !R.payD || R.payD.k !== p.k || !(R.base > 0) || !R.segs) continue; const d = R.segs[seg][1].exp * R.hps; if (d > 0) { v += d; parts.push({ n: p.n || p.k, v: d }); } } } finally { T.pay = main; }
+    return { v, parts }; }
   function buildScore() {
     const k = JSON.stringify(Object.assign({}, S, { tc: null, df: null })); if (SCORE_CACHE.k === k) return SCORE_CACHE.v;
     const T = tcState(); const keep = JSON.stringify(T); let best = null;
@@ -2450,8 +2476,8 @@
       for (const id of unlockedSkills()) { const P = cdata().powers[id]; if (!P || P.passive) continue;
         T.skill = id; T.pay = ''; T.tg = 3; T.st = Object.assign({}, T.st || {}, { boss: false }); let pays = []; try { invalidate(); const R0 = theory(); pays = R0 ? R0.pays || [] : []; } catch (e) { pays = []; }
         for (const p of pays) { T.pay = p.k; let R; try { R = theory(); } catch (e) { continue; } if (!R || !(R.base > 0) || !R.payD || R.payD.k !== p.k || !R.segs) continue;
-          const v = R.segs[1][1].exp * R.hps; if (!best || v > best.pack) best = { pack: v, id, pay: p.k, name: P.name }; } }
-      if (best) { T.skill = best.id; T.pay = best.pay; T.tg = 1; T.st = Object.assign({}, T.st || {}, { boss: true }); try { const R = theory(); best.boss = R && R.segs ? R.segs[2][1].exp * R.hps : 0; } catch (e) { best.boss = 0; } }
+          if (p.grief || p.copy || p.proc) continue; const v = R.segs[1][1].exp * R.hps + riderDps(1).v; if (!best || v > best.pack) best = { pack: v, id, pay: p.k, name: P.name }; } }
+      if (best) { T.skill = best.id; T.pay = best.pay; T.tg = 1; T.st = Object.assign({}, T.st || {}, { boss: true }); try { const R = theory(); best.boss = R && R.segs ? R.segs[2][1].exp * R.hps + riderDps(2).v : 0; } catch (e) { best.boss = 0; } }
     } finally { Object.keys(T).forEach(x => delete T[x]); Object.assign(T, JSON.parse(keep)); invalidate(); }
     let ehp = 0; try { const Dd = defense(); ehp = Dd ? Dd.now || 0 : 0; } catch (e) { ehp = 0; }
     const v = Object.assign(best || { pack: 0, boss: 0 }, { ehp }); SCORE_CACHE = { k, v }; return v;
@@ -3241,7 +3267,7 @@
     x.fillStyle = '#7d705c'; x.font = '18px Georgia, serif'; x.textAlign = 'right'; x.fillText('Made with D4 Build Planner', W - 56, H - 44); x.textAlign = 'left';
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (S.name || 'build').replace(/[^\w -]+/g, '').trim().replace(/\s+/g, '_') + '_card.png'; a.click(); toast('Build card saved as a picture'); }, 'image/png');
   }
-  window.__D4X = { fixedDefs0, seedUnique, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
+  window.__D4X = { riderDps, fixedDefs0, seedUnique, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
   function wireScan() {
     const pick = $('#scanPick'), file = $('#scanFile'); if (pick && file) { pick.onclick = () => file.click(); file.onchange = () => { if (file.files[0]) scanImage(file.files[0]); }; }
     const drop = $('#scanDrop'); if (drop) drop.onclick = () => { SCAN = null; renderGear(); };
@@ -3525,7 +3551,7 @@
       grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased )?(?:to )?All Resistances?\\b', 'resall'); grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*Resistance to All Elements', 'resall'); grab('Resistance to All Elements by ' + NUMP + '%', 'resall'); grab('All Resistance is increased by ' + NUMP + '%', 'resall'); grab(NUMP + '% increased Strength, Resistance,', 'resall');
       ELEMS.forEach(el => { grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased )?' + el + ' Resistance', 'r' + el.toLowerCase()); grab(el + ' Resistance is increased by ' + NUMP + '%', 'r' + el.toLowerCase()); });
       grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?Damage Reduction', 'dr'); grab('take ' + NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:less|reduced) damage', 'dr');
-      grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?(?:Total\\s+)?Armor\\b', 'armor'); grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?Maximum Life', 'life'); grab(NUMP + '% increased Strength, Resistance, Armor', 'armor'); grab('Block [Cc]hance is increased by ' + NUMP + '%', 'block'); grab('Maximum Life by ' + NUMP + '%', 'life'); grab('Dodge Chance (?:increases|is increased|by)\\s*(?:by )?' + NUMP + '%', 'dodge'); grab('Barrier for ' + NUMP + '% of your Maximum Life', 'barrier'); grab('[Ee]nemies[^.]{0,40}deal ' + NUMP + '%\\s*(?:\\[x\\])?\\s*less damage', 'dr'); grab(NUMP + '%(?:\\s*\\[\\+\\])?\\s*(?:increased )?Dodge Chance', 'dodge'); grab('Blocked Damage Reduction is increased by ' + NUMP + '%', 'blockr'); });
+      grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?(?:Total\\s+)?Armor\\b', 'armor'); grab(NUMP + '%\\s*(?:\\[[x+]\\])?\\s*(?:increased\\s+)?Maximum Life', 'life'); grab(NUMP + '% increased Strength, Resistance, Armor', 'armor'); grab('Block [Cc]hance is increased by ' + NUMP + '%', 'block'); grab('Maximum Life by ' + NUMP + '%', 'life'); grab('Dodge Chance (?:increases|is increased|by)\\s*(?:by )?' + NUMP + '%', 'dodge'); grab('Barrier for ' + NUMP + '% of your Maximum Life', 'barrier'); grab('[Ee]nemies[^.]{0,40}deal ' + NUMP + '%\\s*(?:\\[x\\])?\\s*less damage', 'dr'); grab(NUMP + '%(?:\\s*\\[\\+\\])?\\s*(?:increased )?Dodge Chance', 'dodge'); grab('Blocked Damage Reduction is increased by ' + NUMP + '%', 'blockr'); grab(NUMP + '% Dodge Chance and Damage Reduction', 'dr'); });
     SLOTS.forEach(sl => { const it = findItem((S.gear[sl.id] || {}).item); if (!it) return; const t = strip(it.desc); const m = t.match(/Immune for \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]? seconds\.?[^.]*?once every (\d+) seconds/) || t.match(/Immune\. The bubble lasts for \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]? seconds and can only form once every (\d+) seconds/);
       if (m && !pwDef.some(x => x.id === 'pw:' + it.name + ':immune')) { const id = 'pw:' + it.name + ':immune'; pwDef.push({ id, name: it.name, kind: 'dr', v: Math.min(100, (+m[1] + +(m[2] || m[1])) / 2 / +m[3] * 100), upTo: false, on: (T.mdr || {})[id] !== false }); } });
     // how much of the time a power's Barrier is up: its duration over its cooldown when both are written, a tenth for a barrier of a few seconds with no stated cooldown, otherwise half
@@ -3635,7 +3661,7 @@
     const key = (S.hotbar || []).join(',') + '|' + tg + '|' + JSON.stringify(S.alloc || {}).length + '|' + (T.ws || 1); if (OFFBLK && OFFBLK.key === key) return OFFBLK.v;
     offBlocks._busy = 1; const parts = []; let r = 0;
     try { const M = statModel(); const aps = (+T.ws || 1) * (1 + Math.min(100, M.as ? +M.as.v || 0 : 0) / 100);
-      (S.hotbar || []).forEach(id => { const P = C.powers[id]; if (!P) return; let am; try { am = activeMods(id); } catch (e) { return; }
+      (S.hotbar || []).forEach(id => { const P = C.powers[id]; if (!P || needsShield(P)) return; let am; try { am = activeMods(id); } catch (e) { return; }
         const md = (P.mods || []).find(m => am.has(m.key) && /counts? as Blocks/i.test(strip(String(m.desc || '')))); if (!md) return; const once = /once per Cast/i.test(strip(String(md.desc || '')));
         let cd = 0; try { const c = skillCtx(id); cd = c.cd() > 0 ? c.cdEff() : 0; } catch (e) { cd = 0; } const casts = cd > 0 ? 1 / cd : aps; const v = casts * (once ? 1 : tg); r += v;
         parts.push({ n: P.name + ': ' + md.name, v, how: `${D4T.fmtNum(Math.round(casts * 100) / 100)} casts a second${once ? ', one block each' : ', ' + tg + ' enem' + (tg === 1 ? 'y' : 'ies') + ' hit'}` }); });

@@ -1,0 +1,27 @@
+{
+ "key": "paladin-brandish-disciple",
+ "name": "Brandish Disciple",
+ "cls": "Paladin",
+ "base": "Arbiter Wing Strikes",
+ "variant": 1,
+ "main": "Brandish",
+ "swap": [
+  [
+   "Consecration",
+   "Brandish"
+  ]
+ ],
+ "lock": [],
+ "els": [
+  "Holy",
+  "Physical"
+ ],
+ "w": 0.5,
+ "tg": 3,
+ "quick": false,
+ "idea": "Brandish is a Disciple Basic Skill, so the Light's Epiphany 5-piece multiplies it by 500%[x] during Arbiter of Justice, the same engine as Divine Lance. Supplication makes it fire in all directions for 120 to 160%[x] more damage, and on a big boss several arcs can land at once.",
+ "engine": [
+  "Arbiter form",
+  "Disciple"
+ ]
+}
