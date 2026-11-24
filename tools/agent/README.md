@@ -27,3 +27,7 @@ A full search takes several minutes on two cores, because it tries every item in
 ## Changes, 24 Nov 2026
 - Flat Weapon Damage lines (Grief's +750, unique Weapon Damage affixes) add to the assumed 2,000 damage weapon when `T.wdAuto` is set (the build score, `LAB.load` and the pipeline set it). A weapon damage typed by hand is the tooltip number and is left alone.
 - Crushing Blow: Infinity (40%) and Strength (25%) Lucky Hit lines are added to the runeword data. `theory().crush` gives the proc rate; each proc takes about 5% of current Life (testers' figure) down to 40%. The Pit ladder's elite kill time uses `__D4X.killTime(life, dps, crush)`. Bosses leave it out (unknown effect).
+
+## Data refresh (24 Nov)
+- `tools/refresh-data.sh <d4data clone> <branch> <live|ptr>` rebuilds data/*-live.js or *-ptr.js from DiabloTools/d4data with extract.js (plus paragon, gear, cube).
+- When Season 16 goes live, d4data master moves to 3.3.x: run it with `master live`, then drop the s16-patch.js ops the real data now covers.
