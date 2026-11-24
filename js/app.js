@@ -2483,7 +2483,9 @@
   // damage that rides on the main line: Grief's poison, echoes and novas (Andariel's Visage, Cowl of the Nameless), and procs from gear.
   // Each is its own line on the Theory Craft page; the build score and the agent add them to the main line.
   function riderDps(seg) { const T = tcState(); const main = T.pay; let R0; try { R0 = theory(); } catch (e) { return { v: 0, parts: [] }; } if (!R0) return { v: 0, parts: [] };
-    const list = (R0.pays || []).filter(p => p.k !== main && (p.grief || p.copy || p.proc) && !p.dawn); let v = 0; const parts = [];
+    // Dawnfire with allies (a guide's in-game finding): your own Holy Light pulses still go off beside the fire ring, and every ally's aura pulses Holy
+    const dawnAllies = R0.payD && R0.payD.dawn && R0.P && R0.P.id === 'Paladin_HolyShock_Aura' && +T.allies > 0;
+    const list = (R0.pays || []).filter(p => p.k !== main && (((p.grief || p.copy || p.proc) && !p.dawn) || (dawnAllies && p.k === 'PULSING_DAMAGE'))); let v = 0; const parts = [];
     try { for (const p of list) { T.pay = p.k; let R; try { R = theory(); } catch (e) { continue; } if (!R || !R.payD || R.payD.k !== p.k || !(R.base > 0) || !R.segs) continue; const d = R.segs[seg][1].exp * R.hps; if (d > 0) { v += d; parts.push({ n: p.n || p.k, v: d }); } } } finally { T.pay = main; }
     return { v, parts }; }
   function buildScore() {
