@@ -98,7 +98,12 @@
   // Season 15 runeword lines the game files the planner reads leave out (in-game tooltips and guides): Infinity's Lucky Hit Crushing Blow
   // and Maximum Life, Strength's Crushing Blow. Crushing Blow takes a share of the enemy's current Life, down to 40% of its Life.
   function patchRunewords(D) { (D && D.uniques || []).forEach(u => { if (u.kind !== 'runeword' || u.cbAdded) return; const add = (pct, life) => { u.desc = (u.desc || '') + ' Lucky Hit: Up to a <span class="c-number"><b class="num">' + pct + '%</b></span> chance to deliver a Crushing Blow.'; if (life) u.affixes = (u.affixes || []).concat(['+<b class="num">' + life + '</b> Maximum Life']); u.cbAdded = 1; };
-    if (u.name === 'Infinity') add(40, '2,200'); else if (u.name === 'Strength') add(25); }); }
+    if (u.name === 'Infinity') add(40, '2,200'); else if (u.name === 'Strength') add(25); });
+    // Insight: the files give it only Attack Speed and x100% Critical Strike Damage, and no Paladin version. Phil uses one on a two-handed mace in game,
+    // and guides list +[8-23]% Critical Strike Chance, +[104-173] Weapon Damage and +[150-180] All Stats as well (top rolls used)
+    const ins = (D && D.uniques || []).filter(u => u.kind === 'runeword' && u.name === 'Insight');
+    ins.forEach(u => { if (u.insFix) return; u.insFix = 1; u.affixes = (u.affixes || []).concat(['+<b class="num">23%</b> Critical Strike Chance', '+<b class="num">173</b> Weapon Damage', '+<b class="num">180</b> All Stats']); });
+    if (ins.length && !D.uniques.some(u => u.id === 'Runeword_Insight_Mace2H')) { const src = ins[0]; D.uniques.push(Object.assign({}, src, { id: 'Runeword_Insight_Mace2H', type: 'Mace2H', classes: ['Paladin'], handAdded: 1, affixes: src.affixes.slice() })); } }
   Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); addTorch(ALL[k]); patchParaRes(ALL[k]); patchRunewords(ALL[k]); });
 
   // older saves carried a typed-in gear CDR row; the build now supplies that itself
