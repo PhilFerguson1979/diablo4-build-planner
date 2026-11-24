@@ -1,10 +1,10 @@
 // glyph, mercenary and charm searches for any class (run inside the planner page after lab.js)
-// greedy charm fill: 6 rare charms, 2 affixes each, no repeat inside one charm
+// greedy charm fill: a rare charm in every socket, 2 affixes each, no repeat inside one charm
 window.charmFill = (obj, w, els) => { const X = window.__D4X; const S = X.state(); const unl = X.unlockedSkills().map(id => X.cdata().powers[id]).filter(Boolean);
   const pool = X.GD().charmAffixes.filter(a => (!a.cls.length || a.cls.includes(S.cls)) && a.t).filter(a => { if (/Resistance_Single|Movement|Potion|MaxResource|Virtue_(Clarity|Renew|Tenacity|Malice)|CC_Duration/.test(a.id)) return false; const el = a.id.match(/ElementalSurge_(\w+)$/); if (el) return els.includes(el[1]); const sk = a.t.match(/^\+§ to (.+?)(?: Skills)?$/); if (sk) return unl.some(q => q.name === sk[1] || (q.tags || []).includes(sk[1]) || q.tag === sk[1]) || /Core|Basic|Aura/.test(sk[1]); return true; }).map(a => a.id);
   const sc = () => { const d = obj().tot, e = LAB.ehp(); return Math.log(Math.max(d, 1)) + w * Math.log(Math.max(e, 1)); };
-  S.charms.sockets = [0, 1, 2, 3, 4, 5].map(() => ({ t: 'r', aff: [] })); X.invalidate();
-  for (let i = 0; i < 6; i++) for (let k = 0; k < 2; k++) { let best = null, bj = -1e99; for (const id of pool) { if (S.charms.sockets[i].aff.includes(id)) continue; S.charms.sockets[i].aff[k] = id; X.invalidate(); const j = sc(); if (j > bj) { bj = j; best = id; } } S.charms.sockets[i].aff[k] = best; X.invalidate(); }
+  const NS0 = X.sealRules().sockets; S.charms.sockets = Array.from({ length: NS0 }, () => ({ t: 'r', aff: [] })); X.invalidate();
+  for (let i = 0; i < NS0; i++) for (let k = 0; k < 2; k++) { let best = null, bj = -1e99; for (const id of pool) { if (S.charms.sockets[i].aff.includes(id)) continue; S.charms.sockets[i].aff[k] = id; X.invalidate(); const j = sc(); if (j > bj) { bj = j; best = id; } } S.charms.sockets[i].aff[k] = best; X.invalidate(); }
   const cnt = {}; S.charms.sockets.forEach(x => x.aff.forEach(id => { const n = id.replace('Talisman_Charm_', '').replace(/Virtue_|SkillRankBonus_\w+?_|LuckyHit_FlatDamage_ElementalSurge_/, ''); cnt[n] = (cnt[n] || 0) + 1; })); return cnt; };
 // extra searches: glyphs, mercenaries, set charms and unique charms
 window.LX = (() => {
@@ -50,10 +50,10 @@ window.LX = (() => {
     const uq = x.data().uniques.filter(u => u.kind === 'charm' && u.id !== TORCH && (!u.classes || !u.classes.length || u.classes.includes(S.cls)) && !worn.has(u.name) && !(window.AGENT_BAN && window.AGENT_BAN.test(u.name)));
     const hasTorch = x.data().uniques.some(u => u.id === TORCH);
     // build one Talisman: seal, swap, set plan [{set, tier, hor, torch}], uniques [ids], torch flag
-    const place = (seal, swap, plan, uniqs, torch) => { const c = S.charms; c.seal = seal; c.sealSwap = !!swap; c.horadric = {}; c.torch = ''; x.invalidate(); const R = x.sealRules(); const n = R.sockets; const sk = [];
+    const place = (seal, swap, plan, uniqs, torch) => { const c = S.charms; c.seal = seal; c.sealSwap = !!swap; c.horadric = {}; c.torch = ''; c.sockets = []; x.invalidate(); const R = x.sealRules(); const n = R.sockets; const sk = [];
       for (const pl of plan) { const need = Math.max(2, pl.tier - R.minus); const k = Math.max(1, need - pl.hor - (pl.torch ? 1 : 0)); for (let i = 0; i < k; i++) sk.push({ t: 'set', id: pl.set.st.id, piece: pl.set.pcs[i % pl.set.pcs.length].id, aff: fillerAff.slice() }); if (pl.hor) c.horadric[pl.set.st.id] = pl.hor; if (pl.torch) c.torch = pl.set.st.id; }
       if (torch) sk.push({ t: 'u', id: TORCH, aff: [] }); uniqs.forEach(id => sk.push({ t: 'u', id, aff: [] }));
-      if (sk.length > n) return false; let r = 0; while (sk.length < n) { const src = rares[r % Math.max(1, rares.length)]; sk.push(src ? JSON.parse(JSON.stringify(src)) : null); r++; }
+      const nT = n; if (sk.length > nT) return false; let r = 0; while (sk.length < nT) { const src = rares[r % Math.max(1, rares.length)]; sk.push(src ? JSON.parse(JSON.stringify(src)) : null); r++; }
       c.sockets = sk; x.invalidate(); return true; };
     const score = () => SC(obj, w);
     // rank sets by their best tier alone, and uniques alone, under the Legendary seal
@@ -73,7 +73,7 @@ window.LX = (() => {
       for (const [seal, swap] of SEALS) for (const torch of hasTorch ? [false, true] : [false]) for (const sp of splits(plan.length, o.hor)) for (const tIdx of torch && plan.length ? plan.map((_, i) => i).concat([-1]) : [-1]) {
         const pl = plan.map((p, i) => Object.assign({}, p, { hor: sp[i] || 0, torch: i === tIdx })); if (pl.some(p => p.hor && p.hor >= p.tier)) continue;
         S.charms.seal = seal; S.charms.sealSwap = !!swap; S.charms.sockets = []; x.invalidate(); const R = x.sealRules(); const uSlots = R.uniques + (torch ? 1 : 0) - (torch ? 1 : 0);
-        const used = pl.reduce((a, p) => a + Math.max(1, Math.max(2, p.tier - R.minus) - p.hor - (p.torch ? 1 : 0)), 0) + (torch ? 1 : 0); const free = R.sockets - used; if (free < 0) continue;
+        const used = pl.reduce((a, p) => a + Math.max(1, Math.max(2, p.tier - R.minus) - p.hor - (p.torch ? 1 : 0)), 0)  + (torch ? 1 : 0); const free = R.sockets - used; if (free < 0) continue;
         const k = Math.min(uSlots, free); const key = [k, free - k, torch ? 1 : 0, -sp.reduce((a, b) => a + b, 0)];
         if (!pick || key[0] > pick.key[0] || (key[0] === pick.key[0] && (key[1] > pick.key[1] || (key[1] === pick.key[1] && (key[2] > pick.key[2] || (key[2] === pick.key[2] && key[3] > pick.key[3])))))) pick = { key, seal, swap, pl, torch, k }; }
       if (!pick) continue; const ids = uRank.slice(0, pick.k).map(u => u.id); if (!place(pick.seal, pick.swap, pick.pl, ids, pick.torch)) continue; tried++;

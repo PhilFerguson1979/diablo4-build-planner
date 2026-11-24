@@ -1161,6 +1161,7 @@
     if (/MythicUnique_03/.test(sl.id)) minus = 1;
     // Season 15 interaction Blizzard chose to leave in: socket uniques under the Golden Epiphany, then swap to the Diamond Mind; the extra uniques stay active
     const swap = !!ch.sealSwap && /MythicUnique_03/.test(sl.id); if (swap) uniques = 3;
+    // the Hellfire Torch takes a charm slot and adds 1 to the set named on it; it does not use up a unique slot
     const torch = hasTorch(); if (torch) uniques += 1;
     return { sockets, uniques, minus, swap, torch };
   }
