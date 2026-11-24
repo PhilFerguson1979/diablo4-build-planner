@@ -104,6 +104,19 @@
     const ins = (D && D.uniques || []).filter(u => u.kind === 'runeword' && u.name === 'Insight');
     ins.forEach(u => { if (u.insFix) return; u.insFix = 1; u.affixes = (u.affixes || []).concat(['+<b class="num">23%</b> Critical Strike Chance', '+<b class="num">173</b> Weapon Damage', '+<b class="num">180</b> All Stats']); });
     if (ins.length && !D.uniques.some(u => u.id === 'Runeword_Insight_Mace2H')) { const src = ins[0]; D.uniques.push(Object.assign({}, src, { id: 'Runeword_Insight_Mace2H', type: 'Mace2H', classes: ['Paladin'], handAdded: 1, affixes: src.affixes.slice() })); } }
+  // Season 16 patch-note changes the PTR files miss (data/s16-patch.js)
+  const PATCH_MISS = [];
+  function applyPatch(D, ver) { const ops = ((window.D4PATCH || {})[ver]) || []; if (!D || D.s16Patched) return; D.s16Patched = 1;
+    const rep = (o, k, op) => { if (!o || typeof o[k] !== 'string' || o[k].indexOf(op.from) < 0) return false; o[k] = o[k].replace(op.from, op.to); return true; };
+    ops.forEach(op => { let ok = false;
+      if (op.t === 'u') (D.uniques || []).filter(u => u.name === op.name || u.name.indexOf(op.name) === 0).forEach(u => { ok = rep(u, 'desc', op) || ok; });
+      else if (op.t === 'a') (D.aspects || []).filter(a => a.name.indexOf(op.name) >= 0).forEach(a => { ok = rep(a, 'desc', op) || ok; });
+      else if (op.t === 's') (D.sets || []).filter(x => x.name.indexOf(op.name) >= 0).forEach(x => { ok = rep((x.tiers || [])[op.tier], 'desc', op) || ok; });
+      else if (op.t === 'n') Object.values((D.paragon || {}).nodes || {}).filter(n => n.n === op.name).forEach(n => { ok = rep(n, 'd', op) || ok; });
+      else if (op.t === 'sf') { const P = ((D.classes || {})[op.cls] || {}).powers; const pw = P && P[op.id]; if (pw && pw.sf && pw.sf[op.i] != null) { const v = String(pw.sf[op.i]); const re = new RegExp('(^|[^\\d.A-Za-z_])' + op.from.replace('.', '\\.') + '(?![\\d.])'); if (re.test(v)) { pw.sf[op.i] = v.replace(re, (m, a) => a + op.to); ok = true; } } }
+      if (!ok) PATCH_MISS.push(ver + ': ' + (op.name || op.id) + ' ' + op.from); });
+    if (ver === 'ptr' && window.D4PATCH && window.D4PATCH.build && D.meta) D.meta.build = window.D4PATCH.build + ' (PTR files ' + (D.meta.build || '') + ' with patch notes applied)'; }
+  Object.keys(ALL).forEach(k => applyPatch(ALL[k], k));
   Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); addTorch(ALL[k]); patchParaRes(ALL[k]); patchRunewords(ALL[k]); });
 
   // older saves carried a typed-in gear CDR row; the build now supplies that itself
@@ -3289,7 +3302,7 @@
     x.fillStyle = '#7d705c'; x.font = '18px Georgia, serif'; x.textAlign = 'right'; x.fillText('Made with D4 Build Planner', W - 56, H - 44); x.textAlign = 'left';
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (S.name || 'build').replace(/[^\w -]+/g, '').trim().replace(/\s+/g, '_') + '_card.png'; a.click(); toast('Build card saved as a picture'); }, 'image/png');
   }
-  window.__D4X = { killTime, riderDps, fixedDefs0, seedUnique, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
+  window.__D4X = { PATCH_MISS, killTime, riderDps, fixedDefs0, seedUnique, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
   function wireScan() {
     const pick = $('#scanPick'), file = $('#scanFile'); if (pick && file) { pick.onclick = () => file.click(); file.onchange = () => { if (file.files[0]) scanImage(file.files[0]); }; }
     const drop = $('#scanDrop'); if (drop) drop.onclick = () => { SCAN = null; renderGear(); };
@@ -3528,7 +3541,9 @@
   //   (x the non-physical scalar for elements). Difficulty steps 4.75% per tier from Pit 11 up, matching Maxroll.
   // Armor: 0.9 x A / (A + 5100); resistance: 0.9 x R / (R + 1020), both from LevelScaling at level 70.
   //   The resistance curve matches published Season 15 measurements (4,500 gives 73.4%, 11,000 gives 82.4%).
-  const WEAKEN = { normal: 20, elite: 15, boss: 10 };
+  const WEAKEN0 = { normal: 20, elite: 15, boss: 10 };
+  // Season 16: Weakened always reduces damage by 15%, whatever the monster's rarity
+  const WEAKEN = new Proxy({}, { get: (o, k) => S.ver === 'ptr' ? 15 : WEAKEN0[k] });
   const MON_LEVEL = 70;
   const RARITY_HP = { normal: 0, champion: 1, elite: 2, boss: -1 };
   function dfState() {
@@ -3852,7 +3867,7 @@
         </div>
         <div class="chips">
           ${S.cls === 'Paladin' && cdata().powers.Paladin_Defensive_Aura && skillRank('Paladin_Defensive_Aura') > 0 ? `<label class="chip${T.defi !== false ? ' on' : ''}"><input type="checkbox" data-df="defi" ${T.defi !== false ? 'checked' : ''}><span>Defiance Aura passive</span><small>+${f(R.defA * 100, 0)}% Armor and resistances</small></label>` : ''}
-          <label class="chip${T.weak ? ' on' : ''}"><input type="checkbox" data-df="weak" ${T.weak ? 'checked' : ''}><span>Enemy weakened</span><small>20, 15, 10%</small></label>
+          <label class="chip${T.weak ? ' on' : ''}"><input type="checkbox" data-df="weak" ${T.weak ? 'checked' : ''}><span>Enemy weakened</span><small>${S.ver === 'ptr' ? '15%' : '20, 15, 10%'}</small></label>
           <label class="chip${T.block ? ' on' : ''}"><input type="checkbox" data-df="block" ${T.block ? 'checked' : ''}><span>Count block</span><small>${pct(R.block)} x ${pct(R.blockR)}</small></label>
           <label class="chip${T.dodge ? ' on' : ''}"><input type="checkbox" data-df="dodge" ${T.dodge ? 'checked' : ''}><span>Count dodge</span><small>${pct(R.dodge)}</small></label>
           ${R.mercInfo.map(m => `<label class="chip merc${m.on ? ' on' : ''}" data-tt="mercsum|${m.role}"><input type="checkbox" data-dfmerc="${m.role}" ${m.on ? 'checked' : ''}><span>${m.role === 'mercMain' ? 'Hired' : 'Reinforcement'}: ${esc(m.name)}</span><small>${m.n} power${m.n === 1 ? '' : 's'}</small></label>`).join('')}
@@ -3861,7 +3876,7 @@
           ${R.pwDef.map(x => `<label class="chip merc${x.on ? ' on' : ''}"${ttAttr(ttCard(x.name, 'ITEM POWER', esc(x.kind === 'dr' ? 'Counted as ' + f(x.v, 1) + '% Damage Reduction.' : x.kind === 'resall' ? 'Counted as ' + f(x.v, 1) + '% more resistance to every element.' : /^r[a-z]+$/.test(x.kind) ? 'Counted as ' + f(x.v, 1) + '% more ' + x.kind.slice(1) + ' resistance.' : x.kind === 'block' ? 'Counted as ' + f(x.v, 1) + '% more Block Chance, when you have a shield.' : x.kind === 'blockr' ? 'Counted as ' + f(x.v, 1) + '% more Blocked Damage Reduction.' : x.kind === 'barrier' ? 'A Barrier worth ' + f(x.v, 1) + '% of Maximum Life, counted for the share of the time it is up.' : x.kind === 'dodge' ? 'Counted as ' + f(x.v, 1) + '% more Dodge Chance.' : x.kind === 'armor' ? 'Counted as ' + f(x.v, 1) + '% more Armor.' : 'Counted as ' + f(x.v, 1) + '% more Maximum Life.') + '<br>Middle of its roll' + (x.upTo ? ', and half of that because the text says "up to"' : '') + '. Untick it when its condition will not be met.'))}><input type="checkbox" data-dfm="${esc(x.id)}" ${x.on ? 'checked' : ''}><span>${esc(x.name)}</span><small>${f(x.v, 0)}% ${x.kind === 'dr' ? 'less' : x.kind === 'armor' ? 'Armor' : 'Life'}</small></label>`).join('')}
         </div>
         ${R.mercInfo.length ? '<p class="note merc-how"><b>Mercenary switches.</b> Green boxes turn your hired mercenary or reinforcement on and off. Buffs count at full strength while on.</p>' : '<p class="note merc-how"><b>Mercenary buffs.</b> Set up a mercenary on the Mercenaries page to get on and off switches here.</p>'}
-        <p class="note">Tier ${R.tierNo}: monsters deal x${f(R.tier.dmg, 2)} damage and have x${f(R.tier.hp, 2)} life. Monsters are level ${MON_LEVEL}. Weakened enemies deal 20% less if normal, 15% if elite and 10% if a boss. Block and dodge feed the Average column only.</p>
+        <p class="note">Tier ${R.tierNo}: monsters deal x${f(R.tier.dmg, 2)} damage and have x${f(R.tier.hp, 2)} life. Monsters are level ${MON_LEVEL}. Weakened enemies deal ${S.ver === 'ptr' ? '15% less, whatever their rarity (Season 16)' : '20% less if normal, 15% if elite and 10% if a boss'}. Block and dodge feed the Average column only.</p>
       </section>
       <div class="tc-grid">
         <section class="tc-box"><h3>Your defenses</h3>
