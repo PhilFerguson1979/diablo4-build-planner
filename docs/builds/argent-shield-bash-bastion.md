@@ -1,6 +1,6 @@
 # Argent Veil, Shield Bash with Bastion (Paladin)
 
-*Made by the build agent on 2026-11-23. Everything below comes from the planner's maths and has not been checked in game.*
+*Made by the build agent on 2026-11-24. Everything below comes from the planner's maths and has not been checked in game.*
 
 ## The idea
 
@@ -8,34 +8,36 @@ Argent Veil makes Arbiter's Evade cast Shield Bash every 2 meters. Every Shield 
 
 ## Numbers
 
-- **Damage against elites:** 80.25 billion a second
-- **Build score:** 80.25 billion on packs, 58.47 billion on bosses
-- **Effective Life:** 501,193 (Life 21,039, Armor 41,029, Block 30%)
-- **Pit check:** kills an elite before it dies up to Pit 100; the starting build managed below 60 by the same test. The planner's Pit model is harsher than the game, so use it to compare builds, not as a promise.
+- **Damage against elites:** 285.97 billion a second
+- **Build score:** 285.97 billion on packs, 208.34 billion on bosses
+- **Effective Life:** 1.2 million (Life 21,039, Armor 46,467, Block 30%)
+- **Pit check:** kills an elite before it dies up to Pit 110; the starting build managed below 60 by the same test. The planner's Pit model is harsher than the game, so use it to compare builds, not as a promise.
 - **Started from:** Arbiter Wing Strikes: build score 4.1 million on packs, 4.1 million on bosses, 151,356 Effective Life
 
 | Pit | Elite dies in | Elite kills you in | Biggest hit | Your Life |
 |---|---|---|---|---|
-| 60 | 0 s | 43.9 s | 3,367 | 21,039 |
-| 70 | 0 s | 12.6 s | 5,351 | 21,039 |
-| 80 | 0.1 s | 6.1 s | 8,504 | 21,039 |
-| 90 | 0.4 s | 3.4 s | 13,516 | 21,039 |
-| 100 | 1.7 s | 2 s | 21,479 | 21,039 |
-| 110 | 8.4 s | 1.2 s | 34,135 | 21,039 |
-| 120 | 134.2 s | 1 s | 43,148 | 21,039 |
-| 130 | 2155.9 s | 0.8 s | 54,540 | 21,039 |
-| 140 | 34622.7 s | 0.6 s | 68,940 | 21,039 |
-| 150 | 556032.2 s | 0.5 s | 87,142 | 21,039 |
+| 60 | 0 s | 0 s | 1,563 | 21,039 |
+| 70 | 0 s | 0 s | 2,484 | 21,039 |
+| 80 | 0 s | 78.8 s | 3,948 | 21,039 |
+| 90 | 0.1 s | 12.8 s | 6,274 | 21,039 |
+| 100 | 0.5 s | 5.7 s | 9,971 | 21,039 |
+| 110 | 2.3 s | 3.1 s | 15,847 | 21,039 |
+| 120 | 37.7 s | 2.3 s | 20,031 | 21,039 |
+| 130 | 605 s | 1.8 s | 25,319 | 21,039 |
+| 140 | 9716.2 s | 1.4 s | 32,004 | 21,039 |
+| 150 | 156039.3 s | 1.1 s | 40,454 | 21,039 |
 
 ## How it works
 
 - **Evade and Dodge:** made by Juggernaut's and Argent Veil; paid off by Juggernaut's.
 - **Crowd control:** made by Aegis, Shield Bash > Smite, Condemn and Control; paid off by Exploiter's, Vanquishing, Aspect of Chastisement and Control.
-- **Movement:** made by Exploiter's, Defiance Aura, Arbiter of Justice > Movement Speed, Condemn and Condemn > Movement Speed; paid off by Argent Veil and Condemn.
+- **Movement:** made by Exploiter's, Defiance Aura, Defiance Aura > Unstoppable, Arbiter of Justice > Movement Speed, Condemn and Condemn > Movement Speed; paid off by Argent Veil and Condemn.
 - **Block:** made by Aegis and Shield Bash > Hits Are Blocks; paid off by Bastion of Sir Matthias.
+- **Resource spending:** made by Fanaticism Aura > Resource Generation; paid off by Fanaticism Aura.
+- **Critical Strikes:** made by Fanaticism Aura and Locran's Talisman; paid off by Fanaticism Aura > Rite of Vengeance, The Grandfather and Locran's Talisman.
 - **Vulnerable:** made by Fanaticism Aura > Rite of Humility, Arbiter of Justice > Seraph's Wings and Condemn > Gather the Guilty; paid off by Fanaticism Aura > Rite of Humility.
 - **Arbiter form:** made by Arbiter of Justice > Seraph's Wings, Arbiter of Justice > Wing Strike Recast, Arbiter of Justice > Movement Speed and Arbiter; paid off by Arbiter of Justice > Seraph's Wings, Arbiter of Justice > Wing Strike Recast, Arbiter of Justice > Movement Speed and Arbiter.
-- **Critical Strikes:** made by Fanaticism Aura; paid off by The Grandfather.
+- **Fortify, Barrier, Healthy:** made by Fanaticism Aura > Rite of Redemption; paid off by Outmatch and Imbiber.
 
 ## Rotation
 
@@ -48,12 +50,12 @@ Argent Veil makes Arbiter's Evade cast Shield Bash every 2 meters. Every Shield 
 
 ## Skills
 
-- Defiance Aura r20 [Rite of Might, Maximum Life, Bonus Healing]
-- Aegis r33 [Stay Resolute, Duration, Cooldown Reduction]
-- Shield Bash r50 [Smite, Hits Are Blocks, Size Bonus]
-- Fanaticism Aura r15 [Rite of Humility, Extra Passive Stack, Potency]
-- Arbiter of Justice r5 [Seraph's Wings, Wing Strike Recast, Movement Speed]
-- Condemn r1 [Gather the Guilty, Cooldown Reduction, Movement Speed]
+- Defiance Aura r11 [Rite of Might, Rite of Prayer, Rite of Thorns, Maximum Life, Bonus Healing, Potency, Unstoppable]
+- Aegis r24 [Stay Resolute, Duration, Cooldown Reduction]
+- Shield Bash r29 [Smite, Hits Are Blocks, Size Bonus]
+- Fanaticism Aura r18 [Rite of Vengeance, Rite of Humility, Rite of Redemption, Additional Maximum Resource, Extra Passive Stack, Resource Generation, Potency]
+- Arbiter of Justice r8 [Seraph's Wings, Wing Strike Recast, Movement Speed]
+- Condemn r4 [Gather the Guilty, Cooldown Reduction, Movement Speed]
 
 ## Gear to chase
 
@@ -84,29 +86,30 @@ Affixes are in the order the agent picked them, most valuable first. Get the ite
 
 | Element | Damage reduction | Effective Life |
 |---|---|---|
-| Physical | 88.5% | 182,456 |
-| Fire | 98% | 1.0 million |
-| Lightning | 88.5% | 182,456 |
-| Cold | 88.5% | 182,456 |
-| Poison | 88.5% | 182,456 |
-| Shadow | 98% | 1.0 million |
+| Physical | 94.6% | 393,028 |
+| Fire | 99.1% | 2.4 million |
+| Lightning | 94.6% | 393,028 |
+| Cold | 94.6% | 393,028 |
+| Poison | 94.6% | 393,028 |
+| Shadow | 99.1% | 2.4 million |
 
-Best next defensive affixes: Damage Reduction (+17.6% Effective Life), Maximum Life (+15.7% Effective Life), All Resistance (+9.8% Effective Life), Armor (+-14% Effective Life).
+Best next defensive affixes: Damage Reduction (+17.6% Effective Life), Maximum Life (+15.7% Effective Life), All Resistance (+10% Effective Life), Armor (+-18.5% Effective Life).
 
 ## Paragon
 
-- **Boards:** Start, Relentless, Castle, Shield Bearer and Beacon (layout from Shield Charge, block engine (Agent search))
+- **Boards:** Start, Relentless, Castle, Shield Bearer and Beacon (layout from Argent Veil, Shield Bash with Bastion (Agent search))
 - **Glyphs:** Outmatch on Start (level 75), Arbiter on Relentless (level 75), Imbiber on Castle (level 75), Challenger on Shield Bearer (level 75), Control on Beacon (level 75)
 
 ## Charms
 
-- **Seal:** Seal of the Diamond Mind
-- Rare charm: 15%[x] Critical Strike Damage; +3 to Juggernaut Skills
-- Rare charm: +3 to Juggernaut Skills; 15%[x] Vulnerable Damage
+- **Seal:** Seal of the Diamond Mind, with the unique swap (socket the uniques under the Golden Epiphany, then swap to the Diamond Mind)
+- **Season 16 Horadric jewelry:** both rings and the amulet with +1 to Cathan's Iron Conviction, so one charm plus 3 points makes its 5-piece. The Hellfire Torch's +1 goes to Cathan's Dauntless Faith for its 2-piece.
+- Set: Cathan's Dauntless Faith (+3 to Juggernaut Skills; 15%[x] Vulnerable Damage)
+- Set: Cathan's Iron Conviction (15%[x] Critical Strike Damage; +3 to Juggernaut Skills)
+- Unique: Hellfire Torch
 - Unique: The Grandfather
-- Rare charm: +3 to Juggernaut Skills; +3 to Shield Bash
-- Rare charm: +3 to Juggernaut Skills; +3 to Shield Bash
-- Rare charm: +3 to Juggernaut Skills; +3 to Shield Bash
+- Unique: Locran's Talisman
+- Unique: The Furnace
 
 ## Mercenaries
 
@@ -120,13 +123,11 @@ Best next defensive affixes: Damage Reduction (+17.6% Effective Life), Maximum L
 - starting point holds Pit 0
 - engine: Movement, Lucky Hit, Resolve (Juggernaut), Block, Crowd control, Critical Strikes, Attack speed, Vulnerable, Arbiter form, Cooldowns, Aura cast / Aura Potency, Evade and Dodge; 12 payoffs left out for lack of a trigger
 - gear searched (2 passes)
-- paragon boards from Shield Charge, block engine (Agent search)
+- paragon boards from Argent Veil, Shield Bash with Bastion (Agent search)
 - gear searched again with the new boards
-- Paragon_Paladin_06: Imbiber -> Arbiter
-- Paragon_Paladin_01: Spirit -> Imbiber
-- Paragon_Paladin_02: Retribution -> Challenger
 - hired Raheir -> Varyana
 - reinforcement Aldkin -> Aldkin (Mercenary_CursedChild_Wither)
 - charms: The Grandfather
+- talisman: Seal of the Diamond Mind (unique swap), Cathan's Dauntless Faith 2-piece (+Torch), Cathan's Iron Conviction 5-piece (3 Horadric), Hellfire Torch, The Grandfather, Locran's Talisman, The Furnace (189 layouts tried, 3 Horadric jewelry points)
 - glyphs, mercenaries and charms searched
-- took 3 seconds
+- took 1111 seconds

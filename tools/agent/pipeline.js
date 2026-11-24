@@ -87,7 +87,7 @@ window.AGENT = (() => {
     S().paragon = bestPara; if (S().paragon) S().paragon.glyphLv = Object.assign({}, S().paragon.glyphLv || {}, keepLv); X.invalidate(); say('paragon boards from ' + paraFrom);
     mods = pickMods(); PAY = best().k; if (!spec.quick) { LAB.optimize(obj, { w, passes: 1, lock, ban }); say('gear searched again with the new boards'); }
     const els = spec.els || ['Physical', C().powers[MAIN].dmg || 'Physical'];
-    const xlog = [].concat(LX.glyphs(obj, w), LX.mercs(obj, w)); window.charmFill(obj, w, els); if (!spec.quick) xlog.push(...LX.charms(obj, w, els)); log.push(...xlog); say('glyphs, mercenaries and charms searched');
+    const xlog = [].concat(LX.glyphs(obj, w), LX.mercs(obj, w)); window.charmFill(obj, w, els); if (!spec.quick) { xlog.push(...LX.charms(obj, w, els)); xlog.push(...LX.charmCombos(obj, w, { hor: spec.horadric != null ? +spec.horadric : 0 })); } log.push(...xlog); say('glyphs, mercenaries and charms searched');
     PAY = best().k; X.invalidate();
     const E2 = E; return report(spec, { lad0, sc0, E: E2, MAIN, PAY, mods, trim, pts0, d0, e0, obj, procs, best, log, baseName, paraFrom, t0, tg });
   }

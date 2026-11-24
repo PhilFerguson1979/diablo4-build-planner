@@ -47,6 +47,7 @@ You are the build agent for Phil's Diablo 4 Build Planner (repo `diablo4-build-p
  "also": ["Skill name"],                  // other skills whose damage counts in the total
  "sum": ["PAYLOAD_KEY"],                  // other payloads of the main skill to add
  "els": ["Holy", "Physical"],             // elements for charm affixes
+ "horadric": 3,                           // Season 16 Horadric jewelry points (+1 set count each, 0 to 3) for the Talisman search
  "tg": 3,                                 // enemies in range
  "target": "boss",                        // optimise against the boss (single target, boss damage) instead of elites
  "w": 0.5,                                // weight on Effective Life against damage (0.5 balanced, 1 tanky)
@@ -71,6 +72,9 @@ node tools/agent/run.js --eval script.js          # any script in the planner pa
 - Tries every Paragon board layout from the class's library builds, then every glyph in each socket (level 75).
 - Searches both mercenaries and their nodes.
 - Searches charms: single affixes, every set at each tier, and unique charms.
+- Then searches the whole Talisman (`LX.charmCombos`): every seal (Legendary, Severed Finger, Golden Epiphany, Diamond Mind, Diamond Mind with the unique swap), with and without the Hellfire Torch (+1 unique slot, +1 to one set), every set plan (none, one set at 2, 3 or 5 pieces, or two sets such as 5 + 3, 5 + 2 or two 5-pieces), every split of the Horadric jewelry points between the two sets, and the best unique charms in the slots left. The top layouts get their affixes and uniques polished. The log and `window.LX_TALISMAN_TOP` list the leaders.
+
+Talisman rules the search uses: 6 sockets (5 with Severed Finger), 1 unique (2 Severed Finger, 3 Golden Epiphany or the Diamond Mind swap, +1 with the Torch), Diamond Mind needs one fewer piece per bonus (never fewer than 2), each Horadric ring or amulet adds 1 to one set, and a set needs at least one of its charms before Horadric points or the Torch count. When asked about Season 16, run with `"horadric": 3` and compare with 0.
 
 Two filters keep the search honest:
 - **Uniques.** Each unique drops with 2 guaranteed affixes (from `data/unique-guaranteed.js`, Blizzard's patch 3.1 list) and 2 random ones. One enchant per item can reroll any affix, a guaranteed one included, so the search tries keeping both guaranteed affixes or enchanting either away. Any unique can be Mythic: every roll at maximum and +30% to its unique power.

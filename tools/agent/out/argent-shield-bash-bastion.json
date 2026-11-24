@@ -27,51 +27,51 @@
  ],
  "dmg": {
   "start": 0,
-  "main": 80251195957,
+  "main": 285968084269,
   "procs": [],
-  "total": 80251195957,
-  "pack": 80251195957,
-  "boss": 58466162173,
+  "total": 285968084269,
+  "pack": 285968084269,
+  "boss": 208339030861,
   "bestSkill": "Shield Bash"
  },
  "def": {
   "start": 151356,
-  "ehp": 501193,
+  "ehp": 1161677,
   "life": 21039,
-  "armor": 41029,
-  "armorDR": 80,
+  "armor": 46467,
+  "armorDR": 81.1,
   "block": 30,
   "dodge": 0,
   "elems": [
    {
     "el": "Physical",
-    "dr": 88.5,
-    "ehp": 182456
+    "dr": 94.6,
+    "ehp": 393028
    },
    {
     "el": "Fire",
-    "dr": 98,
-    "ehp": 1032422
+    "dr": 99.1,
+    "ehp": 2442759
    },
    {
     "el": "Lightning",
-    "dr": 88.5,
-    "ehp": 182456
+    "dr": 94.6,
+    "ehp": 393028
    },
    {
     "el": "Cold",
-    "dr": 88.5,
-    "ehp": 182456
+    "dr": 94.6,
+    "ehp": 393028
    },
    {
     "el": "Poison",
-    "dr": 88.5,
-    "ehp": 182456
+    "dr": 94.6,
+    "ehp": 393028
    },
    {
     "el": "Shadow",
-    "dr": 98,
-    "ehp": 1032422
+    "dr": 99.1,
+    "ehp": 2442759
    }
   ],
   "overCap": [],
@@ -86,11 +86,11 @@
    },
    {
     "affix": "All Resistance",
-    "gain": 9.8
+    "gain": 10
    },
    {
     "affix": "Armor",
-    "gain": -14
+    "gain": -18.5
    }
   ]
  },
@@ -170,85 +170,85 @@
   {
    "tier": 60,
    "eliteTTK": 0,
-   "eliteKillsYouIn": 43.9,
-   "biggestHit": 3367,
+   "eliteKillsYouIn": 0,
+   "biggestHit": 1563,
    "life": 21039,
-   "ok": true
+   "ok": false
   },
   {
    "tier": 70,
    "eliteTTK": 0,
-   "eliteKillsYouIn": 12.6,
-   "biggestHit": 5351,
+   "eliteKillsYouIn": 0,
+   "biggestHit": 2484,
    "life": 21039,
-   "ok": true
+   "ok": false
   },
   {
    "tier": 80,
-   "eliteTTK": 0.1,
-   "eliteKillsYouIn": 6.1,
-   "biggestHit": 8504,
+   "eliteTTK": 0,
+   "eliteKillsYouIn": 78.8,
+   "biggestHit": 3948,
    "life": 21039,
    "ok": true
   },
   {
    "tier": 90,
-   "eliteTTK": 0.4,
-   "eliteKillsYouIn": 3.4,
-   "biggestHit": 13516,
+   "eliteTTK": 0.1,
+   "eliteKillsYouIn": 12.8,
+   "biggestHit": 6274,
    "life": 21039,
    "ok": true
   },
   {
    "tier": 100,
-   "eliteTTK": 1.7,
-   "eliteKillsYouIn": 2,
-   "biggestHit": 21479,
+   "eliteTTK": 0.5,
+   "eliteKillsYouIn": 5.7,
+   "biggestHit": 9971,
    "life": 21039,
    "ok": true
   },
   {
    "tier": 110,
-   "eliteTTK": 8.4,
-   "eliteKillsYouIn": 1.2,
-   "biggestHit": 34135,
+   "eliteTTK": 2.3,
+   "eliteKillsYouIn": 3.1,
+   "biggestHit": 15847,
    "life": 21039,
-   "ok": false
+   "ok": true
   },
   {
    "tier": 120,
-   "eliteTTK": 134.2,
-   "eliteKillsYouIn": 1,
-   "biggestHit": 43148,
+   "eliteTTK": 37.7,
+   "eliteKillsYouIn": 2.3,
+   "biggestHit": 20031,
    "life": 21039,
    "ok": false
   },
   {
    "tier": 130,
-   "eliteTTK": 2155.9,
-   "eliteKillsYouIn": 0.8,
-   "biggestHit": 54540,
+   "eliteTTK": 605,
+   "eliteKillsYouIn": 1.8,
+   "biggestHit": 25319,
    "life": 21039,
    "ok": false
   },
   {
    "tier": 140,
-   "eliteTTK": 34622.7,
-   "eliteKillsYouIn": 0.6,
-   "biggestHit": 68940,
+   "eliteTTK": 9716.2,
+   "eliteKillsYouIn": 1.4,
+   "biggestHit": 32004,
    "life": 21039,
    "ok": false
   },
   {
    "tier": 150,
-   "eliteTTK": 556032.2,
-   "eliteKillsYouIn": 0.5,
-   "biggestHit": 87142,
+   "eliteTTK": 156039.3,
+   "eliteKillsYouIn": 1.1,
+   "biggestHit": 40454,
    "life": 21039,
    "ok": false
   }
  ],
- "pitHold": 100,
+ "pitHold": 110,
  "pitHoldStart": 0,
  "startScore": {
   "pack": 4056517,
@@ -560,46 +560,41 @@
   "Shield Bearer",
   "Beacon"
  ],
- "paraFrom": "Shield Charge, block engine (Agent search)",
+ "paraFrom": "Argent Veil, Shield Bash with Bastion (Agent search)",
  "charms": [
   {
-   "kind": "rare",
-   "aff": [
-    "15%[x] Critical Strike Damage",
-    "+3 to Juggernaut Skills"
-   ]
-  },
-  {
-   "kind": "rare",
+   "kind": "set",
+   "name": "Cathan's Dauntless Faith",
+   "piece": "Talisman_Charm_Set_Pala_02_01",
    "aff": [
     "+3 to Juggernaut Skills",
     "15%[x] Vulnerable Damage"
    ]
   },
   {
+   "kind": "set",
+   "name": "Cathan's Iron Conviction",
+   "piece": "Talisman_Charm_Set_Pala_05_01",
+   "aff": [
+    "15%[x] Critical Strike Damage",
+    "+3 to Juggernaut Skills"
+   ]
+  },
+  {
+   "kind": "unique",
+   "name": "Hellfire Torch"
+  },
+  {
    "kind": "unique",
    "name": "The Grandfather"
   },
   {
-   "kind": "rare",
-   "aff": [
-    "+3 to Juggernaut Skills",
-    "+3 to Shield Bash"
-   ]
+   "kind": "unique",
+   "name": "Locran's Talisman"
   },
   {
-   "kind": "rare",
-   "aff": [
-    "+3 to Juggernaut Skills",
-    "+3 to Shield Bash"
-   ]
-  },
-  {
-   "kind": "rare",
-   "aff": [
-    "+3 to Juggernaut Skills",
-    "+3 to Shield Bash"
-   ]
+   "kind": "unique",
+   "name": "The Furnace"
   }
  ],
  "seal": "Seal of the Diamond Mind",
@@ -626,12 +621,12 @@
   "leftOut": 12
  },
  "skills": [
-  "Defiance Aura r20 [Rite of Might, Maximum Life, Bonus Healing]",
-  "Aegis r33 [Stay Resolute, Duration, Cooldown Reduction]",
-  "Shield Bash r50 [Smite, Hits Are Blocks, Size Bonus]",
-  "Fanaticism Aura r15 [Rite of Humility, Extra Passive Stack, Potency]",
-  "Arbiter of Justice r5 [Seraph's Wings, Wing Strike Recast, Movement Speed]",
-  "Condemn r1 [Gather the Guilty, Cooldown Reduction, Movement Speed]"
+  "Defiance Aura r11 [Rite of Might, Rite of Prayer, Rite of Thorns, Maximum Life, Bonus Healing, Potency, Unstoppable]",
+  "Aegis r24 [Stay Resolute, Duration, Cooldown Reduction]",
+  "Shield Bash r29 [Smite, Hits Are Blocks, Size Bonus]",
+  "Fanaticism Aura r18 [Rite of Vengeance, Rite of Humility, Rite of Redemption, Additional Maximum Resource, Extra Passive Stack, Resource Generation, Potency]",
+  "Arbiter of Justice r8 [Seraph's Wings, Wing Strike Recast, Movement Speed]",
+  "Condemn r4 [Gather the Guilty, Cooldown Reduction, Movement Speed]"
  ],
  "bar": [
   "Condemn",
@@ -647,17 +642,15 @@
   "starting point holds Pit 0",
   "engine: Movement, Lucky Hit, Resolve (Juggernaut), Block, Crowd control, Critical Strikes, Attack speed, Vulnerable, Arbiter form, Cooldowns, Aura cast / Aura Potency, Evade and Dodge; 12 payoffs left out for lack of a trigger",
   "gear searched (2 passes)",
-  "paragon boards from Shield Charge, block engine (Agent search)",
+  "paragon boards from Argent Veil, Shield Bash with Bastion (Agent search)",
   "gear searched again with the new boards",
-  "Paragon_Paladin_06: Imbiber -> Arbiter",
-  "Paragon_Paladin_01: Spirit -> Imbiber",
-  "Paragon_Paladin_02: Retribution -> Challenger",
   "hired Raheir -> Varyana",
   "reinforcement Aldkin -> Aldkin (Mercenary_CursedChild_Wither)",
   "charms: The Grandfather",
+  "talisman: Seal of the Diamond Mind (unique swap), Cathan's Dauntless Faith 2-piece (+Torch), Cathan's Iron Conviction 5-piece (3 Horadric), Hellfire Torch, The Grandfather, Locran's Talisman, The Furnace (189 layouts tried, 3 Horadric jewelry points)",
   "glyphs, mercenaries and charms searched"
  ],
- "secs": 3,
+ "secs": 1111,
  "st": {
   "v": 1,
   "cls": "Paladin",
@@ -1029,54 +1022,52 @@
   "charms": {
    "seal": "Talisman_Seal_MythicUnique_03",
    "count": {},
-   "horadric": {},
-   "torch": "",
+   "horadric": {
+    "Talisman_Pala_05": 3
+   },
+   "torch": "Talisman_Pala_02",
    "uniques": [],
    "sockets": [
     {
-     "t": "r",
-     "aff": [
-      "Talisman_Charm_Virtue_Bravery",
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut"
-     ]
-    },
-    {
-     "t": "r",
+     "t": "set",
+     "id": "Talisman_Pala_02",
+     "piece": "Talisman_Charm_Set_Pala_02_01",
      "aff": [
       "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
       "Talisman_Charm_Virtue_Wrath"
      ]
     },
     {
+     "t": "set",
+     "id": "Talisman_Pala_05",
+     "piece": "Talisman_Charm_Set_Pala_05_01",
+     "aff": [
+      "Talisman_Charm_Virtue_Bravery",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut"
+     ]
+    },
+    {
+     "t": "u",
+     "id": "S15_HELLFIRE_TORCH",
+     "aff": []
+    },
+    {
      "t": "u",
      "id": "Talisman_Charm_Unique_2HSword_Unique_Generic_001",
-     "aff": [
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_ShieldBash"
-     ]
+     "aff": []
     },
     {
-     "t": "r",
-     "aff": [
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_ShieldBash"
-     ]
+     "t": "u",
+     "id": "Talisman_Charm_Unique_S05_BSK_Amulet_Unique_Generic_001",
+     "aff": []
     },
     {
-     "t": "r",
-     "aff": [
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_ShieldBash"
-     ]
-    },
-    {
-     "t": "r",
-     "aff": [
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Juggernaut",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_ShieldBash"
-     ]
+     "t": "u",
+     "id": "Talisman_Charm_Unique_2HMace_Unique_Generic_001",
+     "aff": []
     }
-   ]
+   ],
+   "sealSwap": true
   },
   "calc": {
    "cd": {
