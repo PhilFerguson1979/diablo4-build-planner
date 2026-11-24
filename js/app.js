@@ -95,7 +95,11 @@
   // the Barbarian glyph-board copy and the Warlock nodes carry the real 1, 2 and 4
   function patchParaRes(D) { const P = D && D.paragon; if (!P || !P.nodes || !P.texts || P._res) return; P._res = 1;
     Object.values(P.nodes).forEach(n => (n.s || []).forEach(x => { if (/Maximum (?:Faith|Fury|Spirit|Essence|Resource|Primary Resource)$/.test(P.texts[x[0]] || '') && x[1] >= 100) x[1] = x[1] / 100; })); }
-  Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); addTorch(ALL[k]); patchParaRes(ALL[k]); });
+  // Season 15 runeword lines the game files the planner reads leave out (in-game tooltips and guides): Infinity's Lucky Hit Crushing Blow
+  // and Maximum Life, Strength's Crushing Blow. Crushing Blow takes a share of the enemy's current Life, down to 40% of its Life.
+  function patchRunewords(D) { (D && D.uniques || []).forEach(u => { if (u.kind !== 'runeword' || u.cbAdded) return; const add = (pct, life) => { u.desc = (u.desc || '') + ' Lucky Hit: Up to a <span class="c-number"><b class="num">' + pct + '%</b></span> chance to deliver a Crushing Blow.'; if (life) u.affixes = (u.affixes || []).concat(['+<b class="num">' + life + '</b> Maximum Life']); u.cbAdded = 1; };
+    if (u.name === 'Infinity') add(40, '2,200'); else if (u.name === 'Strength') add(25); }); }
+  Object.keys(ALL).forEach(k => { patchFlat(ALL[k]); patchZeros(ALL[k]); patchCharms(ALL[k]); addTorch(ALL[k]); patchParaRes(ALL[k]); patchRunewords(ALL[k]); });
 
   // older saves carried a typed-in gear CDR row; the build now supplies that itself
   function migrate(st) { try { st.calc.cd.cdr = (st.calc.cd.cdr || []).filter(r => r.n !== 'Gear and paragon CDR'); } catch (e) { /* ignore */ } return st; }
@@ -1765,6 +1769,7 @@
     { sec: 'Armor & Resistances', id: 'rphys', l: 'Physical Resistance', re: [/^§ Physical Resistance$/] },
     ...['Fire', 'Lightning', 'Cold', 'Poison', 'Shadow'].map(e => ({ sec: 'Armor & Resistances', id: 'r' + e.toLowerCase(), l: e + ' Resistance', re: [new RegExp('^§ ' + e + ' Resistance$'), /^§ Resistance to All Elements$/] })),
     { sec: 'Armor & Resistances', id: 'rallp', l: 'Resistance to All Elements', u: PCT, re: [/^§% Resistance to All Elements$/] },
+    { sec: 'Offensive', id: 'wdf', l: 'Weapon Damage (added to the weapon)', re: [/^§ Weapon Damage$/] },
     { sec: 'Offensive', id: 'as', l: 'Attack Speed Bonus', u: PCT, cap: 100, capSrc: 'game cap on gear and passive attack speed', re: [/^§% Attack Speed$/] },
     { sec: 'Offensive', id: 'cs', l: 'Cast Speed Bonus (second attack speed cap)', u: PCT, cap: 100, capSrc: 'game cap on Cast Speed bonuses, separate from the Attack Speed cap', re: [/^§% Cast Speed$/] },
     { sec: 'Offensive', id: 'csc', l: 'Critical Strike Chance', u: PCT, cap: 100, re: [/^§% Critical Strike Chance$/] },
@@ -2339,7 +2344,9 @@
     const vulnAdd = M.vuln ? M.vuln.v : 0; const vulnX = M.vuln ? M.vuln.x : 0; const vulnMult = 1.2 * (1 + vulnX / 100) * xOnly('vuln');
     const monDR = 1 - ((data().scaling && (data().scaling.levels.find(l => l.l === MON_LEVEL) || {}).dr) || 0);
     const vu = spFx.vulnAlways ? 1 : Math.max(0, Math.min(100, +T.vuln || 0)) / 100;
-    const wd = +T.wd || 0;
+    // flat Weapon Damage lines (Grief's +750, unique Weapon Damage affixes) add to the 2,000 damage weapon the score and the agent assume;
+    // a weapon damage typed in by hand is the tooltip number and already holds them
+    const wd = (+T.wd || 0) + (T.wdAuto && M.wdf ? +M.wdf.v || 0 : 0);
     // attack speed: two separate caps of 100%. "Attack Speed" sources fill the first, "Cast Speed" sources fill the second.
     const spd = speedSources(sk).map(x => Object.assign(x, { on: !T.off[x.id] && mercOn(x.role) })); const spdSum = k => spd.filter(x => x.kind === k && x.on).reduce((a, x) => a + (x.lo + x.hi) / 2, 0);
     const as1 = Math.max(0, Math.min(100, (SBj.as || 0) + spdSum('as') + (spOn ? spFx.as : 0))); const as2 = Math.max(0, Math.min(100, (SBj.cs || 0) + spdSum('cs'))); const asTotal = as1 + as2;
@@ -2457,8 +2464,11 @@
     const plainHit = eliteOn => base * (1 + (addAlways + (dot ? dotAdd : 0) + (eliteOn ? addElite : 0)) / 100) * xMid;
     const segs = [['Normal and magic monsters', seg(false), stateHit(false), plainHit(false)], ['Rare, champion and elite monsters', seg(true), stateHit(true), plainHit(true)], ['Bosses', seg(true), stateHit(true), plainHit(true)]];
     const luck = gearLuckyEffects().map(f => { const p = Math.min(1, sk.lhEff() / 100 * f.v / 100); return { n: f.n.replace(' (from your gear)', ''), v: f.v, p, perSec: p * hps }; });
+    // Crushing Blow (Season 15): Lucky Hit chance from gear; each one takes a share of the enemy's current Life until it is at 40%
+    const crush = (() => { let ch = 0; const src = []; worn.forEach(it => { const m = strip(it.desc || '').match(/Lucky Hit:[^.]*?up to an? \[?([\d.]+)(?:\s*[–-]\s*([\d.]+))?\]?% chance to deliver a Crushing Blow/i); if (m) { const v = +(m[2] || m[1]); ch += v; src.push(it.name + ' ' + v + '%'); } });
+      if (!ch || isThorns || isProc || isJudge) return null; let lh = 0; try { lh = Math.min(100, +sk.lhEff() || 0); } catch (e) { lh = 0; } const p = Math.min(1, lh / 100 * Math.min(100, ch) / 100); return { ch, src, p, perSec: p * hps, share: CRUSH.share, floor: CRUSH.floor }; })();
     const potI = S.cls === 'Paladin' && /_Aura$/.test(P.id || '') ? auraPotency(P.id) : null; const wornSN = worn.some(it => /Aura Potency while standing in Consecration/.test(strip(it.desc || '')));
-    return { noShield, dsCh, dsX, dsHit, dsF, dsSrc, lhMult, echoN, projN, pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
+    return { crush, noShield, dsCh, dsX, dsHit, dsF, dsSrc, lhMult, echoN, projN, pph, blkCasts, blkSrc, resI, potI, wornSN, fanCc, judSpear, cuts, blk, isGrief, isProc, procRate, lhFrac, cdBase, cdCut, castEvery, cutter, tg, xLeft, thParts, judge, isJudge, judRate, lineName: isJudge ? 'Judgement' : isProc ? payD.n : isGrief ? payD.n + ' from ' + P.name : P.name, thornsAuto, thSrc, isThorns, thornsStat, spFx, spOn, mercInfo, spd, dawn, isDawn, dawnX, dot, dotAdd, dotX, payD, as1, as2, asTotal, aps, frames, nextAps, pulse, pulseEvery, asDmg, monDR, st, opAdd, opStacks, opPer, condSt, xS, T, sk, P, SB, pays, pay, skillPct, msName, msTotal, msMult, always, cond, condOn, elite, addAlways, addElite, xStat, xGear, xLo, xMid, xHi, cc, csdAdd, csdX, critMult, vulnAdd, vulnX, vulnMult, wd, hps, base, segs, luck, skills };
   }
   // ===== Build score: the build's best damage line with a fixed 2,000 damage weapon, on packs and on a boss, so any two builds compare =====
   const RANK_KEY = 'sanctuary-ledger-ranked';
@@ -2473,7 +2483,7 @@
     const k = JSON.stringify(Object.assign({}, S, { tc: null, df: null })); if (SCORE_CACHE.k === k) return SCORE_CACHE.v;
     const T = tcState(); const keep = JSON.stringify(T); let best = null;
     try {
-      T.wd = 2000; T.ws = 1;
+      T.wd = 2000; T.ws = 1; T.wdAuto = 1;
       for (const id of unlockedSkills()) { const P = cdata().powers[id]; if (!P || P.passive) continue;
         T.skill = id; T.pay = ''; T.tg = 3; T.st = Object.assign({}, T.st || {}, { boss: false }); let pays = []; try { invalidate(); const R0 = theory(); pays = R0 ? R0.pays || [] : []; } catch (e) { pays = []; }
         for (const p of pays) { T.pay = p.k; let R; try { R = theory(); } catch (e) { continue; } if (!R || !(R.base > 0) || !R.payD || R.payD.k !== p.k || !R.segs) continue;
@@ -2578,6 +2588,7 @@
             <p class="note">Attack Speed counts up to 100% and Cast Speed up to another 100%. Untick a buff you will not have up.</p></details>
           ${R.dot ? `<div class="bucket"><b>Damage over time</b><span>+${f(R.dotAdd, 1)}% in the pool, x${R.dotX.toFixed(2)}</span></div>` : ''}
           <div class="bucket"><b>Critical strike</b><span>${f(R.cc, 1)}% chance, x${f(R.critMult, 2)} on crit${R.csdAdd ? `, plus +${f(R.csdAdd, 1)}% in the additive pool` : ''}</span></div>
+          ${R.crush ? `<div class="bucket"><b>Crushing Blow</b><span>${f(R.crush.ch, 1)}% on Lucky Hit (${esc(R.crush.src.join(', '))}): ${f(R.crush.p * 100, 2)}% of hits, ${f(R.crush.perSec, 2)} a second. Each takes about ${f(R.crush.share * 100)}% of the enemy's current Life until it is at ${f(R.crush.floor * 100)}%, so it shortens kills rather than adding damage a second. The 5% is testers' figure, and its effect on bosses is not known, so boss numbers leave it out.</span></div>` : ''}
           ${R.dsCh ? `<div class="bucket"><b>Deadly Strike</b><span>${f(R.dsCh, 1)}% chance on hits that do not crit (damage over time included), x${f(R.dsHit, 2)} when it lands. Worth x${f(R.dsF, 3)} on those hits. <small>${esc(R.dsSrc.join(', '))}</small></span></div>` : ''}
           <div class="bucket"><b>Vulnerable</b><span>x${f(R.vulnMult, 2)} while vulnerable${R.vulnAdd ? `, plus +${f(R.vulnAdd, 1)}% in the additive pool` : ''}</span></div>
           ${R.pulse ? `<div class="bucket"><b>Attack speed on pulse damage</b><span>x${R.asDmg.toFixed(2)}</span></div>` : ''}
@@ -3268,7 +3279,7 @@
     x.fillStyle = '#7d705c'; x.font = '18px Georgia, serif'; x.textAlign = 'right'; x.fillText('Made with D4 Build Planner', W - 56, H - 44); x.textAlign = 'left';
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (S.name || 'build').replace(/[^\w -]+/g, '').trim().replace(/\s+/g, '_') + '_card.png'; a.click(); toast('Build card saved as a picture'); }, 'image/png');
   }
-  window.__D4X = { riderDps, fixedDefs0, seedUnique, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
+  window.__D4X = { killTime, riderDps, fixedDefs0, seedUnique, fixedLines, mythicDesc, blocksIn, offBlocks, buildScore, sealRules, classSets, charmAff, sockets, mercState, gearMultipliers, buildCard, bagScan, sheetCheck, judgeDrop, bestAspects, dropPlan, evalBuild, state: () => S, theory: () => { invalidate(); return theory(); }, defense: () => { invalidate(); return defense(); }, tcState, dfState, statModel: () => { invalidate(); return statModel(); }, skillCtx, invalidate, GD, data, cdata, SLOTS, findItem, unlockedSkills, mechLines, payloadList, aspectFits, setState: st => { S = st; invalidate(); }, commit, withGear, upgradeAdvice, affixDef, N_AFF, slotItems, twoHanded, offhandBlock, sheetData: () => { invalidate(); return sheetData(); } };
   function wireScan() {
     const pick = $('#scanPick'), file = $('#scanFile'); if (pick && file) { pick.onclick = () => file.click(); file.onchange = () => { if (file.files[0]) scanImage(file.files[0]); }; }
     const drop = $('#scanDrop'); if (drop) drop.onclick = () => { SCAN = null; renderGear(); };
@@ -3668,6 +3679,10 @@
         parts.push({ n: P.name + ': ' + md.name, v, how: `${D4T.fmtNum(Math.round(casts * 100) / 100)} casts a second${once ? ', one block each' : ', ' + tg + ' enem' + (tg === 1 ? 'y' : 'ies') + ' hit'}` }); });
     } catch (e) { /* none */ } finally { offBlocks._busy = 0; }
     const v = { r, parts }; OFFBLK = { key, v }; return v; }
+  // Crushing Blow: about 5% of the enemy's current Life a proc (testers' figure, not published by Blizzard), never below 40% of its Life
+  const CRUSH = { share: 0.05, floor: 0.4 };
+  // time to kill a target with this Life: Crushing Blows shave it to 40%, damage does the rest
+  function killTime(life, dps, cr) { if (!(life > 0)) return 0; const D = Math.max(1, dps); if (!cr || !(cr.perSec > 0)) return life / D; const k = cr.perSec * cr.share, f = cr.floor; const t1 = Math.log((life + D / k) / (f * life + D / k)) / k; return Math.min(life / D, t1 + f * life / D); }
   const POTION = { base: 4, heal: 35, every: 30 };
   function utilityTexts() {
     const C = cdata(); const out = []; const mid = t => decode(strip(t || '')).replace(/\s+/g, ' ').replace(/\[([\d.,]+)\s*[–-]\s*([\d.,]+)\]/g, (m, a, b) => String(Math.round((parseFloat(a.replace(/,/g, '')) + parseFloat(b.replace(/,/g, ''))) / 2 * 100) / 100));

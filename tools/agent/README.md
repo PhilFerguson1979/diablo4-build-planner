@@ -23,3 +23,7 @@ A full search takes several minutes on two cores, because it tries every item in
 - Bastion of Sir Matthias: a retaliated Shield Bash is itself a Block when Shield Bash counts as Blocks, so the chain is counted, and Argent Veil's free casts block too.
 - `LAB.line` now adds the damage that rides on the main line (Grief's poison, echoes and novas, gear procs) through `__D4X.riderDps(seg)`; pass `{ riders: false }` to leave them out. The build score does the same.
 - Unique audit: The Furnace counts on elites, Windforce's triple damage, Protection of the Prime's Damage Reduction, Emblem of Staalbreak's Berserking, Nesekem's marked crits and Leoric's Crown gems are counted. Descriptions with no space after a full stop are now split into sentences.
+
+## Changes, 24 Nov 2026
+- Flat Weapon Damage lines (Grief's +750, unique Weapon Damage affixes) add to the assumed 2,000 damage weapon when `T.wdAuto` is set (the build score, `LAB.load` and the pipeline set it). A weapon damage typed by hand is the tooltip number and is left alone.
+- Crushing Blow: Infinity (40%) and Strength (25%) Lucky Hit lines are added to the runeword data. `theory().crush` gives the proc rate; each proc takes about 5% of current Life (testers' figure) down to 40%. The Pit ladder's elite kill time uses `__D4X.killTime(life, dps, crush)`. Bosses leave it out (unknown effect).

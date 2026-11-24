@@ -3,7 +3,7 @@ window.LAB = (() => {
   const X = window.__D4X; const clone = o => JSON.parse(JSON.stringify(o));
   const S = () => X.state(); const C = () => X.cdata();
   const st = s => String(s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ');
-  function load(name, variant, cls) { const b = window.D4LIB.builds.find(x => (!cls || x.cls === cls) && (x.name === name || x.name.includes(name))); const r = window.__D4LIB.libResolve(b, variant || 0); X.setState(clone(r.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; return b.name; }
+  function load(name, variant, cls) { const b = window.D4LIB.builds.find(x => (!cls || x.cls === cls) && (x.name === name || x.name.includes(name))); const r = window.__D4LIB.libResolve(b, variant || 0); X.setState(clone(r.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; T.wdAuto = 1; return b.name; }
   // one damage line: expected hit against elites times hits a second
   function line(skill, payKey, extra) { const T = X.tcState(); T.skill = skill; T.pay = payKey || ''; const ex = Object.assign({}, extra || {}); delete ex.seg; delete ex.riders; Object.assign(T, ex); { const sg0 = (extra && extra.seg != null) ? extra.seg : window.LAB_SEG; if (sg0 === 2) T.st = Object.assign({}, T.st || {}, { boss: true }); } let R; try { R = X.theory(); } catch (e) { return { dps: 0, err: e.message }; }
     if (!R || !(R.base > 0)) return { dps: 0, R }; if (payKey && (!R.payD || R.payD.k !== payKey)) return { dps: 0, miss: 1, R };

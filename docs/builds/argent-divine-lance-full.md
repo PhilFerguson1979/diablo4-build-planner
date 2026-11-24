@@ -1,6 +1,6 @@
 # Argent Veil, Divine Lance (Paladin)
 
-*Made by the build agent on 2026-11-23. Everything below comes from the planner's maths and has not been checked in game.*
+*Made by the build agent on 2026-11-24. Everything below comes from the planner's maths and has not been checked in game.*
 
 ## The idea
 
@@ -8,31 +8,31 @@ Argent Veil makes Arbiter's Evade cast a random equipped Core Skill every 2 mete
 
 ## Numbers
 
-- **Damage against elites:** 396.96 billion a second
-- **Build score:** 396.96 billion on packs, 284.43 billion on bosses
-- **Effective Life:** 456,360 (Life 22,457, Armor 35,910, Block 28%)
-- **Pit check:** kills an elite before it dies up to Pit 100; the starting build managed 70 by the same test. The planner's Pit model is harsher than the game, so use it to compare builds, not as a promise.
+- **Damage against elites:** 1.23 trillion a second
+- **Build score:** 1.23 trillion on packs, 880.92 billion on bosses
+- **Effective Life:** 429,037 (Life 19,847, Armor 37,328, Block 28%)
+- **Pit check:** kills an elite before it dies up to Pit 110; the starting build managed 70 by the same test. The planner's Pit model is harsher than the game, so use it to compare builds, not as a promise.
 - **Started from:** Arbiter Wing Strikes: build score 192.2 million on packs, 192.2 million on bosses, 151,356 Effective Life
 
 | Pit | Elite dies in | Elite kills you in | Biggest hit | Your Life |
 |---|---|---|---|---|
-| 60 | 0 s | 10 s | 3,961 | 22,457 |
-| 70 | 0 s | 6.3 s | 6,294 | 22,457 |
-| 80 | 0 s | 4 s | 10,003 | 22,457 |
-| 90 | 0.1 s | 2.5 s | 15,897 | 22,457 |
-| 100 | 0.4 s | 1.6 s | 25,264 | 22,457 |
-| 110 | 1.7 s | 1 s | 40,150 | 22,457 |
-| 120 | 27.1 s | 0.8 s | 50,751 | 22,457 |
-| 130 | 435.8 s | 0.7 s | 64,150 | 22,457 |
-| 140 | 6999.5 s | 0.5 s | 81,088 | 22,457 |
-| 150 | 112409.6 s | 0.4 s | 102,497 | 22,457 |
+| 60 | 0 s | 9.1 s | 3,891 | 19,847 |
+| 70 | 0 s | 5.7 s | 6,183 | 19,847 |
+| 80 | 0 s | 3.6 s | 9,827 | 19,847 |
+| 90 | 0 s | 2.3 s | 15,617 | 19,847 |
+| 100 | 0.1 s | 1.5 s | 24,818 | 19,847 |
+| 110 | 0.5 s | 0.9 s | 39,441 | 19,847 |
+| 120 | 8.8 s | 0.8 s | 49,855 | 19,847 |
+| 130 | 140.7 s | 0.6 s | 63,018 | 19,847 |
+| 140 | 2260 s | 0.5 s | 79,657 | 19,847 |
+| 150 | 36295.9 s | 0.3 s | 100,689 | 19,847 |
 
 ## How it works
 
 - **Crowd control:** made by Aegis, Condemn and Control; paid off by Vanquishing, Exploiter's and Control.
 - **Evade and Dodge:** made by Juggernaut's and Argent Veil; paid off by Juggernaut's.
 - **Movement:** made by Exploiter's, Defiance Aura, Arbiter of Justice > Movement Speed, Condemn and Condemn > Movement Speed; paid off by Aspect of Inner Calm, Argent Veil and Condemn.
-- **Critical Strikes:** made by Fanaticism Aura; paid off by The Grandfather and Spirit.
+- **Critical Strikes:** made by Fanaticism Aura and Locran's Talisman; paid off by The Grandfather, Locran's Talisman and Spirit.
 - **Vulnerable:** made by Fanaticism Aura > Rite of Humility, Arbiter of Justice > Seraph's Wings and Condemn > Gather the Guilty; paid off by Fanaticism Aura > Rite of Humility and Apostle .
 - **Arbiter form:** made by Arbiter of Justice > Seraph's Wings, Arbiter of Justice > Wing Strike Recast and Arbiter of Justice > Movement Speed; paid off by Arbiter of Justice > Seraph's Wings, Arbiter of Justice > Wing Strike Recast and Arbiter of Justice > Movement Speed.
 
@@ -47,12 +47,12 @@ Argent Veil makes Arbiter's Evade cast a random equipped Core Skill every 2 mete
 
 ## Skills
 
-- Defiance Aura r2 [Rite of Might, Maximum Life, Bonus Healing]
-- Aegis r15 [Stay Resolute, Duration, Cooldown Reduction]
-- Divine Lance r47 [Divine Javelin, Cast Speed, Stacking Damage]
-- Fanaticism Aura r15 [Rite of Humility, Extra Passive Stack, Potency]
-- Arbiter of Justice r23 [Seraph's Wings, Wing Strike Recast, Movement Speed]
-- Condemn r19 [Gather the Guilty, Cooldown Reduction, Movement Speed]
+- Defiance Aura r5 [Rite of Might, Maximum Life, Bonus Healing]
+- Aegis r18 [Stay Resolute, Duration, Cooldown Reduction]
+- Divine Lance r30 [Divine Javelin, Cast Speed, Stacking Damage]
+- Fanaticism Aura r18 [Rite of Humility, Extra Passive Stack, Potency]
+- Arbiter of Justice r17 [Seraph's Wings, Wing Strike Recast, Movement Speed]
+- Condemn r13 [Gather the Guilty, Cooldown Reduction, Movement Speed]
 
 ## Gear to chase
 
@@ -66,8 +66,8 @@ Affixes are in the order the agent picked them, most valuable first. Get the ite
 | Pants | Juggernaut's | +2,500 Armor; +1,450 Maximum Life; +121 Strength; +2,800 Fire Resistance | +1,500 Maximum Life |
 | Boots | Exploiter's | +1,450 Maximum Life; +121 Strength; +2,800 Fire Resistance; +100 All Stats | +10% Fanaticism Aura Potency |
 | Amulet | Blood-Mad Idol | +180 Strength (guaranteed); x50% Critical Strike Damage Multiplier; +8.5% Critical Strike Chance; x24% Holy Damage Multiplier (enchant away the guaranteed +10% Attack Speed) | +50% Critical Strike Damage |
-| Ring | Aspect of Inner Calm | +5% Critical Strike Chance; x25% Critical Strike Damage Multiplier; x10% All Damage Multiplier; +1,450 Maximum Life | +50% Critical Strike Damage |
-| Ring | Argent Veil | +2 to Core Skills (guaranteed); +5% Critical Strike Chance; x25% Critical Strike Damage Multiplier; x14% Vulnerable Damage Multiplier (enchant away the guaranteed +121 Strength) | +50% Critical Strike Damage |
+| Ring | Aspect of Inner Calm | +5% Critical Strike Chance; x25% Critical Strike Damage Multiplier; x10% All Damage Multiplier; x14% Vulnerable Damage Multiplier | +50% Critical Strike Damage |
+| Ring | Argent Veil | +121 Strength (guaranteed); +5% Critical Strike Chance; x25% Critical Strike Damage Multiplier; x14% Vulnerable Damage Multiplier (enchant away the guaranteed +2 to Core Skills) | +50% Critical Strike Damage |
 | Weapon | The Grandfather | +8.5% Critical Strike Chance (guaranteed); +2,200 Maximum Life; x25% Critical Strike Damage Multiplier; +180 Strength (enchant away the guaranteed +157 Weapon Damage) | +5% Critical Strike Chance |
 
 ## Caps
@@ -82,14 +82,14 @@ Affixes are in the order the agent picked them, most valuable first. Get the ite
 
 | Element | Damage reduction | Effective Life |
 |---|---|---|
-| Physical | 86.4% | 165,577 |
-| Fire | 97.6% | 941,000 |
-| Lightning | 86.4% | 165,577 |
-| Cold | 86.4% | 165,577 |
-| Poison | 86.4% | 165,577 |
-| Shadow | 97.6% | 941,000 |
+| Physical | 86.7% | 148,962 |
+| Fire | 97.8% | 895,830 |
+| Lightning | 86.7% | 148,962 |
+| Cold | 86.7% | 148,962 |
+| Poison | 86.7% | 148,962 |
+| Shadow | 97.8% | 895,830 |
 
-Best next defensive affixes: Damage Reduction (+17.6% Effective Life), Maximum Life (+17.6% Effective Life), All Resistance (+11.3% Effective Life), Armor (+-7.9% Effective Life).
+Best next defensive affixes: Maximum Life (+20% Effective Life), Damage Reduction (+17.6% Effective Life), All Resistance (+11.8% Effective Life), Armor (+-9.5% Effective Life).
 
 ## Paragon
 
@@ -98,13 +98,13 @@ Best next defensive affixes: Damage Reduction (+17.6% Effective Life), Maximum L
 
 ## Charms
 
-- **Seal:** Seal of the Diamond Mind
-- Rare charm: 15%[x] Critical Strike Damage; +3 to Disciple Skills
+- **Seal:** Seal of the Diamond Mind, with the unique swap (socket the uniques under the Golden Epiphany, then swap to the Diamond Mind). The Hellfire Torch's +1 goes to Light's Epiphany, so 3 Light's Epiphany charms plus the Torch make the 5-piece.
+- Set: Light's Epiphany (+3 to Disciple Skills; 15%[x] Vulnerable Damage)
 - Set: Light's Epiphany (+3 to Disciple Skills; +3 to Divine Lance)
-- Set: Light's Epiphany (+3 to Disciple Skills; +3 to Divine Lance)
-- Set: Light's Epiphany (15%[x] Vulnerable Damage; +3 to Disciple Skills)
-- Set: Light's Epiphany (+3 to Disciple Skills; +3 to Divine Lance)
-- Set: Light's Epiphany (+3 to Disciple Skills; +3 to Divine Lance)
+- Set: Light's Epiphany (15%[x] Critical Strike Damage; +3 to Disciple Skills)
+- Unique: Hellfire Torch
+- Unique: Locran's Talisman
+- Unique: The Furnace
 
 ## Mercenaries
 
@@ -126,4 +126,4 @@ Best next defensive affixes: Damage Reduction (+17.6% Effective Life), Maximum L
 - reinforcement Aldkin -> Aldkin (Mercenary_CursedChild_Wither)
 - charms: Light's Epiphany 5-piece
 - glyphs, mercenaries and charms searched
-- took 1148 seconds
+- took 5 seconds

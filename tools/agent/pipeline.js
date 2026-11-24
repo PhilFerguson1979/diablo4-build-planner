@@ -30,16 +30,16 @@ window.AGENT = (() => {
 
   // Pit ladder: at each tier, does the build kill an elite before the elite kills it (the planner's time-to-die with healing),
   // and how long does the boss take. Compare against the starting build measured the same way: the planner's Pit model is harsher than the game.
-  function ladder(dps, bossDps) { const rows = []; let hold = 0; const T2 = X.dfState(); const keep = T2.pit;
+  function ladder(dps, bossDps, cr) { const rows = []; let hold = 0; const T2 = X.dfState(); const keep = T2.pit;
     for (let t = 60; t <= 150; t += 10) { T2.pit = t; let Dp; try { Dp = X.defense(); } catch (e) { break; } const el = Dp.cards.find(c => c.cat === 'elite'); const sv = (Dp.surv || []).find(q => q.cat === 'elite') || {};
-      const row = { tier: t, eliteTTK: el ? +(el.life / Math.max(dps, 1)).toFixed(1) : null, eliteKillsYouIn: sv.ttd != null ? +sv.ttd.toFixed(1) : null, biggestHit: Math.round(Math.max(...Dp.cards.map(c => Math.max(...c.attacks.map(a => a.hit))))), life: Math.round(Dp.life) };
+      const row = { tier: t, eliteTTK: el ? +X.killTime(el.life, dps, cr).toFixed(1) : null, crushing: !!(cr && cr.perSec > 0), eliteKillsYouIn: sv.ttd != null ? +sv.ttd.toFixed(1) : null, biggestHit: Math.round(Math.max(...Dp.cards.map(c => Math.max(...c.attacks.map(a => a.hit))))), life: Math.round(Dp.life) };
       row.ok = row.eliteTTK != null && row.eliteKillsYouIn != null && row.eliteTTK < row.eliteKillsYouIn; rows.push(row); if (row.ok) hold = t; }
     T2.pit = keep; X.invalidate(); return { rows, hold }; }
 
   function start(spec) {
     const lib = libOf(spec.cls); let b = spec.base ? lib.find(q => q.name === spec.base) || lib.find(q => q.name.includes(spec.base)) : null;
     if (!b) b = lib.find(q => !q.lab && (q.variants || []).length) || lib[0]; if (!b) throw new Error('no library build for ' + spec.cls);
-    const r = resolve(b, spec.variant || 0); X.setState(clone(r.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; T.tg = spec.tg || 3; return b.name;
+    const r = resolve(b, spec.variant || 0); X.setState(clone(r.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; T.wdAuto = 1; T.tg = spec.tg || 3; return b.name;
   }
 
   function build(spec) {
@@ -72,7 +72,7 @@ window.AGENT = (() => {
     let over = LAB.points() - pts0; const trim = []; if (over > 0) { const A = S().alloc; const unl = C().nodes.filter(n => n.kind === 'unlock' && n.power !== MAIN && A[n.i] > 1).sort((a, b) => A[b.i] - A[a.i]); for (const n of unl) { while (over > 0 && A[n.i] > 1) { A[n.i]--; over--; trim.push(C().powers[n.power].name); } } X.invalidate(); }
     const obj = () => { const r = LAB.line(MAIN, PAY, { tg }); const pr = procs(); return { tot: (r.dps || 0) + pr.t, parts: [] }; };
     const SC = () => { const d = obj().tot, e = LAB.ehp(); return Math.log(Math.max(d, 1)) + w * Math.log(Math.max(e, 1)); };
-    const d0 = obj().tot, e0 = LAB.ehp(); let sc0 = {}; try { sc0 = X.buildScore() || {}; } catch (e) { sc0 = {}; } const lad0 = ladder(d0, sc0.boss || d0); say('starting point holds Pit ' + lad0.hold);
+    const d0 = obj().tot, e0 = LAB.ehp(); let sc0 = {}; try { sc0 = X.buildScore() || {}; } catch (e) { sc0 = {}; } const crOf = () => { const T3 = X.tcState(); T3.skill = MAIN; T3.pay = PAY; try { const R = X.theory(); return R && R.crush; } catch (e) { return null; } }; const lad0 = ladder(d0, sc0.boss || d0, crOf()); say('starting point holds Pit ' + lad0.hold);
     // locked items stay put
     const lock = {}; for (const [slot, nm] of (spec.lock || [])) { const u = X.data().uniques.find(u => u.name === nm && u.kind !== 'charm') || X.data().uniques.find(u => u.name === nm) || null; const a = u ? null : X.data().aspects.find(a => a.name === nm); const it = u ? { t: 'u', id: u.id } : a ? { t: 'aspect', id: a.id } : null; if (!it) { log.push('lock not found: ' + nm); continue; } lock[slot] = it; S().gear[slot] = S().gear[slot] || { item: null, affixes: [], tempers: [], gems: [] }; S().gear[slot].item = clone(it); }
     for (const slot of (spec.mythic || [])) if (S().gear[slot]) S().gear[slot].mythic = true;
@@ -100,7 +100,7 @@ window.AGENT = (() => {
     const caps = Object.values(M).filter(d => d.cap).map(d => ({ id: d.id, stat: d.l, v: +(d.v || 0).toFixed(1), cap: d.cap, at: (d.v || 0) >= d.cap - 0.05 }));
     const elems = (D.ehp || []).map(e => ({ el: e.t, dr: +(e.dr * 100).toFixed(1), ehp: Math.round(e.ehp) }));
     const whatIf = (D.whatIf || []).slice(0, 6).map(q => ({ affix: q.n, gain: +(q.gain * 100).toFixed(1) }));
-    const lad = ladder(fin.tot, sc.boss || fin.tot); const pit = lad.rows, hold = lad.hold;
+    const lad = ladder(fin.tot, sc.boss || fin.tot, (() => { const T3 = X.tcState(); T3.skill = MAIN; T3.pay = PAY; try { const R = X.theory(); return R && R.crush; } catch (e) { return null; } })()); const pit = lad.rows, hold = lad.hold;
     // rotation facts for the notes
     const rot = St.hotbar.map(id => { const P = C().powers[id]; if (!P) return null; const T3 = X.tcState(); const s0 = T3.skill, p0 = T3.pay; T3.skill = id; T3.pay = ''; let R = null; try { R = X.theory(); } catch (e) { R = null; } T3.skill = s0; T3.pay = p0; return { id, name: P.name, tag: P.tag, basic: !!+P.basic, main: id === MAIN, cd: R && R.castEvery ? +R.castEvery.toFixed(2) : 0, cost: (P.cost || []).length > 0, dmg: P.dmg || '' }; }).filter(Boolean);
     X.invalidate();
@@ -119,7 +119,7 @@ window.AGENT = (() => {
   }
 
   // report again from a saved result without searching (after the report code changes)
-  function rereport(spec, prev) { const t0 = Date.now(); X.setState(clone(prev.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; const tg = spec.tg || 3; T.tg = tg; X.invalidate();
+  function rereport(spec, prev) { const t0 = Date.now(); X.setState(clone(prev.st)); const T = X.tcState(); T.wd = 2000; T.ws = 1; T.wdAuto = 1; const tg = spec.tg || 3; T.tg = tg; X.invalidate();
     const MAIN = pid(prev.main); const PAY = prev.pay;
     const pays = () => { const T = X.tcState(); T.skill = MAIN; T.pay = ''; try { const R = X.theory(); return R ? R.pays : []; } catch (e) { return []; } };
     const best = () => { const r = LAB.line(MAIN, PAY, { tg }); const p = pays().find(p => p.k === PAY) || {}; return { dps: r.dps || 0, k: PAY, n: p.n }; };

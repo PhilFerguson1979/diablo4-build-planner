@@ -27,70 +27,70 @@
  ],
  "dmg": {
   "start": 192237323,
-  "main": 396961037192,
+  "main": 1229403263198,
   "procs": [],
-  "total": 396961037192,
-  "pack": 396961037192,
-  "boss": 284430207781,
+  "total": 1229403263198,
+  "pack": 1229403263198,
+  "boss": 880915154107,
   "bestSkill": "Divine Lance"
  },
  "def": {
   "start": 151356,
-  "ehp": 456360,
-  "life": 22457,
-  "armor": 35910,
-  "armorDR": 78.8,
+  "ehp": 429037,
+  "life": 19847,
+  "armor": 37328,
+  "armorDR": 79.2,
   "block": 28,
   "dodge": 0,
   "elems": [
    {
     "el": "Physical",
-    "dr": 86.4,
-    "ehp": 165577
+    "dr": 86.7,
+    "ehp": 148962
    },
    {
     "el": "Fire",
-    "dr": 97.6,
-    "ehp": 941000
+    "dr": 97.8,
+    "ehp": 895830
    },
    {
     "el": "Lightning",
-    "dr": 86.4,
-    "ehp": 165577
+    "dr": 86.7,
+    "ehp": 148962
    },
    {
     "el": "Cold",
-    "dr": 86.4,
-    "ehp": 165577
+    "dr": 86.7,
+    "ehp": 148962
    },
    {
     "el": "Poison",
-    "dr": 86.4,
-    "ehp": 165577
+    "dr": 86.7,
+    "ehp": 148962
    },
    {
     "el": "Shadow",
-    "dr": 97.6,
-    "ehp": 941000
+    "dr": 97.8,
+    "ehp": 895830
    }
   ],
   "overCap": [],
   "whatIf": [
    {
+    "affix": "Maximum Life",
+    "gain": 20
+   },
+   {
     "affix": "Damage Reduction",
     "gain": 17.6
    },
    {
-    "affix": "Maximum Life",
-    "gain": 17.6
-   },
-   {
     "affix": "All Resistance",
-    "gain": 11.3
+    "gain": 11.8
    },
    {
     "affix": "Armor",
-    "gain": -7.9
+    "gain": -9.5
    }
   ]
  },
@@ -170,85 +170,95 @@
   {
    "tier": 60,
    "eliteTTK": 0,
-   "eliteKillsYouIn": 10,
-   "biggestHit": 3961,
-   "life": 22457,
+   "crushing": false,
+   "eliteKillsYouIn": 9.1,
+   "biggestHit": 3891,
+   "life": 19847,
    "ok": true
   },
   {
    "tier": 70,
    "eliteTTK": 0,
-   "eliteKillsYouIn": 6.3,
-   "biggestHit": 6294,
-   "life": 22457,
+   "crushing": false,
+   "eliteKillsYouIn": 5.7,
+   "biggestHit": 6183,
+   "life": 19847,
    "ok": true
   },
   {
    "tier": 80,
    "eliteTTK": 0,
-   "eliteKillsYouIn": 4,
-   "biggestHit": 10003,
-   "life": 22457,
+   "crushing": false,
+   "eliteKillsYouIn": 3.6,
+   "biggestHit": 9827,
+   "life": 19847,
    "ok": true
   },
   {
    "tier": 90,
-   "eliteTTK": 0.1,
-   "eliteKillsYouIn": 2.5,
-   "biggestHit": 15897,
-   "life": 22457,
+   "eliteTTK": 0,
+   "crushing": false,
+   "eliteKillsYouIn": 2.3,
+   "biggestHit": 15617,
+   "life": 19847,
    "ok": true
   },
   {
    "tier": 100,
-   "eliteTTK": 0.4,
-   "eliteKillsYouIn": 1.6,
-   "biggestHit": 25264,
-   "life": 22457,
+   "eliteTTK": 0.1,
+   "crushing": false,
+   "eliteKillsYouIn": 1.5,
+   "biggestHit": 24818,
+   "life": 19847,
    "ok": true
   },
   {
    "tier": 110,
-   "eliteTTK": 1.7,
-   "eliteKillsYouIn": 1,
-   "biggestHit": 40150,
-   "life": 22457,
-   "ok": false
+   "eliteTTK": 0.5,
+   "crushing": false,
+   "eliteKillsYouIn": 0.9,
+   "biggestHit": 39441,
+   "life": 19847,
+   "ok": true
   },
   {
    "tier": 120,
-   "eliteTTK": 27.1,
+   "eliteTTK": 8.8,
+   "crushing": false,
    "eliteKillsYouIn": 0.8,
-   "biggestHit": 50751,
-   "life": 22457,
+   "biggestHit": 49855,
+   "life": 19847,
    "ok": false
   },
   {
    "tier": 130,
-   "eliteTTK": 435.8,
-   "eliteKillsYouIn": 0.7,
-   "biggestHit": 64150,
-   "life": 22457,
+   "eliteTTK": 140.7,
+   "crushing": false,
+   "eliteKillsYouIn": 0.6,
+   "biggestHit": 63018,
+   "life": 19847,
    "ok": false
   },
   {
    "tier": 140,
-   "eliteTTK": 6999.5,
+   "eliteTTK": 2260,
+   "crushing": false,
    "eliteKillsYouIn": 0.5,
-   "biggestHit": 81088,
-   "life": 22457,
+   "biggestHit": 79657,
+   "life": 19847,
    "ok": false
   },
   {
    "tier": 150,
-   "eliteTTK": 112409.6,
-   "eliteKillsYouIn": 0.4,
-   "biggestHit": 102497,
-   "life": 22457,
+   "eliteTTK": 36295.9,
+   "crushing": false,
+   "eliteKillsYouIn": 0.3,
+   "biggestHit": 100689,
+   "life": 19847,
    "ok": false
   }
  ],
- "pitHold": 100,
+ "pitHold": 110,
  "pitHoldStart": 70,
  "startScore": {
   "pack": 192237323,
@@ -451,7 +461,7 @@
     "+5% Critical Strike Chance",
     "x25% Critical Strike Damage Multiplier",
     "x10% All Damage Multiplier",
-    "+1,450 Maximum Life"
+    "x14% Vulnerable Damage Multiplier"
    ],
    "enchant": "",
    "tempers": [
@@ -467,12 +477,12 @@
    "mythic": false,
    "fixed": [],
    "affixes": [
-    "+2 to Core Skills (guaranteed)",
+    "+121 Strength (guaranteed)",
     "+5% Critical Strike Chance",
     "x25% Critical Strike Damage Multiplier",
     "x14% Vulnerable Damage Multiplier"
    ],
-   "enchant": "+121 Strength",
+   "enchant": "+2 to Core Skills",
    "tempers": [
     "+50% Critical Strike Damage"
    ],
@@ -544,28 +554,12 @@
  "paraFrom": "Blessed Hammer, Hammerdin (Endgame)",
  "charms": [
   {
-   "kind": "rare",
-   "aff": [
-    "15%[x] Critical Strike Damage",
-    "+3 to Disciple Skills"
-   ]
-  },
-  {
    "kind": "set",
    "name": "Light's Epiphany",
    "piece": "Talisman_Charm_Set_Pala_04_01",
    "aff": [
     "+3 to Disciple Skills",
-    "+3 to Divine Lance"
-   ]
-  },
-  {
-   "kind": "set",
-   "name": "Light's Epiphany",
-   "piece": "Talisman_Charm_Set_Pala_04_05",
-   "aff": [
-    "+3 to Disciple Skills",
-    "+3 to Divine Lance"
+    "15%[x] Vulnerable Damage"
    ]
   },
   {
@@ -573,8 +567,8 @@
    "name": "Light's Epiphany",
    "piece": "Talisman_Charm_Set_Pala_04_02",
    "aff": [
-    "15%[x] Vulnerable Damage",
-    "+3 to Disciple Skills"
+    "+3 to Disciple Skills",
+    "+3 to Divine Lance"
    ]
   },
   {
@@ -582,18 +576,21 @@
    "name": "Light's Epiphany",
    "piece": "Talisman_Charm_Set_Pala_04_03",
    "aff": [
-    "+3 to Disciple Skills",
-    "+3 to Divine Lance"
+    "15%[x] Critical Strike Damage",
+    "+3 to Disciple Skills"
    ]
   },
   {
-   "kind": "set",
-   "name": "Light's Epiphany",
-   "piece": "Talisman_Charm_Set_Pala_04_04",
-   "aff": [
-    "+3 to Disciple Skills",
-    "+3 to Divine Lance"
-   ]
+   "kind": "unique",
+   "name": "Hellfire Torch"
+  },
+  {
+   "kind": "unique",
+   "name": "Locran's Talisman"
+  },
+  {
+   "kind": "unique",
+   "name": "The Furnace"
   }
  ],
  "seal": "Seal of the Diamond Mind",
@@ -620,12 +617,12 @@
   "leftOut": 12
  },
  "skills": [
-  "Defiance Aura r2 [Rite of Might, Maximum Life, Bonus Healing]",
-  "Aegis r15 [Stay Resolute, Duration, Cooldown Reduction]",
-  "Divine Lance r47 [Divine Javelin, Cast Speed, Stacking Damage]",
-  "Fanaticism Aura r15 [Rite of Humility, Extra Passive Stack, Potency]",
-  "Arbiter of Justice r23 [Seraph's Wings, Wing Strike Recast, Movement Speed]",
-  "Condemn r19 [Gather the Guilty, Cooldown Reduction, Movement Speed]"
+  "Defiance Aura r5 [Rite of Might, Maximum Life, Bonus Healing]",
+  "Aegis r18 [Stay Resolute, Duration, Cooldown Reduction]",
+  "Divine Lance r30 [Divine Javelin, Cast Speed, Stacking Damage]",
+  "Fanaticism Aura r18 [Rite of Humility, Extra Passive Stack, Potency]",
+  "Arbiter of Justice r17 [Seraph's Wings, Wing Strike Recast, Movement Speed]",
+  "Condemn r13 [Gather the Guilty, Cooldown Reduction, Movement Speed]"
  ],
  "bar": [
   "Condemn",
@@ -650,7 +647,7 @@
   "charms: Light's Epiphany 5-piece",
   "glyphs, mercenaries and charms searched"
  ],
- "secs": 4,
+ "secs": 5,
  "st": {
   "v": 1,
   "cls": "Paladin",
@@ -733,7 +730,7 @@
       "id": "S04_Damage_All"
      },
      {
-      "id": "S04_Life"
+      "id": "S04_Damage_to_Vulnerable"
      }
     ],
     "tempers": [
@@ -891,7 +888,7 @@
     },
     "affixes": [
      {
-      "id": "S04_SkillRankBonus_Generic_Category_Core",
+      "id": "S04_CoreStat_Strength",
       "g": 1
      },
      {
@@ -992,32 +989,16 @@
    "seal": "Talisman_Seal_MythicUnique_03",
    "count": {},
    "horadric": {},
-   "torch": "",
+   "torch": "Talisman_Pala_04",
    "uniques": [],
    "sockets": [
-    {
-     "t": "r",
-     "aff": [
-      "Talisman_Charm_Virtue_Bravery",
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple"
-     ]
-    },
     {
      "t": "set",
      "id": "Talisman_Pala_04",
      "piece": "Talisman_Charm_Set_Pala_04_01",
      "aff": [
       "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_DivineLance"
-     ]
-    },
-    {
-     "t": "set",
-     "id": "Talisman_Pala_04",
-     "piece": "Talisman_Charm_Set_Pala_04_05",
-     "aff": [
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_DivineLance"
+      "Talisman_Charm_Virtue_Wrath"
      ]
     },
     {
@@ -1025,8 +1006,8 @@
      "id": "Talisman_Pala_04",
      "piece": "Talisman_Charm_Set_Pala_04_02",
      "aff": [
-      "Talisman_Charm_Virtue_Wrath",
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple"
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple",
+      "Talisman_Charm_SkillRankBonus_Paladin_Core_DivineLance"
      ]
     },
     {
@@ -1034,20 +1015,27 @@
      "id": "Talisman_Pala_04",
      "piece": "Talisman_Charm_Set_Pala_04_03",
      "aff": [
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_DivineLance"
+      "Talisman_Charm_Virtue_Bravery",
+      "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple"
      ]
     },
     {
-     "t": "set",
-     "id": "Talisman_Pala_04",
-     "piece": "Talisman_Charm_Set_Pala_04_04",
-     "aff": [
-      "Talisman_Charm_SkillRankBonus_Paladin_Category_Disciple",
-      "Talisman_Charm_SkillRankBonus_Paladin_Core_DivineLance"
-     ]
+     "t": "u",
+     "id": "S15_HELLFIRE_TORCH",
+     "aff": []
+    },
+    {
+     "t": "u",
+     "id": "Talisman_Charm_Unique_S05_BSK_Amulet_Unique_Generic_001",
+     "aff": []
+    },
+    {
+     "t": "u",
+     "id": "Talisman_Charm_Unique_2HMace_Unique_Generic_001",
+     "aff": []
     }
-   ]
+   ],
+   "sealSwap": true
   },
   "calc": {
    "cd": {
@@ -1548,11 +1536,9 @@
    "vuln": 50,
    "cond": {},
    "off": {},
-   "st": {
-    "crit": true,
-    "vuln": true
-   },
-   "tg": 3
+   "st": "[state]",
+   "tg": 3,
+   "wdAuto": 1
   },
   "df": {
    "diff": 10,

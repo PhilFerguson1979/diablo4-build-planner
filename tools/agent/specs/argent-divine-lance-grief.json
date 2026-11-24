@@ -1,0 +1,40 @@
+{
+ "key": "argent-divine-lance-grief",
+ "name": "Argent Veil, Divine Lance with Grief",
+ "cls": "Paladin",
+ "base": "Arbiter Wing Strikes",
+ "variant": 1,
+ "main": "Divine Lance",
+ "swap": [
+  [
+   "Consecration",
+   "Divine Lance"
+  ]
+ ],
+ "lock": [
+  [
+   "ring2",
+   "Argent Veil"
+  ],
+  [
+   "weapon",
+   "Grief"
+  ],
+  [
+   "offhand",
+   "Herald of Zakarum"
+  ]
+ ],
+ "els": [
+  "Holy",
+  "Physical"
+ ],
+ "w": 0.5,
+ "tg": 3,
+ "quick": false,
+ "idea": "The tanky version of the Argent Veil Divine Lance build: Grief in the main hand and Herald of Zakarum in the off-hand instead of The Grandfather, which moves into the Talisman. Grief's 40% poison rides on every Divine Lance hit and its +750 Weapon Damage adds to every hit; the shield adds block, armor and resistances.",
+ "engine": [
+  "Arbiter form",
+  "Movement"
+ ]
+}
